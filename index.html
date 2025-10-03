@@ -2,546 +2,226 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Star of Ash — Card/Text Builder</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Star of Ash — Deck Builder (CSV)</title>
 <style>
   :root{
-    --bg:#0b0d0f;
-    --panel:#14181c;
-    --panel2:#1b2026;
-    --ink:#e6edf3;
-    --muted:#9aa7b2;
-    --accent:#6aa9ff;
-    --ok:#33c48f;
-    --warn:#ffb454;
-    --err:#ff6b6b;
-    --border:#28313a;
-    --card-w: 300px;
-    --card-h: 420px;
-    --radius: 16px;
+    --bg:#0b0d0f; --panel:#14181c; --panel2:#1b2026; --ink:#e6edf3;
+    --muted:#9aa7b2; --accent:#6aa9ff; --ok:#33c48f; --warn:#ffb454; --err:#ff6b6b; --border:#28313a;
   }
   *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
-    background: radial-gradient(1200px 800px at 70% -30%, #17202a 0%, var(--bg) 60%) no-repeat fixed;
-    color:var(--ink);
-  }
-  header{
-    display:flex;align-items:center;gap:14px;
-    padding:16px 20px;border-bottom:1px solid var(--border);
-    background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0));
-    position:sticky;top:0;z-index:10;
-  }
-  header h1{margin:0;font-size:18px;letter-spacing:.3px}
-  header .tag{font-size:12px;color:var(--muted);border:1px solid var(--border);padding:2px 8px;border-radius:999px}
-  main{display:grid;grid-template-columns: 380px 1fr;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
-  .panel{background:var(--panel);border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);}
-  .form{padding:16px 14px;display:flex;flex-direction:column;gap:12px;max-height:calc(100dvh - 90px);overflow:auto}
-  .section{padding:12px 12px 10px;border-bottom:1px dashed var(--border)}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Arial}
+  header{padding:12px 16px;background:#111;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+  header h1{margin:0;font-size:18px;letter-spacing:.2px}
+  main{display:grid;grid-template-columns:340px 1fr 380px;gap:16px;padding:16px;max-width:1600px;margin:0 auto}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .section{padding:12px 12px;border-bottom:1px solid var(--border)}
   .section:last-child{border-bottom:0}
-  .section h3{margin:0 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
-  label{display:block;font-size:13px;margin-bottom:4px;color:var(--muted)}
-  .help{font-size:12px;color:var(--muted);opacity:.9;margin-top:4px}
-  input[type="text"], input[type="number"], select, textarea{
-    width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--panel2);color:var(--ink);
-    outline:none;
-  }
-  textarea{min-height:72px;resize:vertical}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
-  button{
-    border:1px solid var(--border);background:var(--panel2);color:var(--ink);
-    padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600
-  }
-  button.primary{background:var(--accent);border-color:transparent;color:#0b1320}
-  button.ok{background:var(--ok);border-color:transparent;color:#072018}
-  button.warn{background:var(--warn);border-color:transparent;color:#2a1f00}
-  button.ghost{background:transparent}
-  .workspace{padding:16px}
-  .preview-wrap{display:flex;gap:16px;flex-wrap:wrap}
-  .status{padding:8px 12px;background:#101418;border-top:1px solid var(--border);border-radius:0 0 18px 18px;color:var(--muted);font-size:12px}
-  .footer{padding:14px 16px;color:var(--muted);font-size:12px;text-align:center}
-  canvas{background:#0d1014;border-radius:14px;border:1px solid var(--border)}
-  .danger{color:var(--err)}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted);font-size:11px}
-  .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .hidden{display:none !important}
+  .title{margin:0 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+  label{display:block;font-size:12px;color:var(--muted);margin:6px 0 4px}
+  input,select{width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--panel2);color:var(--ink)}
+  input[type="number"]{width:100px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--panel2);color:var(--ink);cursor:pointer}
+  .btn.primary{background:var(--accent);color:#081020;border-color:transparent}
+  .btn.ok{background:var(--ok);color:#02180f;border-color:transparent}
+  .btn.warn{background:var(--warn);color:#2a1f00;border-color:transparent}
+  .btn.ghost{background:transparent}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+  .status{padding:8px 12px;background:#101418;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
+  .status.danger{color:var(--err)}
+  /* Table */
+  table{width:100%;border-collapse:collapse}
+  thead th{position:sticky;top:0;background:#101418;border-bottom:1px solid var(--border);padding:8px;font-size:12px;text-align:left;cursor:pointer}
+  tbody td{padding:8px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+  tbody tr:hover{background:#171d23}
+  .qtybox{display:inline-flex;align-items:center;gap:6px}
+  .qtybox input{width:56px;text-align:center}
+  .small{font-size:12px;color:var(--muted)}
+  .right{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+  .tag{display:inline-block;padding:2px 8px;border:1px solid var(--border);border-radius:999px;color:var(--muted);font-size:11px;margin-right:6px}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .statbox{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px}
+  canvas{width:100%;height:160px;background:#0d1014;border:1px solid var(--border);border-radius:10px}
+  .list{max-height:55vh;overflow:auto}
 </style>
 </head>
 <body>
 <header>
-  <h1>⭐ Star of Ash — Card/Text Builder</h1>
-  <span class="tag">HTML Single-File • No libs</span>
-  <span class="pill">ATK/HP included</span>
-  <span class="pill">Export: Single + Sheet</span>
+  <h1>⭐ Star of Ash — Deck Builder (CSV)</h1>
 </header>
 
 <main>
-  <!-- LEFT: FORM -->
-  <aside class="panel form" id="builderForm">
+  <!-- LEFT: DATA & FILTERS -->
+  <aside class="panel">
     <div class="section">
-      <h3>Card Identity</h3>
-      <label for="name">Card Name</label>
-      <input id="name" type="text" placeholder="e.g., Ember Vanguard" />
+      <p class="title">Card Database</p>
+      <label>Upload CSV</label>
+      <input id="csvFile" type="file" accept=".csv" />
+      <label class="small" style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <input id="replaceDb" type="checkbox" /> Replace existing database (unchecked = append)
+      </label>
+      <div class="toolbar" style="margin-top:8px">
+        <button class="btn" id="btnExportDb">Export current DB CSV</button>
+        <button class="btn" id="btnClearDb">Clear DB</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="title">Filters</p>
+      <label>Search (name / rules / flavor)</label>
+      <input id="q" type="text" placeholder="e.g., Grasp, Ember" />
+      <div class="row" style="margin-top:8px">
+        <div>
+          <label>Faction</label>
+          <select id="faction"><option value="">All</option></select>
+        </div>
+        <div>
+          <label>Type</label>
+          <select id="ctype"><option value="">All</option></select>
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div>
+          <label>Cost ≤</label>
+          <input id="maxCost" type="number" min="0" step="1" placeholder="e.g., 5" />
+        </div>
+        <div>
+          <label>Min ATK / Min HP</label>
+          <div style="display:flex;gap:6px">
+            <input id="minAtk" type="number" min="0" step="1" placeholder="ATK" />
+            <input id="minHp" type="number" min="0" step="1" placeholder="HP" />
+          </div>
+        </div>
+      </div>
+      <div class="toolbar" style="margin-top:10px">
+        <button class="btn" id="btnReset">Reset Filters</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="title">Sort</p>
       <div class="row">
         <div>
-          <label for="faction">Faction</label>
-          <select id="faction">
-            <option>Flame</option>
-            <option>Blood</option>
-            <option>Ash</option>
-            <option>Flame • Blood</option>
-            <option>Flame • Ash</option>
-            <option>Blood • Ash</option>
-            <option disabled>— Future —</option>
-            <option>Sky</option>
-            <option>Stone</option>
+          <label>Column</label>
+          <select id="sortCol">
+            <option value="name">Name</option>
+            <option value="faction">Faction</option>
+            <option value="ctype">Type</option>
+            <option value="cost">Cost</option>
+            <option value="atk">ATK</option>
+            <option value="hp">HP</option>
           </select>
-          <div class="help">Affects frame color strip.</div>
         </div>
         <div>
-          <label for="ctype">Card Type</label>
-          <select id="ctype">
-            <option>Creature</option>
-            <option>Relic</option>
-            <option>Sorcery</option>
-            <option>War Chief</option>
+          <label>Direction</label>
+          <select id="sortDir">
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
           </select>
-          <div class="help">War Chief = commander; cannot attack/defend.</div>
-        </div>
-      </div>
-      <div class="row3">
-        <div>
-          <label for="cost">Cost</label>
-          <input id="cost" type="number" min="0" step="1" value="1" />
-          <div class="help">Single digit economy recommended.</div>
-        </div>
-        <div>
-          <label for="atk">ATK</label>
-          <input id="atk" type="number" min="0" max="9" step="1" value="1" />
-        </div>
-        <div>
-          <label for="hp">HP</label>
-          <input id="hp" type="number" min="0" max="9" step="1" value="1" />
         </div>
       </div>
     </div>
 
-    <div class="section">
-      <h3>Rules & Flavor</h3>
-      <label for="mechanics">Mechanics (comma-separated)</label>
-      <input id="mechanics" type="text" placeholder="e.g., Surge, Soar, Grasp, Harrow" />
-      <div class="help">Common: Surge (haste), Soar (fly lanes), Grasp (intercept), Harrow (needs 2+ blockers).</div>
-
-      <label for="rules">Rules Text</label>
-      <textarea id="rules" placeholder="Card ability text..."></textarea>
-
-      <label for="flavor">Flavor Text</label>
-      <textarea id="flavor" placeholder="Italicized flavor line..."></textarea>
-    </div>
-
-    <div class="section">
-      <h3>Art & Rarity</h3>
-      <label for="artUrl">Art URL (optional)</label>
-      <input id="artUrl" type="text" placeholder="Paste an image URL (https://...)" />
-      <div class="help">If empty, a subtle gradient fills the art box.</div>
-      <label for="rarity">Rarity</label>
-      <select id="rarity">
-        <option>Common</option>
-        <option>Uncommon</option>
-        <option>Rare</option>
-        <option>Legendary</option>
-      </select>
-    </div>
-
-    <div class="section">
-      <h3>Sheet Layout</h3>
-      <div class="row3">
-        <div>
-          <label for="cols">Columns</label>
-          <input id="cols" type="number" min="1" max="10" value="5" />
-        </div>
-        <div>
-          <label for="rows">Rows</label>
-          <input id="rows" type="number" min="1" max="10" value="4" />
-        </div>
-        <div>
-          <label for="scale">Export Scale</label>
-          <input id="scale" type="number" min="1" max="6" value="2" />
-          <div class="help">Higher = crisper text on export.</div>
-        </div>
-      </div>
-      <div class="row3" style="margin-top:8px">
-        <div>
-          <label for="fontsize">Font Scale</label>
-          <input id="fontsize" type="number" min="0.6" max="1.6" step="0.1" value="1.0" />
-        </div>
-        <div>
-          <label for="cardw">Card W</label>
-          <input id="cardw" type="number" min="200" max="520" value="300" />
-        </div>
-        <div>
-          <label for="cardh">Card H</label>
-          <input id="cardh" type="number" min="300" max="700" value="420" />
-        </div>
-      </div>
-      <div class="help">All boxes are labeled above. These control the exported grid sheet.</div>
-    </div>
-
-    <div class="section">
-      <h3>CSV Import</h3>
-      <input id="csvFile" type="file" accept=".csv" />
-      <label class="flex" style="margin-top:8px;align-items:center">
-        <input id="csvClear" type="checkbox" style="width:auto;margin-right:8px"> Clear sheet before import
-      </label>
-      <div class="help">Required headers (any order): <code>name,faction,ctype,cost,atk,hp,mechanics,rules,flavor,rarity,artUrl</code>. Quoted commas are supported.</div>
-    </div>
-
-    <div class="btns">
-      <button class="primary" id="btnRender">Render Preview</button>
-      <button class="ok" id="btnAdd">Add to Sheet</button>
-      <button id="btnClear">Clear Sheet</button>
-      <button class="warn" id="btnSaveOne">Download Single PNG</button>
-      <button class="warn" id="btnSaveSheet">Download Sheet PNG</button>
-      <button class="ghost" id="btnSample">Sample Values</button>
-    </div>
-    <div class="status" id="status">Ready.</div>
+    <div class="status" id="status">Load a CSV to begin.</div>
   </aside>
 
-  <!-- RIGHT: WORKSPACE -->
-  <section class="panel workspace">
-    <div class="section">
-      <h3>Live Preview</h3>
-      <div class="preview-wrap">
-        <canvas id="single" width="300" height="420" aria-label="Single card preview"></canvas>
-      </div>
-      <div class="help">If anything breaks, you'll see an error message instead of a blank/white page.</div>
+  <!-- CENTER: CARD TABLE -->
+  <section class="panel">
+    <div class="section" style="border-bottom:0">
+      <p class="title">Card Pool</p>
+      <div class="small" id="poolInfo">0 cards</div>
     </div>
-
-    <div class="section">
-      <h3>Sheet Preview</h3>
-      <canvas id="sheet" width="1540" height="1050" aria-label="Card sheet preview"></canvas>
-      <div class="help">“Add to Sheet” appends copies of the current card. Use Columns/Rows + Scale to adjust export clarity.</div>
+    <div class="list">
+      <table id="cardTable">
+        <thead>
+          <tr>
+            <th data-col="name">Name</th>
+            <th data-col="faction">Faction</th>
+            <th data-col="ctype">Type</th>
+            <th data-col="cost">Cost</th>
+            <th data-col="atk">ATK</th>
+            <th data-col="hp">HP</th>
+            <th>Rules</th>
+            <th class="right">Add</th>
+          </tr>
+        </thead>
+        <tbody id="cardTbody">
+          <!-- rows injected -->
+        </tbody>
+      </table>
     </div>
-
-    <div class="footer">Build: 2025-10-03 • Single-file HTML • Local-only</div>
   </section>
+
+  <!-- RIGHT: DECK -->
+  <aside class="panel">
+    <div class="section">
+      <p class="title">Your Deck</p>
+      <div class="small" id="deckInfo">0 cards</div>
+      <div class="toolbar" style="margin-top:8px">
+        <button class="btn ok" id="btnExportDeckCSV">Export Deck CSV</button>
+        <button class="btn" id="btnExportDeckJSON">Export Deck JSON</button>
+        <button class="btn" id="btnCopyList">Copy Text List</button>
+      </div>
+      <div class="toolbar" style="margin-top:8px">
+        <input id="deckJsonFile" type="file" accept=".json" />
+        <button class="btn" id="btnImportDeckJSON">Import Deck JSON</button>
+        <button class="btn warn" id="btnClearDeck">Clear Deck</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="stats">
+        <div class="statbox">
+          <div class="small">Faction Breakdown</div>
+          <div id="factionBreak"></div>
+        </div>
+        <div class="statbox">
+          <div class="small">Average ATK / HP</div>
+          <div id="avgStats"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="title">Cost Curve</p>
+      <canvas id="curve" width="340" height="160"></canvas>
+    </div>
+
+    <div class="section">
+      <p class="title">Deck List</p>
+      <div class="list" style="max-height:40vh">
+        <table id="deckTable">
+          <thead>
+            <tr>
+              <th>Qty</th><th>Name</th><th>Faction</th><th>Type</th><th>Cost</th>
+              <th class="right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="deckTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </aside>
 </main>
 
 <script>
 (function(){
   const $ = (sel) => document.querySelector(sel);
   const status = $('#status');
-  const single = $('#single');
-  const sheet = $('#sheet');
-  let sheetCards = []; // stores serialized card objects
+  let DB = [];          // full card database (array of objects)
+  let filtered = [];    // filtered view for table
+  const deck = new Map();// key -> { card, qty }
+  let sortCol = 'name', sortDir='asc';
 
-  // prevent "white screen": global error handler
+  // --- Error guard ---
   window.addEventListener('error', (e)=>{
-    status.textContent = 'Script error: ' + (e.message || e.error || 'Unknown');
+    status.textContent = 'Error: ' + (e.message || e.error || 'Unknown');
     status.classList.add('danger');
     console.error(e);
   });
 
-  function factionColor(f){
-    const base = {
-      'Flame':'#e2583e',
-      'Blood':'#c4334e',
-      'Ash':'#7b8a97',
-      'Sky':'#35a2d7',
-      'Stone':'#7b6a51'
-    };
-    if (f.includes('•')) return '#b084ff'; // multi-faction accent
-    return base[f] || '#6aa9ff';
-  }
-
-  function clampInt(v, mn, mx){
-    v = parseInt(v,10); if (isNaN(v)) v = mn;
-    return Math.max(mn, Math.min(mx, v));
-  }
-  function clampNum(v, mn, mx){
-    v = parseFloat(v); if (isNaN(v)) v = mn;
-    return Math.max(mn, Math.min(mx, v));
-  }
-
-  function collectCard(){
-    const name = $('#name').value.trim() || 'Unnamed';
-    const faction = $('#faction').value;
-    const ctype = $('#ctype').value;
-    const cost = clampInt($('#cost').value, 0, 99);
-    const atk = clampInt($('#atk').value, 0, 9);
-    const hp = clampInt($('#hp').value, 0, 99);
-    const mechanics = $('#mechanics').value.trim();
-    const rules = $('#rules').value.trim();
-    const flavor = $('#flavor').value.trim();
-    const artUrl = $('#artUrl').value.trim();
-    const rarity = $('#rarity').value;
-
-    const fontsize = clampNum($('#fontsize').value, .6, 2);
-    const w = clampInt($('#cardw').value, 200, 800);
-    const h = clampInt($('#cardh').value, 280, 1000);
-
-    return {name, faction, ctype, cost, atk, hp, mechanics, rules, flavor, artUrl, rarity, fontsize, w, h};
-  }
-
-  function setCanvasSize(c, w, h){
-    c.width = w; c.height = h;
-    c.style.width = w + 'px'; c.style.height = h + 'px';
-  }
-
-  function drawCard(ctx, card, scale=1){
-    const W = Math.round(card.w * scale);
-    const H = Math.round(card.h * scale);
-    const r = Math.round(16 * scale);
-    // clear
-    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
-    // bg
-    roundRect(ctx, 0,0, W,H, r, '#0d1014', true);
-    // inner
-    roundRect(ctx, 6*scale,6*scale, W-12*scale, H-12*scale, r-6*scale, '#12171c', true, '#27313b');
-
-    // top strip color from faction
-    const strip = factionColor(card.faction);
-    roundRect(ctx, 6*scale, 6*scale, W-12*scale, 26*scale, r-6*scale, strip, true);
-
-    // name + cost row
-    ctx.save();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `${Math.round(14*card.fontsize*scale)}px ui-sans-serif, system-ui, -apple-system, Segoe UI`;
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'left';
-    ctx.fillText(card.name, 16*scale, 19*scale);
-    // cost pill
-    const costText = String(card.cost ?? '');
-    const costW = Math.max(28*scale, ctx.measureText(costText).width + 16*scale);
-    const cx = W - (16*scale) - costW;
-    roundRect(ctx, cx, 9*scale, costW, 20*scale, 10*scale, 'rgba(0,0,0,.35)', true);
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign='center';
-    ctx.fillText(costText, cx + costW/2, 19*scale);
-    ctx.restore();
-
-    // art box
-    const artX = 14*scale, artY = 40*scale;
-    const artW = W - 28*scale, artH = Math.round(H*0.40);
-    roundRect(ctx, artX, artY, artW, artH, 10*scale, '#10141a', true, '#2a3139');
-
-    // gradient placeholder (art is drawn later in renderSingle if URL provided)
-    const g = ctx.createLinearGradient(0, artY, 0, artY+artH);
-    g.addColorStop(0, 'rgba(106,169,255,0.15)');
-    g.addColorStop(1, 'rgba(53,84,119,0.15)');
-    ctx.fillStyle = g;
-    ctx.fillRect(artX, artY, artW, artH);
-
-    // type + rarity
-    ctx.save();
-    ctx.fillStyle = '#9fb3c8';
-    ctx.font = `${Math.round(12*card.fontsize*scale)}px ui-sans-serif, system-ui`;
-    ctx.textAlign = 'left';
-    ctx.fillText(`${card.ctype} • ${card.rarity} • ${card.faction}`, 16*scale, artY + artH + 16*scale);
-    ctx.restore();
-
-    // rules box
-    const boxX = 14*scale, boxY = artY + artH + 24*scale;
-    const boxW = W - 28*scale, boxH = Math.round(H*0.26);
-    roundRect(ctx, boxX, boxY, boxW, boxH, 10*scale, '#0f1318', true, '#26303a');
-
-    // mechanics line
-    ctx.save();
-    ctx.fillStyle = '#bcd0e6';
-    ctx.font = `italic ${Math.round(12*card.fontsize*scale)}px ui-sans-serif, system-ui`;
-    wrapText(ctx, card.mechanics, boxX+10*scale, boxY+14*scale, boxW-20*scale, Math.round(14*card.fontsize*scale), 2);
-    ctx.restore();
-
-    // rules
-    ctx.save();
-    ctx.fillStyle = '#e6edf3';
-    ctx.font = `${Math.round(12*card.fontsize*scale)}px ui-sans-serif, system-ui`;
-    const rulesTop = boxY + 32*scale;
-    wrapText(ctx, card.rules, boxX+10*scale, rulesTop, boxW-20*scale, Math.round(14*card.fontsize*scale), 8);
-    ctx.restore();
-
-    // flavor
-    ctx.save();
-    ctx.fillStyle = '#9fb3c8';
-    ctx.font = `italic ${Math.round(11*card.fontsize*scale)}px ui-sans-serif, system-ui`;
-    const flavorTop = boxY + boxH - 12*scale;
-    const flavorMaxW = boxW - 20*scale;
-    const clipped = clipText(ctx, `“${card.flavor}”`, flavorMaxW);
-    ctx.textAlign='right';
-    ctx.fillText(clipped, boxX + boxW - 10*scale, flavorTop);
-    ctx.restore();
-
-    // ATK / HP plate (bottom)
-    const plateW = 88*scale, plateH = 32*scale;
-    const px = W - (plateW + 16*scale);
-    const py = H - (plateH + 14*scale);
-    roundRect(ctx, px, py, plateW, plateH, 10*scale, 'rgba(0,0,0,.35)', true, '#33404d');
-    ctx.save();
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign='center';
-    ctx.textBaseline='middle';
-    ctx.font = `bold ${Math.round(14*card.fontsize*scale)}px ui-sans-serif, system-ui`;
-    ctx.fillText(`ATK ${card.atk}  |  HP ${card.hp}`, px + plateW/2, py + plateH/2);
-    ctx.restore();
-  }
-
-  function roundRect(ctx, x,y,w,h,r, fill, stroke='#000'){
-    ctx.save();
-    ctx.beginPath();
-    const rr = Math.min(r, w/2, h/2);
-    ctx.moveTo(x+rr, y);
-    ctx.arcTo(x+w, y, x+w, y+h, rr);
-    ctx.arcTo(x+w, y+h, x, y+h, rr);
-    ctx.arcTo(x, y+h, x, y, rr);
-    ctx.arcTo(x, y, x+w, y, rr);
-    ctx.closePath();
-    if (fill){ ctx.fillStyle = fill; ctx.fill(); }
-    if (stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
-    ctx.restore();
-  }
-
-  function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines){
-    if (!text){ return; }
-    const words = String(text).split(/\s+/);
-    let line = '', lines = 0;
-    for (let n=0;n<words.length;n++){
-      const test = line ? line + ' ' + words[n] : words[n];
-      const w = ctx.measureText(test).width;
-      if (w > maxWidth && line){
-        ctx.fillText(line, x, y);
-        line = words[n];
-        y += lineHeight;
-        lines++;
-        if (maxLines && lines >= maxLines-1){
-          const tail = clipText(ctx, words.slice(n).join(' '), maxWidth);
-          ctx.fillText(tail, x, y);
-          return;
-        }
-      } else {
-        line = test;
-      }
-    }
-    if (line) ctx.fillText(line, x, y);
-  }
-
-  function clipText(ctx, text, maxWidth){
-    if (!text) return '';
-    let t = String(text);
-    if (ctx.measureText(t).width <= maxWidth) return t;
-    while (t.length && ctx.measureText(t + '…').width > maxWidth){
-      t = t.slice(0, -1);
-    }
-    return t + '…';
-  }
-
-  async function renderSingle(){
-    const card = collectCard();
-    setCanvasSize(single, card.w, card.h);
-    const ctx = single.getContext('2d');
-    drawCard(ctx, card, 1);
-
-    // draw art if provided (best-effort, async)
-    if (card.artUrl){
-      try{
-        const img = await loadImage(card.artUrl);
-        const artX = 14, artY = 40;
-        const artW = single.width - 28, artH = Math.round(single.height*0.40);
-        ctx.save();
-        // contain image
-        const ratio = Math.min(artW/img.naturalWidth, artH/img.naturalHeight);
-        const w = img.naturalWidth * ratio, h = img.naturalHeight * ratio;
-        const ox = artX + (artW - w)/2, oy = artY + (artH - h)/2;
-        ctx.drawImage(img, ox, oy, w, h);
-        ctx.restore();
-      }catch(err){
-        console.warn('Art failed to load:', err);
-      }
-    }
-    status.textContent = 'Preview rendered.';
-    status.classList.remove('danger');
-  }
-
-  function addToSheet(){
-    const card = collectCard();
-    sheetCards.push(card);
-    renderSheet();
-    status.textContent = `Added to sheet • ${sheetCards.length} card(s).`;
-  }
-
-  function clearSheet(){
-    sheetCards = [];
-    const ctx = sheet.getContext('2d');
-    ctx.clearRect(0,0,sheet.width, sheet.height);
-    status.textContent = 'Sheet cleared.';
-  }
-
-  function buildSheetCanvasSize(cols, rows, cardW, cardH, gutter=10){
-    const w = cols*cardW + (cols+1)*gutter;
-    const h = rows*cardH + (rows+1)*gutter;
-    setCanvasSize(sheet, w, h);
-    return {w,h,gutter};
-  }
-
-  async function renderSheet(){
-    const cols = clampInt($('#cols').value, 1, 10);
-    const rows = clampInt($('#rows').value, 1, 10);
-    const scale = clampInt($('#scale').value, 1, 6);
-
-    const cardW = clampInt($('#cardw').value, 200, 800);
-    const cardH = clampInt($('#cardh').value, 280, 1000);
-
-    const {w,h,gutter} = buildSheetCanvasSize(cols, rows, cardW, cardH, 12);
-    const ctx = sheet.getContext('2d');
-    ctx.clearRect(0,0,w,h);
-    ctx.fillStyle = '#0d1116';
-    ctx.fillRect(0,0,w,h);
-
-    let i = 0;
-    for (let r=0; r<rows; r++){
-      for (let c=0; c<cols; c++){
-        const card = sheetCards[i] || collectCard(); // if not enough, repeat current
-        const x = gutter + c*(cardW+gutter);
-        const y = gutter + r*(cardH+gutter);
-
-        // draw into an offscreen for crispness, then blit
-        const off = document.createElement('canvas');
-        off.width = cardW*scale; off.height = cardH*scale;
-        const octx = off.getContext('2d');
-        drawCard(octx, {...card, w:cardW, h:cardH}, scale);
-        // (Art drawing skipped on sheet for performance)
-        ctx.drawImage(off, x, y, cardW, cardH);
-        i++;
-      }
-    }
-    status.textContent = `Sheet rendered (${cols}×${rows}) with ${sheetCards.length} card(s) queued.`;
-  }
-
-  async function saveCanvasPNG(cnv, filename){
-    const a = document.createElement('a');
-    a.download = filename;
-    a.href = cnv.toDataURL('image/png');
-    a.click();
-  }
-
-  function sampleFill(){
-    $('#name').value = 'Ember Vanguard';
-    $('#faction').value = 'Flame';
-    $('#ctype').value = 'Creature';
-    $('#cost').value = 3;
-    $('#atk').value = 4;
-    $('#hp').value = 3;
-    $('#mechanics').value = 'Surge — This can attack the turn it enters. Harrow — Must be blocked by two or more.';
-    $('#rules').value = 'When Ember Vanguard enters the field, it deals 1 damage to an opposing creature. If blocked by 2+, it gains +1 ATK this combat.';
-    $('#flavor').value = '“In ash, we begin; in flame, we rise.”';
-    $('#rarity').value = 'Uncommon';
-  }
-
-  // -------- CSV SUPPORT --------
-  // robust CSV -> array of rows (array of strings), supports quotes and commas inside quotes
+  // --- CSV parsing ---
   function parseCSV(text){
     const rows = [];
     let i=0, field='', row=[], inQuotes=false;
@@ -549,7 +229,7 @@
       const ch = text[i];
       if (inQuotes){
         if (ch === '"'){
-          if (text[i+1] === '"'){ field += '"'; i+=2; continue; } // escaped quote
+          if (text[i+1] === '"'){ field += '"'; i+=2; continue; }
           inQuotes = false; i++; continue;
         } else { field += ch; i++; continue; }
       } else {
@@ -561,121 +241,391 @@
       }
     }
     row.push(field); rows.push(row);
-    // trim trailing empty lines
-    return rows.filter(r => r.length > 1 || (r.length === 1 && r[0].trim() !== ''));
+    return rows.filter(r => r.length>1 || (r.length===1 && r[0].trim()!==''));
   }
+  const norm = s => String(s||'').trim();
+  const lower = s => norm(s).toLowerCase();
 
-  function normalizeHeader(h){
-    return String(h||'').trim().toLowerCase();
-  }
-
-  function csvToCards(csvText){
-    const rows = parseCSV(csvText);
+  function csvToObjects(text){
+    const rows = parseCSV(text);
     if (!rows.length) return [];
-    const header = rows[0].map(normalizeHeader);
-    const idx = {};
-    const needed = ['name','faction','ctype','cost','atk','hp','mechanics','rules','flavor','rarity','arturl'];
-    needed.forEach(k=> idx[k] = header.indexOf(k));
-    // name is mandatory
-    if (idx['name'] === -1){
-      throw new Error('CSV missing required header: name');
-    }
+    const header = rows[0].map(lower);
+    const idx = (keys)=> {
+      for (const k of keys){ const i = header.indexOf(lower(k)); if (i>=0) return i; }
+      return -1;
+    };
+    const map = {
+      name:   idx(['name','card name','title']),
+      faction:idx(['faction']),
+      ctype:  idx(['card type','type','ctype']),
+      cost:   idx(['cost','mana','energy']),
+      atk:    idx(['atk','attack']),
+      hp:     idx(['hp','health']),
+      rules:  idx(['rules','text','rules text']),
+      flavor: idx(['flavor','flavor text']),
+      id:     idx(['id','card id']),
+      artUrl: idx(['arturl','art url','image','imageurl'])
+    };
     const out = [];
-    for (let r=1; r<rows.length; r++){
-      const raw = rows[r];
-      const get = (k)=> {
-        const j = idx[k];
-        return j>=0 ? (raw[j] ?? '').trim() : '';
+    for (let r=1;r<rows.length;r++){
+      const row = rows[r];
+      const obj = {
+        name:   map.name>=0 ? norm(row[map.name]) : '',
+        faction:map.faction>=0 ? norm(row[map.faction]) : '',
+        ctype:  map.ctype>=0 ? norm(row[map.ctype]) : '',
+        cost:   map.cost>=0 ? parseInt(row[map.cost]||'0',10) : 0,
+        atk:    map.atk>=0 ? parseInt(row[map.atk]||'0',10) : 0,
+        hp:     map.hp>=0 ? parseInt(row[map.hp]||'0',10) : 0,
+        rules:  map.rules>=0 ? norm(row[map.rules]) : '',
+        flavor: map.flavor>=0 ? norm(row[map.flavor]) : '',
+        id:     map.id>=0 ? norm(row[map.id]) : '',
+        artUrl: map.artUrl>=0 ? norm(row[map.artUrl]) : ''
       };
-      const card = {
-        name: get('name') || 'Unnamed',
-        faction: get('faction') || 'Ash',
-        ctype: get('ctype') || 'Creature',
-        cost: parseInt(get('cost'))||0,
-        atk: parseInt(get('atk'))||0,
-        hp: parseInt(get('hp'))||0,
-        mechanics: get('mechanics'),
-        rules: get('rules'),
-        flavor: get('flavor'),
-        rarity: get('rarity') || 'Common',
-        artUrl: get('arturl'),
-        fontsize: clampNum($('#fontsize').value, .6, 2),
-        w: clampInt($('#cardw').value, 200, 800),
-        h: clampInt($('#cardh').value, 280, 1000),
-      };
-      out.push(card);
+      if (obj.name) out.push(obj);
     }
     return out;
   }
 
-  // -------- Event wiring --------
-  function attach(){
-    $('#btnRender').addEventListener('click', (e)=>{e.preventDefault(); renderSingle();});
-    $('#btnAdd').addEventListener('click', (e)=>{e.preventDefault(); addToSheet();});
-    $('#btnClear').addEventListener('click', (e)=>{e.preventDefault(); clearSheet();});
-    $('#btnSaveOne').addEventListener('click', (e)=>{e.preventDefault(); renderSingle().then(()=>saveCanvasPNG(single, 'card.png'));});
-    $('#btnSaveSheet').addEventListener('click', (e)=>{e.preventDefault(); renderSheet().then(()=>saveCanvasPNG(sheet, 'sheet.png'));});
-    $('#btnSample').addEventListener('click', (e)=>{e.preventDefault(); sampleFill(); renderSingle();});
-
-    // Live size updates
-    ['cardw','cardh'].forEach(id=>{
-      document.getElementById(id).addEventListener('change', ()=>{
-        const card = collectCard();
-        setCanvasSize(single, card.w, card.h);
-        renderSingle();
-      });
-    });
-
-    // CSV import
-    $('#csvFile').addEventListener('change', (e)=>{
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = ()=>{
-        try{
-          const text = String(reader.result || '');
-          const cards = csvToCards(text);
-          if ($('#csvClear').checked) sheetCards = [];
-          sheetCards.push(...cards);
-          renderSheet();
-          status.textContent = `Imported ${cards.length} card(s) from CSV. Sheet now has ${sheetCards.length}.`;
-          status.classList.remove('danger');
-        }catch(err){
-          status.textContent = 'CSV error: ' + (err.message || err);
-          status.classList.add('danger');
-          console.error(err);
-        }
-      };
-      reader.onerror = ()=>{
-        status.textContent = 'CSV read error.';
+  // --- DB ops ---
+  function loadCSVFile(file){
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const objs = csvToObjects(String(reader.result||''));
+        if ($('#replaceDb').checked) DB = [];
+        DB.push(...objs);
+        dedupeDB();
+        rebuildFilters();
+        applyFilters();
+        status.textContent = `Loaded ${objs.length} cards. DB now ${DB.length}.`;
+        status.classList.remove('danger');
+      }catch(err){
+        status.textContent = 'CSV error: ' + (err.message||err);
         status.classList.add('danger');
-      };
-      reader.readAsText(file);
+      }
+    };
+    reader.onerror = ()=>{ status.textContent='CSV read failed.'; status.classList.add('danger'); };
+    reader.readAsText(file);
+  }
+
+  function dedupeDB(){
+    const seen = new Map();
+    const keyOf = c => (c.id?lower(c.id):'') + '|' + lower(c.name) + '|' + lower(c.faction) + '|' + lower(c.ctype);
+    const out = [];
+    for (const c of DB){
+      const k = keyOf(c);
+      if (!seen.has(k)){ seen.set(k,1); out.push(c); }
+    }
+    DB = out;
+  }
+
+  function exportDBCsv(){
+    const cols = ['name','faction','ctype','cost','atk','hp','rules','flavor','id','artUrl'];
+    const esc = v => {
+      const s = String(v??'');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    };
+    const lines = [];
+    lines.push(cols.join(','));
+    DB.forEach(c=>{
+      lines.push(cols.map(k=>esc(c[k])).join(','));
+    });
+    download('card_database.csv', lines.join('\n'));
+  }
+
+  // --- Filters & Sorting ---
+  function rebuildFilters(){
+    // factions/types from DB
+    const fSel = $('#faction'); const tSel = $('#ctype');
+    const factions = Array.from(new Set(DB.map(c=>c.faction).filter(Boolean))).sort();
+    const ctypes = Array.from(new Set(DB.map(c=>c.ctype).filter(Boolean))).sort();
+    fSel.innerHTML = '<option value="">All</option>' + factions.map(f=>`<option>${escapeHtml(f)}</option>`).join('');
+    tSel.innerHTML = '<option value="">All</option>' + ctypes.map(t=>`<option>${escapeHtml(t)}</option>`).join('');
+  }
+
+  function applyFilters(){
+    const q = lower($('#q').value);
+    const faction = $('#faction').value;
+    const ctype = $('#ctype').value;
+    const maxCost = parseInt($('#maxCost').value||'',10);
+    const minAtk = parseInt($('#minAtk').value||'',10);
+    const minHp = parseInt($('#minHp').value||'',10);
+
+    filtered = DB.filter(c=>{
+      if (faction && c.faction !== faction) return false;
+      if (ctype && c.ctype !== ctype) return false;
+      if (!isNaN(maxCost) && c.cost > maxCost) return false;
+      if (!isNaN(minAtk) && c.atk < minAtk) return false;
+      if (!isNaN(minHp) && c.hp < minHp) return false;
+      if (q){
+        const hay = lower(c.name+' '+c.rules+' '+c.flavor);
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    sortFiltered();
+    renderCardTable();
+    $('#poolInfo').textContent = `${filtered.length} cards (DB: ${DB.length})`;
+  }
+
+  function sortFiltered(){
+    const col = sortCol, dir = sortDir==='asc'?1:-1;
+    filtered.sort((a,b)=>{
+      let x=a[col], y=b[col];
+      if (typeof x==='string') x = x.toLowerCase();
+      if (typeof y==='string') y = y.toLowerCase();
+      if (x<y) return -1*dir;
+      if (x>y) return 1*dir;
+      return 0;
     });
   }
 
-  function loadImage(url){
-    return new Promise((resolve, reject)=>{
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = ()=>resolve(img);
-      img.onerror = reject;
-      img.src = url;
+  // --- Card Table ---
+  function renderCardTable(){
+    const tbody = $('#cardTbody');
+    tbody.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    filtered.forEach((c,i)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escapeHtml(c.name)}</td>
+        <td>${escapeHtml(c.faction||'')}</td>
+        <td>${escapeHtml(c.ctype||'')}</td>
+        <td>${num(c.cost)}</td>
+        <td>${num(c.atk)}</td>
+        <td>${num(c.hp)}</td>
+        <td class="small">${escapeHtml(shorten(c.rules,140))}</td>
+        <td class="right">
+          <div class="qtybox">
+            <button class="btn" data-act="minus">-</button>
+            <input type="number" min="0" step="1" value="1" />
+            <button class="btn" data-act="plus">+</button>
+            <button class="btn primary" data-act="add">Add</button>
+          </div>
+        </td>
+      `;
+      const qtyInput = tr.querySelector('input[type="number"]');
+      tr.querySelector('[data-act="minus"]').onclick = ()=>{ qtyInput.value = Math.max(0, (parseInt(qtyInput.value)||0)-1); };
+      tr.querySelector('[data-act="plus"]').onclick = ()=>{ qtyInput.value = (parseInt(qtyInput.value)||0)+1; };
+      tr.querySelector('[data-act="add"]').onclick = ()=>{
+        const qty = Math.max(0, parseInt(qtyInput.value)||0);
+        if (qty>0) addToDeck(c, qty);
+      };
+      frag.appendChild(tr);
     });
+    tbody.appendChild(frag);
   }
+
+  // --- Deck ---
+  function keyFor(c){ return (c.id?lower(c.id):'') + '|' + lower(c.name); }
+
+  function addToDeck(card, qty){
+    const k = keyFor(card);
+    const cur = deck.get(k);
+    if (cur) cur.qty += qty; else deck.set(k, {card, qty});
+    renderDeck();
+  }
+  function setDeckQty(k, qty){
+    const cur = deck.get(k);
+    if (!cur) return;
+    if (qty<=0) deck.delete(k); else cur.qty = qty;
+    renderDeck();
+  }
+  function clearDeck(){
+    deck.clear();
+    renderDeck();
+  }
+
+  function deckArray(){
+    return Array.from(deck.values()).map(({card,qty})=>({card,qty}));
+  }
+
+  function renderDeck(){
+    const tbody = $('#deckTbody'); tbody.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    let total = 0;
+    deckArray().forEach(({card,qty})=>{
+      total += qty;
+      const k = keyFor(card);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="number" min="0" step="1" value="${qty}" style="width:60px" /></td>
+        <td>${escapeHtml(card.name)}</td>
+        <td class="small">${escapeHtml(card.faction||'')}</td>
+        <td class="small">${escapeHtml(card.ctype||'')}</td>
+        <td>${num(card.cost)}</td>
+        <td class="right">
+          <button class="btn" data-act="dec">-</button>
+          <button class="btn" data-act="inc">+</button>
+          <button class="btn warn" data-act="rm">Remove</button>
+        </td>
+      `;
+      const qtyInput = tr.querySelector('input[type="number"]');
+      qtyInput.onchange = ()=> setDeckQty(k, Math.max(0, parseInt(qtyInput.value)||0));
+      tr.querySelector('[data-act="dec"]').onclick = ()=> setDeckQty(k, Math.max(0, (parseInt(qtyInput.value)||0)-1));
+      tr.querySelector('[data-act="inc"]').onclick = ()=> setDeckQty(k, (parseInt(qtyInput.value)||0)+1);
+      tr.querySelector('[data-act="rm"]').onclick  = ()=> setDeckQty(k, 0);
+      frag.appendChild(tr);
+    });
+    tbody.appendChild(frag);
+    $('#deckInfo').textContent = `${total} cards in deck`;
+
+    // stats
+    renderStats();
+    renderCurve();
+  }
+
+  function renderStats(){
+    const byFaction = countBy(deckArray(), x=>x.card.faction||'');
+    const fb = Object.entries(byFaction).sort((a,b)=>b[1]-a[1]).map(([f,n])=>`<span class="tag">${escapeHtml(f||'—')}: ${n}</span>`).join(' ');
+    $('#factionBreak').innerHTML = fb || '<span class="small">—</span>';
+
+    const nums = deckArray().flatMap(({card,qty})=>{
+      return Array(qty).fill({atk:card.atk||0, hp:card.hp||0});
+    });
+    const avgAtk = (nums.reduce((s,x)=>s+x.atk,0)/(nums.length||1)).toFixed(2);
+    const avgHp  = (nums.reduce((s,x)=>s+x.hp,0)/(nums.length||1)).toFixed(2);
+    $('#avgStats').innerHTML = `<span class="tag">ATK ${avgAtk}</span> <span class="tag">HP ${avgHp}</span>`;
+  }
+
+  function renderCurve(){
+    const ctx = $('#curve').getContext('2d');
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    // build counts by cost 0..9
+    const counts = Array(10).fill(0);
+    deckArray().forEach(({card,qty})=>{
+      const c = clamp(parseInt(card.cost)||0, 0, 9);
+      counts[c] += qty;
+    });
+    const W = ctx.canvas.width, H = ctx.canvas.height, pad = 20;
+    const max = Math.max(1, ...counts);
+    const bw = (W - pad*2) / counts.length;
+    // axes
+    ctx.strokeStyle = '#304050'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, H-pad); ctx.lineTo(W-pad, H-pad); ctx.stroke();
+    // bars
+    for (let i=0;i<counts.length;i++){
+      const h = Math.round((H - pad*2) * (counts[i] / max));
+      const x = pad + i*bw + 4, y = H - pad - h;
+      ctx.fillStyle = '#6aa9ff';
+      ctx.fillRect(x, y, bw-8, h);
+      ctx.fillStyle = '#9aa7b2';
+      ctx.font = '12px system-ui';
+      ctx.fillText(String(i), pad + i*bw + bw/2 - 3, H - pad + 12);
+    }
+  }
+
+  // --- Exports / Imports (deck) ---
+  function exportDeckCSV(){
+    const cols = ['qty','name','faction','ctype','cost','atk','hp','id'];
+    const esc = v => {
+      const s = String(v??'');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    };
+    const lines = [cols.join(',')];
+    deckArray().forEach(({card,qty})=>{
+      lines.push([
+        qty, card.name, card.faction, card.ctype, card.cost, card.atk, card.hp, card.id
+      ].map(esc).join(','));
+    });
+    download('deck.csv', lines.join('\n'));
+  }
+
+  function exportDeckJSON(){
+    const obj = deckArray().map(({card,qty})=>({qty, card}));
+    download('deck.json', JSON.stringify(obj, null, 2));
+  }
+
+  function copyDeckList(){
+    const lines = deckArray().map(({card,qty})=>`${qty}x ${card.name} (${card.faction} • ${card.ctype} • ${card.cost})`);
+    const txt = lines.join('\n');
+    navigator.clipboard.writeText(txt).then(()=>{
+      toast('Deck list copied to clipboard');
+    }).catch(()=>{ toast('Copy failed'); });
+  }
+
+  function importDeckJSONFile(file){
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const arr = JSON.parse(String(reader.result||''));
+        deck.clear();
+        arr.forEach(x=>{
+          // try match card from DB by name+id, else keep provided
+          const key = keyFor(x.card);
+          const match = DB.find(c=> keyFor(c)===key) || x.card;
+          deck.set(keyFor(match), {card: match, qty: parseInt(x.qty)||0});
+        });
+        renderDeck();
+        status.textContent = 'Deck JSON imported.';
+        status.classList.remove('danger');
+      }catch(e){
+        status.textContent = 'Deck JSON parse error.';
+        status.classList.add('danger');
+      }
+    };
+    reader.onerror = ()=>{ status.textContent='Deck JSON read failed.'; status.classList.add('danger'); };
+    reader.readAsText(file);
+  }
+
+  // --- Utils ---
+  function download(filename, content){
+    const a = document.createElement('a');
+    a.download = filename;
+    a.href = URL.createObjectURL(new Blob([content], {type:'text/plain'}));
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  function num(n){ return (n===0 || n) ? String(n) : ''; }
+  function clamp(v, mn, mx){ return Math.max(mn, Math.min(mx, v)); }
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function shorten(s, n){ s=String(s||''); return s.length>n ? s.slice(0,n-1)+'…' : s; }
+  function countBy(arr, fn){ const m={}; for(const x of arr){ const k=fn(x); m[k]=(m[k]||0)+ (x.qty||1); } return m; }
+  function toast(msg){ status.textContent = msg; setTimeout(()=>status.textContent='', 1500); }
+
+  // --- Wiring ---
+  $('#csvFile').addEventListener('change', e=>{
+    const f = e.target.files[0];
+    if (f) loadCSVFile(f);
+  });
+  $('#btnExportDb').onclick = exportDBCsv;
+  $('#btnClearDb').onclick = ()=>{ DB=[]; filtered=[]; applyFilters(); rebuildFilters(); status.textContent='Database cleared.'; };
+
+  ['q','faction','ctype','maxCost','minAtk','minHp'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', applyFilters);
+  });
+  $('#btnReset').onclick = ()=>{
+    $('#q').value=''; $('#faction').value=''; $('#ctype').value='';
+    $('#maxCost').value=''; $('#minAtk').value=''; $('#minHp').value='';
+    applyFilters();
+  };
+  $('#sortCol').onchange = (e)=>{ sortCol = e.target.value; sortFiltered(); renderCardTable(); };
+  $('#sortDir').onchange = (e)=>{ sortDir = e.target.value; sortFiltered(); renderCardTable(); };
+
+  // header click sort (center table)
+  document.querySelectorAll('#cardTable thead th[data-col]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const c = th.getAttribute('data-col');
+      if (sortCol===c){ sortDir = (sortDir==='asc'?'desc':'asc'); } else { sortCol=c; sortDir='asc'; }
+      $('#sortCol').value = sortCol; $('#sortDir').value = sortDir;
+      sortFiltered(); renderCardTable();
+    });
+  });
+
+  // deck buttons
+  $('#btnExportDeckCSV').onclick = exportDeckCSV;
+  $('#btnExportDeckJSON').onclick = exportDeckJSON;
+  $('#btnCopyList').onclick = copyDeckList;
+  $('#btnClearDeck').onclick = clearDeck;
+  $('#btnImportDeckJSON').onclick = ()=>{
+    const f = $('#deckJsonFile').files[0];
+    if (f) importDeckJSONFile(f);
+  };
 
   // init
-  try{
-    attach();
-    const card = collectCard();
-    setCanvasSize(single, card.w, card.h);
-    renderSingle();
-    renderSheet();
-  }catch(err){
-    status.textContent = 'Init error: ' + (err.message || err);
-    status.classList.add('danger');
-    console.error(err);
-  }
+  applyFilters();
+  renderDeck();
 })();
 </script>
 </body>
