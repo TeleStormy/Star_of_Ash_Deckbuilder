@@ -1,227 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Star of Ash — Card/Text Builder</title>
+<style>
+  :root{
+    --bg:#0b0d0f; --panel:#14181c; --panel2:#1b2026;
+    --ink:#e6edf3; --muted:#9aa7b2; --accent:#6aa9ff;
+    --ok:#33c48f; --warn:#ffb454; --err:#ff6b6b;
+    --border:#28313a; --card-w:300px; --card-h:420px;
+    --radius:16px;
+  }
+  body{margin:0;font-family:sans-serif;background:var(--bg);color:var(--ink)}
+  header{padding:12px 16px;background:#111;border-bottom:1px solid var(--border)}
+  header h1{margin:0;font-size:18px}
+  main{display:grid;grid-template-columns:380px 1fr;gap:16px;padding:16px}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px}
+  .form{padding:14px;display:flex;flex-direction:column;gap:12px}
+  .section{padding-bottom:12px;border-bottom:1px dashed var(--border)}
+  .section:last-child{border-bottom:0}
+  label{font-size:13px;display:block;margin:6px 0 3px}
+  input,select,textarea{width:100%;padding:8px;border-radius:8px;
+    border:1px solid var(--border);background:var(--panel2);color:var(--ink)}
+  textarea{min-height:60px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  button{padding:8px 12px;border-radius:8px;border:1px solid var(--border);cursor:pointer}
+  button.primary{background:var(--accent);color:#000}
+  .status{font-size:12px;padding:8px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header><h1>⭐ Star of Ash — Card/Text Builder</h1></header>
+
+<main>
+  <!-- Left Panel -->
+  <aside class="panel form">
+    <div class="section">
+      <h3>Card Info</h3>
+      <label>Name</label><input id="name" type="text" />
+      <div class="row">
+        <div><label>Faction</label>
+          <select id="faction"><option>Flame</option><option>Blood</option><option>Ash</option></select></div>
+        <div><label>Type</label>
+          <select id="ctype"><option>Creature</option><option>Relic</option><option>Sorcery</option></select></div>
+      </div>
+      <div class="row3">
+        <div><label>Cost</label><input id="cost" type="number" value="1"></div>
+        <div><label>ATK</label><input id="atk" type="number" value="1"></div>
+        <div><label>HP</label><input id="hp" type="number" value="1"></div>
+      </div>
+      <label>Mechanics</label><input id="mechanics" type="text">
+      <label>Rules</label><textarea id="rules"></textarea>
+      <label>Flavor</label><textarea id="flavor"></textarea>
+      <label>Rarity</label>
+      <select id="rarity"><option>Common</option><option>Uncommon</option><option>Rare</option><option>Legendary</option></select>
+      <label>Art URL</label><input id="artUrl" type="text">
+    </div>
+
+    <div class="section">
+      <h3>CSV Import</h3>
+      <input id="csvFile" type="file" accept=".csv" />
+      <small>Headers: name,faction,ctype,cost,atk,hp,mechanics,rules,flavor,rarity,artUrl</small>
+    </div>
+
+    <div class="section">
+      <h3>Controls</h3>
+      <button id="btnRender" class="primary">Render Preview</button>
+      <button id="btnAdd">Add to Sheet</button>
+      <button id="btnClear">Clear Sheet</button>
+      <button id="btnSaveOne">Download Card</button>
+      <button id="btnSaveSheet">Download Sheet</button>
+    </div>
+    <div class="status" id="status">Ready.</div>
+  </aside>
+
+  <!-- Right Panel -->
+  <section class="panel" style="padding:12px">
+    <h3>Preview</h3>
+    <canvas id="single" width="300" height="420"></canvas>
+    <h3>Sheet</h3>
+    <canvas id="sheet" width="1000" height="800"></canvas>
+  </section>
+</main>
+
 <script>
-(() => {
-  let allCards = [];
-  const deck = { main: [], frags: [], chief: [] };
+// helpers
+const $ = id=>document.getElementById(id);
+const single=$("single"), sheet=$("sheet"), status=$("status");
+let sheetCards=[];
 
-  // --- CSV parse ---
-  function parseCSV(text){
-    const rows=[], row=[], pushRow=()=>{rows.push(row.splice(0));};
-    let cell='', q=false;
-    for (let i=0;i<text.length;i++){
-      const c=text[i], n=text[i+1];
-      if (c==='"' && q && n=== '"'){ cell+='"'; i++; continue; }
-      if (c==='"' ){ q=!q; continue; }
-      if (c===',' && !q){ row.push(cell.trim()); cell=''; continue; }
-      if ((c==='\n'||c==='\r') && !q){ if(cell.length||row.length){row.push(cell.trim()); cell=''; pushRow();} continue; }
-      cell+=c;
-    }
-    if (cell.length||row.length){ row.push(cell.trim()); pushRow(); }
-    return rows;
-  }
-  const norm = h => h.map(x=>x.toLowerCase().replace(/\s+/g,' ').trim());
-  function toCards(rows){
-    const H = norm(rows[0]), idx = n=>H.indexOf(n), get=(r,n)=>r[idx(n)]??'';
-    const out=[];
-    for (let i=1;i<rows.length;i++){
-      const r=rows[i]; if (!r?.length) continue;
-      out.push({
-        name:get(r,'card name'), faction:get(r,'faction'), type:get(r,'card type'),
-        cost:get(r,'cost'), atk:get(r,'atk'), hp:get(r,'hp'),
-        text:get(r,'rules text'), flavor:get(r,'flavor text')
-      });
-    }
-    return out.filter(c=>c.name);
-  }
+function collectCard(){
+  return {
+    name: $("name").value||"Unnamed",
+    faction:$("faction").value,
+    ctype:$("ctype").value,
+    cost:parseInt($("cost").value)||0,
+    atk:parseInt($("atk").value)||0,
+    hp:parseInt($("hp").value)||0,
+    mechanics:$("mechanics").value,
+    rules:$("rules").value,
+    flavor:$("flavor").value,
+    rarity:$("rarity").value,
+    artUrl:$("artUrl").value
+  };
+}
 
-  // --- DOM helpers ---
-  const $ = id => document.getElementById(id);
-  const cardsEl = $('cards'), mainList=$('mainList'), fragList=$('fragList'), chiefList=$('chiefList');
+// simple draw
+function drawCard(ctx,card){
+  ctx.fillStyle="#222";ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  ctx.fillStyle="#fff";ctx.font="16px sans-serif";
+  ctx.fillText(card.name,10,20);
+  ctx.fillText(card.faction+" "+card.ctype+" Cost:"+card.cost,10,40);
+  ctx.fillText("ATK:"+card.atk+" HP:"+card.hp,10,60);
+  ctx.fillText(card.mechanics,10,90);
+  ctx.fillText(card.rules,10,120);
+  ctx.fillText(card.flavor,10,180);
+}
 
-  function escapeHtml(s){ return (s??'').replace(/[&<>"]/g, ch=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[ch])); }
-  let toastTimer; function toast(msg){ const el=$('validationMsg'); el.textContent=msg; el.className='small warn'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.textContent='',3000); }
+function renderSingle(){
+  const card=collectCard();
+  drawCard(single.getContext("2d"),card);
+  status.textContent="Preview updated.";
+}
+function addToSheet(){
+  sheetCards.push(collectCard());
+  renderSheet();
+}
+function renderSheet(){
+  const ctx=sheet.getContext("2d");
+  ctx.clearRect(0,0,sheet.width,sheet.height);
+  let x=10,y=20;
+  sheetCards.forEach((c,i)=>{
+    drawCard(ctx,c);
+    ctx.translate(0,150);
+  });
+  status.textContent="Sheet rendered with "+sheetCards.length+" cards.";
+}
+function clearSheet(){sheetCards=[];renderSheet();status.textContent="Cleared."}
+function saveCanvasPNG(cnv,name){
+  const a=document.createElement("a");
+  a.download=name;a.href=cnv.toDataURL();a.click();
+}
 
-  // --- Render card grid ---
-  function parseCostNumber(costStr){
-    if (!costStr) return NaN;
-    const digits=[...costStr.matchAll(/\d+/g)].map(m=>+m[0]);
-    const symbols=[...costStr.matchAll(/[🔥🩸🕯️]/g)].length;
-    return (digits.reduce((a,b)=>a+b,0))+symbols;
-  }
-  function renderCards(list){
-    cardsEl.innerHTML='';
-    list.forEach(c=>{
-      const el=document.createElement('div'); el.className='card';
-      const costNum=parseCostNumber(c.cost);
-      el.innerHTML = `
-        <div class="row"><span class="name">${escapeHtml(c.name)}</span></div>
-        <div class="row">
-          <span class="tag">${c.faction||'—'}</span>
-          <span class="tag">${c.type||'—'}</span>
-          <span class="tag">Cost: ${c.cost||'—'}</span>
-          ${c.atk && c.hp ? `<span class="tag">ATK ${c.atk} / HP ${c.hp}</span>` : ``}
-        </div>
-        <div class="muted small">${escapeHtml(c.text||'')}</div>
-        <div class="row" style="margin-top:6px;gap:6px;">
-          <button class="btn" data-add="main">+ Main</button>
-          <button class="btn" data-add="frag">+ Fragment</button>
-          <button class="btn" data-add="chief">Set Chief</button>
-          <div class="small muted" style="margin-left:auto">${Number.isFinite(costNum)?('Est Cost: '+costNum):''}</div>
-        </div>`;
-      el.querySelectorAll('button').forEach(b=>{
-        b.addEventListener('click',()=>{
-          if (b.dataset.add==='main') addToDeck('main',c);
-          if (b.dataset.add==='frags') addToDeck('frags',c);
-          if (b.dataset.add==='chief') setChief(c);
-          updateCounts();
-        });
-      });
-      cardsEl.appendChild(el);
+// CSV upload
+$("csvFile").addEventListener("change", e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const rows=reader.result.trim().split(/\r?\n/).map(r=>r.split(","));
+    const headers=rows.shift().map(h=>h.trim());
+    rows.forEach(r=>{
+      let c={};headers.forEach((h,i)=>c[h]=r[i]);
+      c.cost=parseInt(c.cost)||0;c.atk=parseInt(c.atk)||0;c.hp=parseInt(c.hp)||0;
+      sheetCards.push(c);
     });
-    $('results').textContent = `${list.length} results`;
-  }
-  function filtered(){
-    const f=$('faction').value.trim().toLowerCase();
-    const t=$('type').value.trim().toLowerCase();
-    const q=$('text').value.trim().toLowerCase();
-    const cmin=$('costMin').value? +$('costMin').value : -Infinity;
-    const cmax=$('costMax').value? +$('costMax').value : +Infinity;
-    return allCards.filter(c=>{
-      if (f && (c.faction||'').toLowerCase()!==f) return false;
-      if (t){
-        const ct=(c.type||'').toLowerCase();
-        const ok = t==='war chief' ? /war\\s*chief/.test(ct)
-                  : t==='fragment' ? /fragment/.test(ct)
-                  : ct.startsWith(t);
-        if (!ok) return false;
-      }
-      if (q){
-        const blob=`${c.name} ${c.type} ${c.faction} ${c.cost} ${c.text} ${c.flavor}`.toLowerCase();
-        if (!blob.includes(q)) return false;
-      }
-      const est=parseCostNumber(c.cost);
-      if (Number.isFinite(est) && (est<cmin||est>cmax)) return false;
-      return true;
-    });
-  }
+    renderSheet();
+    status.textContent="Imported "+rows.length+" cards from CSV.";
+  };
+  reader.readAsText(file);
+});
 
-  // --- Deck lists ---
-  function renderDeckList(container, list, bucket){
-    container.innerHTML='';
-    list.forEach((c,i)=>{
-      const li=document.createElement('div'); li.className='li';
-      li.innerHTML = `
-        <div>
-          <div class="name">${escapeHtml(c.name)}</div>
-          <div class="small muted">
-            ${escapeHtml(c.faction||'')} • ${escapeHtml(c.type||'')} • Cost ${escapeHtml(c.cost||'—')}
-            ${c.atk && c.hp ? ` • ATK ${c.atk} / HP ${c.hp}` : ``}
-          </div>
-        </div>
-        <div><button class="btn" data-remove="${bucket}" data-idx="${i}">Remove</button></div>`;
-      container.appendChild(li);
-    });
-    container.querySelectorAll('button[data-remove]').forEach(btn=>{
-      btn.addEventListener('click',()=>{ const b=btn.dataset.remove, ix=+btn.dataset.idx; deck[b].splice(ix,1); renderAll(); });
-    });
-  }
-  function renderAll(){ renderDeckList(mainList,deck.main,'main'); renderDeckList(fragList,deck.frags,'frags'); renderDeckList(chiefList,deck.chief,'chief'); updateCounts(); }
-  function updateCounts(){ $('countMain').textContent=`Main: ${deck.main.length} / 45`; $('countFrags').textContent=`Fragments: ${deck.frags.length} / 20`; $('countChief').textContent=`War Chiefs: ${deck.chief.length} / 1`; }
-  function addToDeck(bucket,card){
-    const t=(card.type||'').toLowerCase();
-    if (bucket==='frags' && !/fragment/.test(t)) return toast('Only Fragment cards belong in the Fragment deck.');
-    if (bucket==='main' && /fragment/.test(t)) return toast('Fragments belong in the Fragment deck.');
-    if (bucket==='main'){
-      if (deck.main.some(x=>x.name===card.name)) return toast('Singleton rule: that card is already in Main.');
-      if (deck.main.length>=45) return toast('Main deck is already at 45.');
-      deck.main.push(card);
-    } else {
-      if (deck.frags.length>=20) return toast('Fragment deck is already at 20.');
-      deck.frags.push(card);
-    }
-    renderAll();
-  }
-  function setChief(card){ if (!/war\\s*chief/i.test(card.type||'')) return toast('Selected card is not a War Chief.'); deck.chief=[card]; renderAll(); }
-  function validateDeck(){
-    const msgs=[];
-    if (deck.main.length!==45) msgs.push(`Main must be 45 (current ${deck.main.length}).`);
-    if (deck.frags.length!==20) msgs.push(`Fragments must be 20 (current ${deck.frags.length}).`);
-    if (deck.chief.length!==1) msgs.push(`Exactly 1 War Chief required (current ${deck.chief.length}).`);
-    const names=deck.main.map(c=>c.name), dup=names.find((n,i)=>names.indexOf(n)!==i);
-    if (dup) msgs.push(`Singleton violated: duplicate ${dup}.`);
-    const el=$('validationMsg'); if (!msgs.length){ el.textContent='✓ Deck is valid.'; el.className='small ok'; } else { el.textContent='⚠ '+msgs.join(' '); el.className='small warn'; }
-  }
+// buttons
+$("btnRender").onclick=renderSingle;
+$("btnAdd").onclick=addToSheet;
+$("btnClear").onclick=clearSheet;
+$("btnSaveOne").onclick=()=>saveCanvasPNG(single,"card.png");
+$("btnSaveSheet").onclick=()=>saveCanvasPNG(sheet,"sheet.png");
 
-  // --- Sheet rendering ---
-  const CAN=$('sheet'); const CTX=CAN.getContext('2d');
-  function pickSource(){ const s=$('sheetSource').value; if (s==='main') return [...deck.main]; if (s==='frags') return [...deck.frags]; if (s==='chief') return [...deck.chief]; return [...deck.chief,...deck.main,...deck.frags]; }
-  function drawRoundedRect(ctx,x,y,w,h,r){ const rr=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+rr,y); ctx.arcTo(x+w,y,x+w,y+h,rr); ctx.arcTo(x+w,y+h,x,y+h,rr); ctx.arcTo(x,y+h,x,y,rr); ctx.arcTo(x,y,x+w,y,rr); ctx.closePath(); }
-  function wrapText(ctx,text,x,y,maxW,lineH,maxLines){ if(!text) return y; const words=text.split(/\\s+/); let line='', lines=0; for(let n=0;n<words.length;n++){ const test=line? line+' '+words[n] : words[n]; if(ctx.measureText(test).width>maxW && n>0){ ctx.fillText(line,x,y); line=words[n]; y+=lineH; lines++; if(lines>=maxLines-1){ let rest=words.slice(n).join(' '); while(ctx.measureText(rest+'…').width>maxW && rest.length>0) rest=rest.slice(0,-1); ctx.fillText(rest+'…',x,y); return y+lineH; } } else { line=test; } } ctx.fillText(line,x,y); return y+lineH; }
-  function tint(f){ f=(f||'').toLowerCase(); if(f.includes('flame'))return '#ff7a4a'; if(f.includes('blood'))return '#d94763'; if(f.includes('ash'))return '#b6b1a9'; return '#8aa3ff'; }
-  function renderCard(ctx, card, x, y, w, h, opts){
-    const { setCode='', sizes={} } = opts||{};
-    const NAME=sizes.name||32, RULES=sizes.rules||20, FLAVOR=sizes.flavor||16, STATS=sizes.stats||22;
-    ctx.save();
-    // frame
-    drawRoundedRect(ctx,x,y,w,h,24); ctx.fillStyle='#11151f'; ctx.fill(); ctx.strokeStyle='#2b3145'; ctx.lineWidth=2; ctx.stroke();
-    ctx.fillStyle=tint(card.faction); ctx.fillRect(x,y,w,12);
-    const pad=24; let cx=x+pad, cy=y+pad+18;
-
-    ctx.fillStyle='#e9ebef'; ctx.font=`bold ${NAME}px system-ui`; ctx.fillText(card.name||'Unnamed', cx,cy);
-    const cost=card.cost||'—'; ctx.font=`bold ${Math.max(14,NAME-6)}px system-ui`; ctx.fillStyle='#cfd3da'; ctx.textAlign='right'; ctx.fillText(cost, x+w-pad, cy); ctx.textAlign='left'; cy+=14;
-    cy+=18; ctx.fillStyle='#9aa0ac'; ctx.font='14px system-ui'; ctx.fillText(`${card.type||'—'}  •  ${card.faction||'—'}`, cx, cy); cy+=10;
-
-    const boxY=cy+14, boxH=h*0.52;
-    drawRoundedRect(ctx,x+pad-6,boxY-18,w-2*pad+12,boxH+28,14); ctx.fillStyle='#141a26'; ctx.fill(); ctx.strokeStyle='#262d3f'; ctx.stroke();
-
-    ctx.fillStyle='#e1e4ea'; ctx.font=`${RULES}px system-ui`; const textMaxW=w-2*pad-10; let ty=boxY; ty=wrapText(ctx, (card.text||''), x+pad, ty, textMaxW, RULES+4, 12);
-
-    if (card.flavor){ ctx.fillStyle='#a5acb8'; ctx.font=`italic ${FLAVOR}px system-ui`; wrapText(ctx, '“'+card.flavor+'”', x+pad, ty+6, textMaxW, FLAVOR+2, 3); }
-
-    if (/war\\s*chief/i.test(card.type||'')){
-      const r=34; ctx.beginPath(); ctx.arc(x+w-pad-r,y+h-pad-r,r,0,Math.PI*2); ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=3; ctx.stroke();
-      ctx.fillStyle='#e9ebef'; ctx.font=`bold ${STATS}px system-ui`; const hp=(card.hp||'').toString()||'40'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(hp, x+w-pad-r, y+h-pad-r); ctx.textAlign='left'; ctx.textBaseline='alphabetic';
-    } else if (!/fragment/i.test((card.type||'').toLowerCase())){
-      const bw=110, bh=56; drawRoundedRect(ctx, x+w-pad-bw, y+h-pad-bh, bw, bh, 10); ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=2; ctx.stroke();
-      ctx.fillStyle='#e9ebef'; ctx.font=`bold ${STATS}px system-ui`; ctx.fillText(`${card.atk||'—'} / ${card.hp||'—'}`, x+w-pad-bw+12, y+h-pad-bh+(STATS+8)/2);
-    } else { ctx.fillStyle='#8e95a3'; ctx.font=`bold ${Math.max(14,STATS-6)}px system-ui`; ctx.fillText('Fragment', x+w-pad-140, y+h-pad-18); }
-
-    if (setCode){ ctx.fillStyle='#80889a'; ctx.font='bold 13px system-ui'; ctx.fillText(setCode, x+pad, y+h-pad); }
-    ctx.restore();
-  }
-
-  function renderSheet(){
-    const src=pickSource(); if (!src.length) return toast('No cards in the chosen section.');
-    const rows=+$('rows').value||7, cols=+$('cols').value||10, cardW=+$('cardW').value||744, cardH=+$('cardH').value||1038;
-    const margin=+$('margin').value||24, scale=Math.max(1,+$('scale').value||2), setCode=$('setCode').value.trim();
-    const sizes={ name:+$('nameSize').value||32, rules:+$('rulesSize').value||20, flavor:+$('flavorSize').value||16, stats:+$('statsSize').value||22 };
-    const gridW=cols*cardW+(cols+1)*margin, gridH=rows*cardH+(rows+1)*margin;
-    CAN.width=Math.floor(gridW*scale); CAN.height=Math.floor(gridH*scale); CTX.setTransform(scale,0,0,scale,0,0);
-    CTX.fillStyle='#0b0b0e'; CTX.fillRect(0,0,gridW,gridH);
-    let i=0; for(let r=0;r<rows;r++){ for(let c=0;c<cols;c++){ const x=margin+c*(cardW+margin), y=margin+r*(cardH+margin); const card=src[i++]; if(card) renderCard(CTX,card,x,y,cardW,cardH,{setCode,sizes}); } }
-  }
-  function renderBacks(){
-    const rows=+$('rows').value||7, cols=+$('cols').value||10, cardW=+$('cardW').value||744, cardH=+$('cardH').value||1038;
-    const margin=+$('margin').value||24, scale=Math.max(1,+$('scale').value||2), label=$('backLabel').value||'Star of Ash', color=$('backColor').value||'#0b0b0e';
-    const gridW=cols*cardW+(cols+1)*margin, gridH=rows*cardH+(rows+1)*margin;
-    CAN.width=Math.floor(gridW*scale); CAN.height=Math.floor(gridH*scale); CTX.setTransform(scale,0,0,scale,0,0);
-    CTX.fillStyle='#0b0b0e'; CTX.fillRect(0,0,gridW,gridH);
-    for(let r=0;r<rows;r++){ for(let c=0;c<cols;c++){ const x=margin+c*(cardW+margin), y=margin+r*(cardH+margin); drawRoundedRect(CTX,x,y,cardW,cardH,24); CTX.fillStyle=color; CTX.fill(); CTX.strokeStyle='#222633'; CTX.lineWidth=2; CTX.stroke(); CTX.save(); CTX.translate(x+cardW/2,y+cardH/2); CTX.fillStyle='#e7e8ea'; CTX.font='bold 40px system-ui'; CTX.textAlign='center'; CTX.textBaseline='middle'; CTX.fillText(label,0,0); CTX.restore(); } }
-  }
-  function download(filename, blobOrText){ const blob = blobOrText instanceof Blob ? blobOrText : new Blob([blobOrText],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
-  function exportJSON(){ download('star_of_ash_deck.json', JSON.stringify(deck,null,2)); }
-  function exportCSV(){ const rows=[]; rows.push(['Section','Card Name','Faction','Card Type','Cost','ATK','HP','Rules Text','Flavor Text'].join(',')); const push=(sec,c)=>rows.push([sec,c.name,c.faction,c.type,c.cost,c.atk,c.hp,(c.text||'').replace(/,/g,';'),(c.flavor||'').replace(/,/g,';')].join(',')); deck.chief.forEach(c=>push('War Chief',c)); deck.main.forEach(c=>push('Main',c)); deck.frags.forEach(c=>push('Fragment',c)); download('star_of_ash_deck.csv', rows.join('\\n')); }
-  function exportNames(){ const out=[]; if (deck.chief[0]) out.push(`# War Chief\\n${deck.chief[0].name}\\n`); out.push(`# Main (${deck.main.length})`); deck.main.forEach(c=>out.push(c.name)); out.push(`\\n# Fragments (${deck.frags.length})`); deck.frags.forEach(c=>out.push(c.name)); download('star_of_ash_deck.txt', out.join('\\n')); }
-
-  // events
-  $('file').addEventListener('change', async e=>{ const f=e.target.files[0]; if(!f) return; const text=await f.text(); allCards = toCards(parseCSV(text)); $('status').textContent = `Loaded ${allCards.length} cards`; renderCards(filtered()); });
-  ['faction','type','text','costMin','costMax'].forEach(id=>$(id).addEventListener('input', ()=>renderCards(filtered())));
-  $('clear').addEventListener('click', ()=>{ ['faction','type','text','costMin','costMax'].forEach(id=>$(id).value=''); renderCards(filtered()); });
-  $('validate').addEventListener('click', validateDeck);
-  $('exportJson').addEventListener('click', exportJSON);
-  $('exportCsv').addEventListener('click', exportCSV);
-  $('exportTxt').addEventListener('click', exportNames);
-  $('renderSheet').addEventListener('click', renderSheet);
-  $('renderBacks').addEventListener('click', renderBacks);
-  $('downloadSheet').addEventListener('click', ()=>CAN.toBlob(b=>download('star_of_ash_cardsheet.png', b),'image/png'));
-})();
+// init
+renderSingle();
 </script>
+</body>
+</html>
