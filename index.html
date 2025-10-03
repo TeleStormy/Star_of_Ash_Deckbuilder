@@ -6,172 +6,677 @@
 <title>Star of Ash — Card/Text Builder</title>
 <style>
   :root{
-    --bg:#0b0d0f; --panel:#14181c; --panel2:#1b2026;
-    --ink:#e6edf3; --muted:#9aa7b2; --accent:#6aa9ff;
-    --ok:#33c48f; --warn:#ffb454; --err:#ff6b6b;
-    --border:#28313a; --card-w:300px; --card-h:420px;
-    --radius:16px;
+    --bg:#0b0d0f;
+    --panel:#14181c;
+    --panel2:#1b2026;
+    --ink:#e6edf3;
+    --muted:#9aa7b2;
+    --accent:#6aa9ff;
+    --ok:#33c48f;
+    --warn:#ffb454;
+    --err:#ff6b6b;
+    --border:#28313a;
+    --card-w: 300px;
+    --card-h: 420px;
+    --radius: 16px;
   }
-  body{margin:0;font-family:sans-serif;background:var(--bg);color:var(--ink)}
-  header{padding:12px 16px;background:#111;border-bottom:1px solid var(--border)}
-  header h1{margin:0;font-size:18px}
-  main{display:grid;grid-template-columns:380px 1fr;gap:16px;padding:16px}
-  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px}
-  .form{padding:14px;display:flex;flex-direction:column;gap:12px}
-  .section{padding-bottom:12px;border-bottom:1px dashed var(--border)}
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+    background: radial-gradient(1200px 800px at 70% -30%, #17202a 0%, var(--bg) 60%) no-repeat fixed;
+    color:var(--ink);
+  }
+  header{
+    display:flex;align-items:center;gap:14px;
+    padding:16px 20px;border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0));
+    position:sticky;top:0;z-index:10;
+  }
+  header h1{margin:0;font-size:18px;letter-spacing:.3px}
+  header .tag{font-size:12px;color:var(--muted);border:1px solid var(--border);padding:2px 8px;border-radius:999px}
+  main{display:grid;grid-template-columns: 380px 1fr;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.25);}
+  .form{padding:16px 14px;display:flex;flex-direction:column;gap:12px;max-height:calc(100dvh - 90px);overflow:auto}
+  .section{padding:12px 12px 10px;border-bottom:1px dashed var(--border)}
   .section:last-child{border-bottom:0}
-  label{font-size:13px;display:block;margin:6px 0 3px}
-  input,select,textarea{width:100%;padding:8px;border-radius:8px;
-    border:1px solid var(--border);background:var(--panel2);color:var(--ink)}
-  textarea{min-height:60px}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-  button{padding:8px 12px;border-radius:8px;border:1px solid var(--border);cursor:pointer}
-  button.primary{background:var(--accent);color:#000}
-  .status{font-size:12px;padding:8px;color:var(--muted)}
+  .section h3{margin:0 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+  label{display:block;font-size:13px;margin-bottom:4px;color:var(--muted)}
+  .help{font-size:12px;color:var(--muted);opacity:.9;margin-top:4px}
+  input[type="text"], input[type="number"], select, textarea{
+    width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--panel2);color:var(--ink);
+    outline:none;
+  }
+  textarea{min-height:72px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+  button{
+    border:1px solid var(--border);background:var(--panel2);color:var(--ink);
+    padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600
+  }
+  button.primary{background:var(--accent);border-color:transparent;color:#0b1320}
+  button.ok{background:var(--ok);border-color:transparent;color:#072018}
+  button.warn{background:var(--warn);border-color:transparent;color:#2a1f00}
+  button.ghost{background:transparent}
+  .workspace{padding:16px}
+  .preview-wrap{display:flex;gap:16px;flex-wrap:wrap}
+  .status{padding:8px 12px;background:#101418;border-top:1px solid var(--border);border-radius:0 0 18px 18px;color:var(--muted);font-size:12px}
+  .footer{padding:14px 16px;color:var(--muted);font-size:12px;text-align:center}
+  canvas{background:#0d1014;border-radius:14px;border:1px solid var(--border)}
+  .danger{color:var(--err)}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted);font-size:11px}
+  .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .hidden{display:none !important}
 </style>
 </head>
 <body>
-<header><h1>⭐ Star of Ash — Card/Text Builder</h1></header>
+<header>
+  <h1>⭐ Star of Ash — Card/Text Builder</h1>
+  <span class="tag">HTML Single-File • No libs</span>
+  <span class="pill">ATK/HP included</span>
+  <span class="pill">Export: Single + Sheet</span>
+</header>
 
 <main>
-  <!-- Left Panel -->
-  <aside class="panel form">
+  <!-- LEFT: FORM -->
+  <aside class="panel form" id="builderForm">
     <div class="section">
-      <h3>Card Info</h3>
-      <label>Name</label><input id="name" type="text" />
+      <h3>Card Identity</h3>
+      <label for="name">Card Name</label>
+      <input id="name" type="text" placeholder="e.g., Ember Vanguard" />
       <div class="row">
-        <div><label>Faction</label>
-          <select id="faction"><option>Flame</option><option>Blood</option><option>Ash</option></select></div>
-        <div><label>Type</label>
-          <select id="ctype"><option>Creature</option><option>Relic</option><option>Sorcery</option></select></div>
+        <div>
+          <label for="faction">Faction</label>
+          <select id="faction">
+            <option>Flame</option>
+            <option>Blood</option>
+            <option>Ash</option>
+            <option>Flame • Blood</option>
+            <option>Flame • Ash</option>
+            <option>Blood • Ash</option>
+            <option disabled>— Future —</option>
+            <option>Sky</option>
+            <option>Stone</option>
+          </select>
+          <div class="help">Affects frame color strip.</div>
+        </div>
+        <div>
+          <label for="ctype">Card Type</label>
+          <select id="ctype">
+            <option>Creature</option>
+            <option>Relic</option>
+            <option>Sorcery</option>
+            <option>War Chief</option>
+          </select>
+          <div class="help">War Chief = commander; cannot attack/defend.</div>
+        </div>
       </div>
       <div class="row3">
-        <div><label>Cost</label><input id="cost" type="number" value="1"></div>
-        <div><label>ATK</label><input id="atk" type="number" value="1"></div>
-        <div><label>HP</label><input id="hp" type="number" value="1"></div>
+        <div>
+          <label for="cost">Cost</label>
+          <input id="cost" type="number" min="0" step="1" value="1" />
+          <div class="help">Single digit economy recommended.</div>
+        </div>
+        <div>
+          <label for="atk">ATK</label>
+          <input id="atk" type="number" min="0" max="9" step="1" value="1" />
+        </div>
+        <div>
+          <label for="hp">HP</label>
+          <input id="hp" type="number" min="0" max="9" step="1" value="1" />
+        </div>
       </div>
-      <label>Mechanics</label><input id="mechanics" type="text">
-      <label>Rules</label><textarea id="rules"></textarea>
-      <label>Flavor</label><textarea id="flavor"></textarea>
-      <label>Rarity</label>
-      <select id="rarity"><option>Common</option><option>Uncommon</option><option>Rare</option><option>Legendary</option></select>
-      <label>Art URL</label><input id="artUrl" type="text">
+    </div>
+
+    <div class="section">
+      <h3>Rules & Flavor</h3>
+      <label for="mechanics">Mechanics (comma-separated)</label>
+      <input id="mechanics" type="text" placeholder="e.g., Surge, Soar, Grasp, Harrow" />
+      <div class="help">Common: Surge (haste), Soar (fly lanes), Grasp (intercept), Harrow (needs 2+ blockers).</div>
+
+      <label for="rules">Rules Text</label>
+      <textarea id="rules" placeholder="Card ability text..."></textarea>
+
+      <label for="flavor">Flavor Text</label>
+      <textarea id="flavor" placeholder="Italicized flavor line..."></textarea>
+    </div>
+
+    <div class="section">
+      <h3>Art & Rarity</h3>
+      <label for="artUrl">Art URL (optional)</label>
+      <input id="artUrl" type="text" placeholder="Paste an image URL (https://...)" />
+      <div class="help">If empty, a subtle gradient fills the art box.</div>
+      <label for="rarity">Rarity</label>
+      <select id="rarity">
+        <option>Common</option>
+        <option>Uncommon</option>
+        <option>Rare</option>
+        <option>Legendary</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <h3>Sheet Layout</h3>
+      <div class="row3">
+        <div>
+          <label for="cols">Columns</label>
+          <input id="cols" type="number" min="1" max="10" value="5" />
+        </div>
+        <div>
+          <label for="rows">Rows</label>
+          <input id="rows" type="number" min="1" max="10" value="4" />
+        </div>
+        <div>
+          <label for="scale">Export Scale</label>
+          <input id="scale" type="number" min="1" max="6" value="2" />
+          <div class="help">Higher = crisper text on export.</div>
+        </div>
+      </div>
+      <div class="row3" style="margin-top:8px">
+        <div>
+          <label for="fontsize">Font Scale</label>
+          <input id="fontsize" type="number" min="0.6" max="1.6" step="0.1" value="1.0" />
+        </div>
+        <div>
+          <label for="cardw">Card W</label>
+          <input id="cardw" type="number" min="200" max="520" value="300" />
+        </div>
+        <div>
+          <label for="cardh">Card H</label>
+          <input id="cardh" type="number" min="300" max="700" value="420" />
+        </div>
+      </div>
+      <div class="help">All boxes are labeled above. These control the exported grid sheet.</div>
     </div>
 
     <div class="section">
       <h3>CSV Import</h3>
       <input id="csvFile" type="file" accept=".csv" />
-      <small>Headers: name,faction,ctype,cost,atk,hp,mechanics,rules,flavor,rarity,artUrl</small>
+      <label class="flex" style="margin-top:8px;align-items:center">
+        <input id="csvClear" type="checkbox" style="width:auto;margin-right:8px"> Clear sheet before import
+      </label>
+      <div class="help">Required headers (any order): <code>name,faction,ctype,cost,atk,hp,mechanics,rules,flavor,rarity,artUrl</code>. Quoted commas are supported.</div>
     </div>
 
-    <div class="section">
-      <h3>Controls</h3>
-      <button id="btnRender" class="primary">Render Preview</button>
-      <button id="btnAdd">Add to Sheet</button>
+    <div class="btns">
+      <button class="primary" id="btnRender">Render Preview</button>
+      <button class="ok" id="btnAdd">Add to Sheet</button>
       <button id="btnClear">Clear Sheet</button>
-      <button id="btnSaveOne">Download Card</button>
-      <button id="btnSaveSheet">Download Sheet</button>
+      <button class="warn" id="btnSaveOne">Download Single PNG</button>
+      <button class="warn" id="btnSaveSheet">Download Sheet PNG</button>
+      <button class="ghost" id="btnSample">Sample Values</button>
     </div>
     <div class="status" id="status">Ready.</div>
   </aside>
 
-  <!-- Right Panel -->
-  <section class="panel" style="padding:12px">
-    <h3>Preview</h3>
-    <canvas id="single" width="300" height="420"></canvas>
-    <h3>Sheet</h3>
-    <canvas id="sheet" width="1000" height="800"></canvas>
+  <!-- RIGHT: WORKSPACE -->
+  <section class="panel workspace">
+    <div class="section">
+      <h3>Live Preview</h3>
+      <div class="preview-wrap">
+        <canvas id="single" width="300" height="420" aria-label="Single card preview"></canvas>
+      </div>
+      <div class="help">If anything breaks, you'll see an error message instead of a blank/white page.</div>
+    </div>
+
+    <div class="section">
+      <h3>Sheet Preview</h3>
+      <canvas id="sheet" width="1540" height="1050" aria-label="Card sheet preview"></canvas>
+      <div class="help">“Add to Sheet” appends copies of the current card. Use Columns/Rows + Scale to adjust export clarity.</div>
+    </div>
+
+    <div class="footer">Build: 2025-10-03 • Single-file HTML • Local-only</div>
   </section>
 </main>
 
 <script>
-// helpers
-const $ = id=>document.getElementById(id);
-const single=$("single"), sheet=$("sheet"), status=$("status");
-let sheetCards=[];
+(function(){
+  const $ = (sel) => document.querySelector(sel);
+  const status = $('#status');
+  const single = $('#single');
+  const sheet = $('#sheet');
+  let sheetCards = []; // stores serialized card objects
 
-function collectCard(){
-  return {
-    name: $("name").value||"Unnamed",
-    faction:$("faction").value,
-    ctype:$("ctype").value,
-    cost:parseInt($("cost").value)||0,
-    atk:parseInt($("atk").value)||0,
-    hp:parseInt($("hp").value)||0,
-    mechanics:$("mechanics").value,
-    rules:$("rules").value,
-    flavor:$("flavor").value,
-    rarity:$("rarity").value,
-    artUrl:$("artUrl").value
-  };
-}
-
-// simple draw
-function drawCard(ctx,card){
-  ctx.fillStyle="#222";ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
-  ctx.fillStyle="#fff";ctx.font="16px sans-serif";
-  ctx.fillText(card.name,10,20);
-  ctx.fillText(card.faction+" "+card.ctype+" Cost:"+card.cost,10,40);
-  ctx.fillText("ATK:"+card.atk+" HP:"+card.hp,10,60);
-  ctx.fillText(card.mechanics,10,90);
-  ctx.fillText(card.rules,10,120);
-  ctx.fillText(card.flavor,10,180);
-}
-
-function renderSingle(){
-  const card=collectCard();
-  drawCard(single.getContext("2d"),card);
-  status.textContent="Preview updated.";
-}
-function addToSheet(){
-  sheetCards.push(collectCard());
-  renderSheet();
-}
-function renderSheet(){
-  const ctx=sheet.getContext("2d");
-  ctx.clearRect(0,0,sheet.width,sheet.height);
-  let x=10,y=20;
-  sheetCards.forEach((c,i)=>{
-    drawCard(ctx,c);
-    ctx.translate(0,150);
+  // prevent "white screen": global error handler
+  window.addEventListener('error', (e)=>{
+    status.textContent = 'Script error: ' + (e.message || e.error || 'Unknown');
+    status.classList.add('danger');
+    console.error(e);
   });
-  status.textContent="Sheet rendered with "+sheetCards.length+" cards.";
-}
-function clearSheet(){sheetCards=[];renderSheet();status.textContent="Cleared."}
-function saveCanvasPNG(cnv,name){
-  const a=document.createElement("a");
-  a.download=name;a.href=cnv.toDataURL();a.click();
-}
 
-// CSV upload
-$("csvFile").addEventListener("change", e=>{
-  const file=e.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    const rows=reader.result.trim().split(/\r?\n/).map(r=>r.split(","));
-    const headers=rows.shift().map(h=>h.trim());
-    rows.forEach(r=>{
-      let c={};headers.forEach((h,i)=>c[h]=r[i]);
-      c.cost=parseInt(c.cost)||0;c.atk=parseInt(c.atk)||0;c.hp=parseInt(c.hp)||0;
-      sheetCards.push(c);
-    });
+  function factionColor(f){
+    const base = {
+      'Flame':'#e2583e',
+      'Blood':'#c4334e',
+      'Ash':'#7b8a97',
+      'Sky':'#35a2d7',
+      'Stone':'#7b6a51'
+    };
+    if (f.includes('•')) return '#b084ff'; // multi-faction accent
+    return base[f] || '#6aa9ff';
+  }
+
+  function clampInt(v, mn, mx){
+    v = parseInt(v,10); if (isNaN(v)) v = mn;
+    return Math.max(mn, Math.min(mx, v));
+  }
+  function clampNum(v, mn, mx){
+    v = parseFloat(v); if (isNaN(v)) v = mn;
+    return Math.max(mn, Math.min(mx, v));
+  }
+
+  function collectCard(){
+    const name = $('#name').value.trim() || 'Unnamed';
+    const faction = $('#faction').value;
+    const ctype = $('#ctype').value;
+    const cost = clampInt($('#cost').value, 0, 99);
+    const atk = clampInt($('#atk').value, 0, 9);
+    const hp = clampInt($('#hp').value, 0, 99);
+    const mechanics = $('#mechanics').value.trim();
+    const rules = $('#rules').value.trim();
+    const flavor = $('#flavor').value.trim();
+    const artUrl = $('#artUrl').value.trim();
+    const rarity = $('#rarity').value;
+
+    const fontsize = clampNum($('#fontsize').value, .6, 2);
+    const w = clampInt($('#cardw').value, 200, 800);
+    const h = clampInt($('#cardh').value, 280, 1000);
+
+    return {name, faction, ctype, cost, atk, hp, mechanics, rules, flavor, artUrl, rarity, fontsize, w, h};
+  }
+
+  function setCanvasSize(c, w, h){
+    c.width = w; c.height = h;
+    c.style.width = w + 'px'; c.style.height = h + 'px';
+  }
+
+  function drawCard(ctx, card, scale=1){
+    const W = Math.round(card.w * scale);
+    const H = Math.round(card.h * scale);
+    const r = Math.round(16 * scale);
+    // clear
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    // bg
+    roundRect(ctx, 0,0, W,H, r, '#0d1014', true);
+    // inner
+    roundRect(ctx, 6*scale,6*scale, W-12*scale, H-12*scale, r-6*scale, '#12171c', true, '#27313b');
+
+    // top strip color from faction
+    const strip = factionColor(card.faction);
+    roundRect(ctx, 6*scale, 6*scale, W-12*scale, 26*scale, r-6*scale, strip, true);
+
+    // name + cost row
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `${Math.round(14*card.fontsize*scale)}px ui-sans-serif, system-ui, -apple-system, Segoe UI`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillText(card.name, 16*scale, 19*scale);
+    // cost pill
+    const costText = String(card.cost ?? '');
+    const costW = Math.max(28*scale, ctx.measureText(costText).width + 16*scale);
+    const cx = W - (16*scale) - costW;
+    roundRect(ctx, cx, 9*scale, costW, 20*scale, 10*scale, 'rgba(0,0,0,.35)', true);
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign='center';
+    ctx.fillText(costText, cx + costW/2, 19*scale);
+    ctx.restore();
+
+    // art box
+    const artX = 14*scale, artY = 40*scale;
+    const artW = W - 28*scale, artH = Math.round(H*0.40);
+    roundRect(ctx, artX, artY, artW, artH, 10*scale, '#10141a', true, '#2a3139');
+
+    // gradient placeholder (art is drawn later in renderSingle if URL provided)
+    const g = ctx.createLinearGradient(0, artY, 0, artY+artH);
+    g.addColorStop(0, 'rgba(106,169,255,0.15)');
+    g.addColorStop(1, 'rgba(53,84,119,0.15)');
+    ctx.fillStyle = g;
+    ctx.fillRect(artX, artY, artW, artH);
+
+    // type + rarity
+    ctx.save();
+    ctx.fillStyle = '#9fb3c8';
+    ctx.font = `${Math.round(12*card.fontsize*scale)}px ui-sans-serif, system-ui`;
+    ctx.textAlign = 'left';
+    ctx.fillText(`${card.ctype} • ${card.rarity} • ${card.faction}`, 16*scale, artY + artH + 16*scale);
+    ctx.restore();
+
+    // rules box
+    const boxX = 14*scale, boxY = artY + artH + 24*scale;
+    const boxW = W - 28*scale, boxH = Math.round(H*0.26);
+    roundRect(ctx, boxX, boxY, boxW, boxH, 10*scale, '#0f1318', true, '#26303a');
+
+    // mechanics line
+    ctx.save();
+    ctx.fillStyle = '#bcd0e6';
+    ctx.font = `italic ${Math.round(12*card.fontsize*scale)}px ui-sans-serif, system-ui`;
+    wrapText(ctx, card.mechanics, boxX+10*scale, boxY+14*scale, boxW-20*scale, Math.round(14*card.fontsize*scale), 2);
+    ctx.restore();
+
+    // rules
+    ctx.save();
+    ctx.fillStyle = '#e6edf3';
+    ctx.font = `${Math.round(12*card.fontsize*scale)}px ui-sans-serif, system-ui`;
+    const rulesTop = boxY + 32*scale;
+    wrapText(ctx, card.rules, boxX+10*scale, rulesTop, boxW-20*scale, Math.round(14*card.fontsize*scale), 8);
+    ctx.restore();
+
+    // flavor
+    ctx.save();
+    ctx.fillStyle = '#9fb3c8';
+    ctx.font = `italic ${Math.round(11*card.fontsize*scale)}px ui-sans-serif, system-ui`;
+    const flavorTop = boxY + boxH - 12*scale;
+    const flavorMaxW = boxW - 20*scale;
+    const clipped = clipText(ctx, `“${card.flavor}”`, flavorMaxW);
+    ctx.textAlign='right';
+    ctx.fillText(clipped, boxX + boxW - 10*scale, flavorTop);
+    ctx.restore();
+
+    // ATK / HP plate (bottom)
+    const plateW = 88*scale, plateH = 32*scale;
+    const px = W - (plateW + 16*scale);
+    const py = H - (plateH + 14*scale);
+    roundRect(ctx, px, py, plateW, plateH, 10*scale, 'rgba(0,0,0,.35)', true, '#33404d');
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.font = `bold ${Math.round(14*card.fontsize*scale)}px ui-sans-serif, system-ui`;
+    ctx.fillText(`ATK ${card.atk}  |  HP ${card.hp}`, px + plateW/2, py + plateH/2);
+    ctx.restore();
+  }
+
+  function roundRect(ctx, x,y,w,h,r, fill, stroke='#000'){
+    ctx.save();
+    ctx.beginPath();
+    const rr = Math.min(r, w/2, h/2);
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y, x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x, y+h, rr);
+    ctx.arcTo(x, y+h, x, y, rr);
+    ctx.arcTo(x, y, x+w, y, rr);
+    ctx.closePath();
+    if (fill){ ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+    ctx.restore();
+  }
+
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines){
+    if (!text){ return; }
+    const words = String(text).split(/\s+/);
+    let line = '', lines = 0;
+    for (let n=0;n<words.length;n++){
+      const test = line ? line + ' ' + words[n] : words[n];
+      const w = ctx.measureText(test).width;
+      if (w > maxWidth && line){
+        ctx.fillText(line, x, y);
+        line = words[n];
+        y += lineHeight;
+        lines++;
+        if (maxLines && lines >= maxLines-1){
+          const tail = clipText(ctx, words.slice(n).join(' '), maxWidth);
+          ctx.fillText(tail, x, y);
+          return;
+        }
+      } else {
+        line = test;
+      }
+    }
+    if (line) ctx.fillText(line, x, y);
+  }
+
+  function clipText(ctx, text, maxWidth){
+    if (!text) return '';
+    let t = String(text);
+    if (ctx.measureText(t).width <= maxWidth) return t;
+    while (t.length && ctx.measureText(t + '…').width > maxWidth){
+      t = t.slice(0, -1);
+    }
+    return t + '…';
+  }
+
+  async function renderSingle(){
+    const card = collectCard();
+    setCanvasSize(single, card.w, card.h);
+    const ctx = single.getContext('2d');
+    drawCard(ctx, card, 1);
+
+    // draw art if provided (best-effort, async)
+    if (card.artUrl){
+      try{
+        const img = await loadImage(card.artUrl);
+        const artX = 14, artY = 40;
+        const artW = single.width - 28, artH = Math.round(single.height*0.40);
+        ctx.save();
+        // contain image
+        const ratio = Math.min(artW/img.naturalWidth, artH/img.naturalHeight);
+        const w = img.naturalWidth * ratio, h = img.naturalHeight * ratio;
+        const ox = artX + (artW - w)/2, oy = artY + (artH - h)/2;
+        ctx.drawImage(img, ox, oy, w, h);
+        ctx.restore();
+      }catch(err){
+        console.warn('Art failed to load:', err);
+      }
+    }
+    status.textContent = 'Preview rendered.';
+    status.classList.remove('danger');
+  }
+
+  function addToSheet(){
+    const card = collectCard();
+    sheetCards.push(card);
     renderSheet();
-    status.textContent="Imported "+rows.length+" cards from CSV.";
-  };
-  reader.readAsText(file);
-});
+    status.textContent = `Added to sheet • ${sheetCards.length} card(s).`;
+  }
 
-// buttons
-$("btnRender").onclick=renderSingle;
-$("btnAdd").onclick=addToSheet;
-$("btnClear").onclick=clearSheet;
-$("btnSaveOne").onclick=()=>saveCanvasPNG(single,"card.png");
-$("btnSaveSheet").onclick=()=>saveCanvasPNG(sheet,"sheet.png");
+  function clearSheet(){
+    sheetCards = [];
+    const ctx = sheet.getContext('2d');
+    ctx.clearRect(0,0,sheet.width, sheet.height);
+    status.textContent = 'Sheet cleared.';
+  }
 
-// init
-renderSingle();
+  function buildSheetCanvasSize(cols, rows, cardW, cardH, gutter=10){
+    const w = cols*cardW + (cols+1)*gutter;
+    const h = rows*cardH + (rows+1)*gutter;
+    setCanvasSize(sheet, w, h);
+    return {w,h,gutter};
+  }
+
+  async function renderSheet(){
+    const cols = clampInt($('#cols').value, 1, 10);
+    const rows = clampInt($('#rows').value, 1, 10);
+    const scale = clampInt($('#scale').value, 1, 6);
+
+    const cardW = clampInt($('#cardw').value, 200, 800);
+    const cardH = clampInt($('#cardh').value, 280, 1000);
+
+    const {w,h,gutter} = buildSheetCanvasSize(cols, rows, cardW, cardH, 12);
+    const ctx = sheet.getContext('2d');
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = '#0d1116';
+    ctx.fillRect(0,0,w,h);
+
+    let i = 0;
+    for (let r=0; r<rows; r++){
+      for (let c=0; c<cols; c++){
+        const card = sheetCards[i] || collectCard(); // if not enough, repeat current
+        const x = gutter + c*(cardW+gutter);
+        const y = gutter + r*(cardH+gutter);
+
+        // draw into an offscreen for crispness, then blit
+        const off = document.createElement('canvas');
+        off.width = cardW*scale; off.height = cardH*scale;
+        const octx = off.getContext('2d');
+        drawCard(octx, {...card, w:cardW, h:cardH}, scale);
+        // (Art drawing skipped on sheet for performance)
+        ctx.drawImage(off, x, y, cardW, cardH);
+        i++;
+      }
+    }
+    status.textContent = `Sheet rendered (${cols}×${rows}) with ${sheetCards.length} card(s) queued.`;
+  }
+
+  async function saveCanvasPNG(cnv, filename){
+    const a = document.createElement('a');
+    a.download = filename;
+    a.href = cnv.toDataURL('image/png');
+    a.click();
+  }
+
+  function sampleFill(){
+    $('#name').value = 'Ember Vanguard';
+    $('#faction').value = 'Flame';
+    $('#ctype').value = 'Creature';
+    $('#cost').value = 3;
+    $('#atk').value = 4;
+    $('#hp').value = 3;
+    $('#mechanics').value = 'Surge — This can attack the turn it enters. Harrow — Must be blocked by two or more.';
+    $('#rules').value = 'When Ember Vanguard enters the field, it deals 1 damage to an opposing creature. If blocked by 2+, it gains +1 ATK this combat.';
+    $('#flavor').value = '“In ash, we begin; in flame, we rise.”';
+    $('#rarity').value = 'Uncommon';
+  }
+
+  // -------- CSV SUPPORT --------
+  // robust CSV -> array of rows (array of strings), supports quotes and commas inside quotes
+  function parseCSV(text){
+    const rows = [];
+    let i=0, field='', row=[], inQuotes=false;
+    while (i < text.length){
+      const ch = text[i];
+      if (inQuotes){
+        if (ch === '"'){
+          if (text[i+1] === '"'){ field += '"'; i+=2; continue; } // escaped quote
+          inQuotes = false; i++; continue;
+        } else { field += ch; i++; continue; }
+      } else {
+        if (ch === '"'){ inQuotes = true; i++; continue; }
+        if (ch === ','){ row.push(field); field=''; i++; continue; }
+        if (ch === '\r'){ i++; continue; }
+        if (ch === '\n'){ row.push(field); rows.push(row); field=''; row=[]; i++; continue; }
+        field += ch; i++; continue;
+      }
+    }
+    row.push(field); rows.push(row);
+    // trim trailing empty lines
+    return rows.filter(r => r.length > 1 || (r.length === 1 && r[0].trim() !== ''));
+  }
+
+  function normalizeHeader(h){
+    return String(h||'').trim().toLowerCase();
+  }
+
+  function csvToCards(csvText){
+    const rows = parseCSV(csvText);
+    if (!rows.length) return [];
+    const header = rows[0].map(normalizeHeader);
+    const idx = {};
+    const needed = ['name','faction','ctype','cost','atk','hp','mechanics','rules','flavor','rarity','arturl'];
+    needed.forEach(k=> idx[k] = header.indexOf(k));
+    // name is mandatory
+    if (idx['name'] === -1){
+      throw new Error('CSV missing required header: name');
+    }
+    const out = [];
+    for (let r=1; r<rows.length; r++){
+      const raw = rows[r];
+      const get = (k)=> {
+        const j = idx[k];
+        return j>=0 ? (raw[j] ?? '').trim() : '';
+      };
+      const card = {
+        name: get('name') || 'Unnamed',
+        faction: get('faction') || 'Ash',
+        ctype: get('ctype') || 'Creature',
+        cost: parseInt(get('cost'))||0,
+        atk: parseInt(get('atk'))||0,
+        hp: parseInt(get('hp'))||0,
+        mechanics: get('mechanics'),
+        rules: get('rules'),
+        flavor: get('flavor'),
+        rarity: get('rarity') || 'Common',
+        artUrl: get('arturl'),
+        fontsize: clampNum($('#fontsize').value, .6, 2),
+        w: clampInt($('#cardw').value, 200, 800),
+        h: clampInt($('#cardh').value, 280, 1000),
+      };
+      out.push(card);
+    }
+    return out;
+  }
+
+  // -------- Event wiring --------
+  function attach(){
+    $('#btnRender').addEventListener('click', (e)=>{e.preventDefault(); renderSingle();});
+    $('#btnAdd').addEventListener('click', (e)=>{e.preventDefault(); addToSheet();});
+    $('#btnClear').addEventListener('click', (e)=>{e.preventDefault(); clearSheet();});
+    $('#btnSaveOne').addEventListener('click', (e)=>{e.preventDefault(); renderSingle().then(()=>saveCanvasPNG(single, 'card.png'));});
+    $('#btnSaveSheet').addEventListener('click', (e)=>{e.preventDefault(); renderSheet().then(()=>saveCanvasPNG(sheet, 'sheet.png'));});
+    $('#btnSample').addEventListener('click', (e)=>{e.preventDefault(); sampleFill(); renderSingle();});
+
+    // Live size updates
+    ['cardw','cardh'].forEach(id=>{
+      document.getElementById(id).addEventListener('change', ()=>{
+        const card = collectCard();
+        setCanvasSize(single, card.w, card.h);
+        renderSingle();
+      });
+    });
+
+    // CSV import
+    $('#csvFile').addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        try{
+          const text = String(reader.result || '');
+          const cards = csvToCards(text);
+          if ($('#csvClear').checked) sheetCards = [];
+          sheetCards.push(...cards);
+          renderSheet();
+          status.textContent = `Imported ${cards.length} card(s) from CSV. Sheet now has ${sheetCards.length}.`;
+          status.classList.remove('danger');
+        }catch(err){
+          status.textContent = 'CSV error: ' + (err.message || err);
+          status.classList.add('danger');
+          console.error(err);
+        }
+      };
+      reader.onerror = ()=>{
+        status.textContent = 'CSV read error.';
+        status.classList.add('danger');
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  function loadImage(url){
+    return new Promise((resolve, reject)=>{
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = ()=>resolve(img);
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  // init
+  try{
+    attach();
+    const card = collectCard();
+    setCanvasSize(single, card.w, card.h);
+    renderSingle();
+    renderSheet();
+  }catch(err){
+    status.textContent = 'Init error: ' + (err.message || err);
+    status.classList.add('danger');
+    console.error(err);
+  }
+})();
 </script>
 </body>
 </html>
