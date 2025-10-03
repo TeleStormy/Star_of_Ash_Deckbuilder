@@ -1,153 +1,617 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vandals Bath</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #4A2E1E;
-      color: #FDF5E6;
-    }
-    header {
-      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-                  url('https://i.ibb.co/9gHp3TP/bathhouse-bg.jpg') center/cover no-repeat;
-      text-align: center;
-      padding: 100px 20px;
-    }
-    header h1 {
-      font-size: 3em;
-      color: #FDF5E6;
-      margin-bottom: 10px;
-    }
-    header p {
-      font-size: 1.2em;
-      color: #DAA520;
-      margin-bottom: 20px;
-    }
-    header a {
-      background: #8B0000;
-      padding: 12px 25px;
-      color: #FDF5E6;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    section {
-      padding: 60px 20px;
-      max-width: 900px;
-      margin: auto;
-    }
-    section h2 {
-      color: #DAA520;
-      margin-bottom: 20px;
-    }
-    .columns {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-    .column {
-      flex: 1;
-      min-width: 250px;
-      background: rgba(0,0,0,0.3);
-      padding: 20px;
-      border-radius: 12px;
-    }
-    footer {
-      background: #2B1A12;
-      text-align: center;
-      padding: 20px;
-      font-size: 0.9em;
-    }
-    footer a {
-      color: #DAA520;
-      margin: 0 8px;
-      text-decoration: none;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Star of Ash — Deck Builder + Sheet Exporter</title>
+<style>
+  :root { --bg:#0f0f13; --panel:#171923; --muted:#9aa0ac; --text:#e7e8ea; --accent:#b389ff; --ok:#6dd37a; --warn:#ffb84d; --bad:#ff6b6b; }
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+  header{padding:16px 20px;border-bottom:1px solid #222;display:flex;gap:16px;align-items:center;position:sticky;top:0;background:rgba(15,15,19,.95);backdrop-filter:saturate(140%) blur(6px)}
+  header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.4px}
+  .btn{padding:8px 12px;border-radius:10px;border:1px solid #2a2d3a;background:#1d2030;color:var(--text);cursor:pointer}
+  .btn:hover{border-color:#3a3f52}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#0e061a;font-weight:700}
+  .layout{display:grid;grid-template-columns:320px 1fr 360px;gap:16px;padding:16px}
+  .panel{background:var(--panel);border:1px solid #222633;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+  .panel h2{margin:0;padding:12px 14px;border-bottom:1px solid #23283a;font-size:13px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
+  .panel .body{padding:12px;display:flex;flex-direction:column;gap:10px;min-height:0}
+  input,select{background:#141722;border:1px solid #2a2d3a;color:var(--text);border-radius:10px;padding:8px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .cards{overflow:auto;min-height:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+  .card{background:#141722;border:1px solid #252a3a;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
+  .tag{font-size:11px;color:#b7bdc9;background:#1e2230;border:1px solid #2a2f43;border-radius:999px;padding:2px 8px;margin-right:6px}
+  .name{font-weight:700}
+  .muted{color:var(--muted)}
+  .deckcol{display:flex;flex-direction:column;gap:10px;min-height:0}
+  .list{overflow:auto;min-height:140px;border:1px dashed #2c3144;border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:6px}
+  .li{display:flex;justify-content:space-between;gap:8px;border:1px solid #2a2d3a;background:#111421;border-radius:10px;padding:8px}
+  .counts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .pill{padding:6px 8px;border-radius:999px;text-align:center;background:#141722;border:1px solid #2a2d3a}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+  footer{padding:12px 16px;border-top:1px solid #222633;display:flex;gap:8px;justify-content:flex-end}
+  .small{font-size:12px}
+  canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:12px}
+</style>
 </head>
 <body>
+<header>
+  <h1>Star of Ash — Deck Builder + Sheet Exporter</h1>
+  <label class="btn">
+    Import Cards (CSV)
+    <input id="file" type="file" accept=".csv" hidden />
+  </label>
+  <button id="exportJson" class="btn">Export Deck (JSON)</button>
+  <button id="exportCsv" class="btn">Export Deck (CSV)</button>
+  <button id="exportTxt" class="btn">Export Names (TXT)</button>
+  <div class="small muted" id="status">No card file loaded</div>
+</header>
 
-  <!-- Hero Section -->
-  <header>
-    <h1>Vandals Bath</h1>
-    <p>An Eastern-inspired bath house experience in Final Fantasy XIV</p>
-    <a href="YOUR_DISCORD_LINK_HERE" target="_blank">Join Our Discord</a>
-  </header>
-
-  <!-- About Section -->
-  <section>
-    <h2>Welcome to Vandals Bath</h2>
-    <p>
-      A soothing retreat in Eorzea blending Eastern tradition with natural serenity.  
-      Relax in our signature bath house, enjoy drinks at our full bar, or join in on our nightly entertainment.  
-      Our atmosphere is designed with a warm red and walnut theme, creating an inviting space for both adventurers and wanderers alike.  
-    </p>
-  </section>
-
-  <!-- Bar & Entertainment Section -->
-  <section>
-    <h2>Bar & Entertainment</h2>
-    <div class="columns">
-      <div class="column">
-        <h3>🍹 Full Bar Experience</h3>
-        <p>Our bartenders serve exotic cocktails, traditional ales, and refreshing teas. Whether you’re looking for a quiet drink or a lively toast, Vandals Bath has something for every taste.</p>
+<div class="layout">
+  <!-- Filters -->
+  <section class="panel">
+    <h2>Filters</h2>
+    <div class="body">
+      <div class="grid">
+        <select id="faction">
+          <option value="">All Factions</option>
+          <option>Flame</option>
+          <option>Blood</option>
+          <option>Ash</option>
+          <option>Flame/Blood</option>
+          <option>Blood/Ash</option>
+          <option>Flame/Ash</option>
+        </select>
+        <select id="type">
+          <option value="">All Types</option>
+          <option>Creature</option>
+          <option>Spell</option>
+          <option>Relic</option>
+          <option>War Chief</option>
+          <option>Fragment</option>
+        </select>
+        <input id="text" placeholder="Search name or rules…" />
+        <input id="costMin" type="number" min="0" placeholder="Min Cost" />
+        <input id="costMax" type="number" min="0" placeholder="Max Cost" />
       </div>
-      <div class="column">
-        <h3>🎭 Live Fun Every Night</h3>
-        <ul>
-          <li>🎶 Open stage for bards</li>
-          <li>♠️ Blackjack tables</li>
-          <li>🍺 New mini-game coming soon: Flip Cup</li>
-        </ul>
+      <div class="row">
+        <button id="clear" class="btn">Clear Filters</button>
+        <div class="small muted" id="results"></div>
       </div>
+    </div>
+
+    <h2>Card Sheet Exporter</h2>
+    <div class="body">
+      <div class="grid">
+        <select id="sheetSource">
+          <option value="all">All Deck Sections</option>
+          <option value="main">Main Only</option>
+          <option value="frags">Fragments Only</option>
+          <option value="chief">War Chief Only</option>
+        </select>
+        <input id="setCode" placeholder="Set code (optional)" />
+        <input id="rows" type="number" min="1" value="7" />
+        <input id="cols" type="number" min="1" value="10" />
+        <input id="cardW" type="number" min="100" value="744" />
+        <input id="cardH" type="number" min="140" value="1038" />
+        <input id="bleed" type="number" min="0" value="36" />
+        <input id="margin" type="number" min="0" value="24" />
+        <input id="scale" type="number" min="1" value="1" />
+      </div>
+      <div class="small muted">
+        Tips: cardW×cardH in px (e.g., 744×1038 ~ 2.48″×3.46″ @300dpi). Bleed adds to the draw area border. Scale multiplies output resolution.
+      </div>
+      <div class="row">
+        <button id="renderSheet" class="btn primary">Render Card Sheet</button>
+        <button id="downloadSheet" class="btn">Download PNG</button>
+        <button id="renderBacks" class="btn">Render Back Sheet</button>
+        <input id="backLabel" placeholder="Back label (e.g., Star of Ash)" />
+        <input id="backColor" type="color" value="#0b0b0e" />
+      </div>
+      <canvas id="sheet" width="0" height="0"></canvas>
     </div>
   </section>
 
-  <!-- Atmosphere Section -->
-  <section style="background:#8B0000; border-radius:12px;">
-    <h2 style="text-align:center;">🌸 Atmosphere</h2>
-    <p style="text-align:center; font-style:italic;">
-      "A sanctuary of relaxation and joy — where Eastern elegance meets natural harmony."
-    </p>
+  <!-- Card Browser -->
+  <section class="panel">
+    <h2>Cards</h2>
+    <div class="body" style="min-height:400px">
+      <div class="cards" id="cards"></div>
+    </div>
   </section>
 
-  <!-- Events Section -->
-  <section>
-    <h2>Upcoming Events</h2>
-    <ul>
-      <li><strong>Friday Nights</strong> – Blackjack Tournaments</li>
-      <li><strong>Saturday Nights</strong> – Bard Performances on Open Stage</li>
-      <li><strong>Coming Soon</strong> – Flip Cup mini-game launch</li>
-    </ul>
+  <!-- Deck Builder -->
+  <section class="panel">
+    <h2>Deck</h2>
+    <div class="body deckcol">
+      <div class="counts">
+        <div class="pill" id="countMain">Main: 0 / 45</div>
+        <div class="pill" id="countFrags">Fragments: 0 / 20</div>
+        <div class="pill" id="countChief">War Chiefs: 0 / 1</div>
+      </div>
+      <div class="small muted">Main Deck (singleton, 45 cards)</div>
+      <div class="list" id="mainList"></div>
+      <div class="small muted">Fragment Deck (20 cards)</div>
+      <div class="list" id="fragList"></div>
+      <div class="small muted">War Chief (exactly 1)</div>
+      <div class="list" id="chiefList"></div>
+      <footer>
+        <button id="validate" class="btn primary">Validate Deck</button>
+        <div id="validationMsg" class="small"></div>
+      </footer>
+    </div>
   </section>
+</div>
 
-  <!-- Location Section -->
-  <section>
-    <h2>Where to Find Us</h2>
-    <p>
-      🌍 World: <strong>Adamantoise (Aether)</strong><br>
-      🏠 Venue: Vandals Bath<br>
-      📍 Ward/Plot: (Details Coming Soon)
-    </p>
-  </section>
+<script>
+(() => {
+  // ====== STATE ======
+  let allCards = [];  // parsed from CSV
+  const deck = { main: [], frags: [], chief: [] };
 
-  <!-- Call to Action -->
-  <section style="text-align:center; background:#2B1A12; border-radius:12px;">
-    <h2>Step into Vandals Bath</h2>
-    <p>Your retreat from the grind.</p>
-    <a href="YOUR_DISCORD_LINK_HERE" target="_blank">Join Our Discord</a>
-  </section>
+  // ====== CSV PARSER ======
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], cell = '', inQuotes = false;
+    for (let i=0;i<text.length;i++){
+      const c = text[i], n = text[i+1];
+      if (c === '"' && inQuotes && n === '"'){ cell+='"'; i++; continue; }
+      if (c === '"'){ inQuotes = !inQuotes; continue; }
+      if (c === ',' && !inQuotes){ row.push(cell.trim()); cell=''; continue; }
+      if ((c === '\n' || c === '\r') && !inQuotes){
+        if (cell.length || row.length){ row.push(cell.trim()); rows.push(row); row=[]; cell=''; }
+        continue;
+      }
+      cell += c;
+    }
+    if (cell.length || row.length){ row.push(cell.trim()); rows.push(row); }
+    return rows.filter(r=>r.length>0);
+  }
+  function normalizeHeaders(h) { return h.map(x => x.toLowerCase().replace(/\s+/g,' ').trim()); }
+  function toCards(rows) {
+    const headers = normalizeHeaders(rows[0]);
+    const idx = (name) => headers.indexOf(name);
+    const get = (r, name) => r[idx(name)] ?? '';
+    const out = [];
+    for (let i=1;i<rows.length;i++){
+      const r = rows[i];
+      if (!r.length) continue;
+      out.push({
+        name: get(r, 'card name'),
+        faction: get(r, 'faction'),
+        type: get(r, 'card type'),
+        cost: get(r, 'cost'),
+        atk: get(r, 'atk'),
+        hp: get(r, 'hp'),
+        text: get(r, 'rules text'),
+        flavor: get(r, 'flavor text')
+      });
+    }
+    return out.filter(c => c.name);
+  }
 
-  <!-- Footer -->
-  <footer>
-    © Vandals Bath - An FFXIV Venue | 
-    <a href="YOUR_DISCORD_LINK_HERE" target="_blank">Discord</a> |
-    <a href="#">Lodestone</a>
-  </footer>
+  // ====== UI HELPERS ======
+  const $ = (id)=>document.getElementById(id);
+  const cardsEl = $('cards'), mainList = $('mainList'), fragList = $('fragList'), chiefList = $('chiefList');
 
+  function renderCards(list){
+    cardsEl.innerHTML = '';
+    list.forEach(c=>{
+      const el = document.createElement('div');
+      el.className='card';
+      const costNum = parseCostNumber(c.cost);
+      el.innerHTML = `
+        <div class="row"><span class="name">${escapeHtml(c.name)}</span></div>
+        <div class="row"><span class="tag">${c.faction||'—'}</span><span class="tag">${c.type||'—'}</span><span class="tag">Cost: ${c.cost||'—'}</span></div>
+        <div class="muted small">${escapeHtml(c.text||'')}</div>
+        <div class="row" style="margin-top:6px;gap:6px;">
+          <button class="btn" data-add="main">+ Main</button>
+          <button class="btn" data-add="frag">+ Fragment</button>
+          <button class="btn" data-add="chief">Set Chief</button>
+          <div class="small muted" style="margin-left:auto">${Number.isFinite(costNum)?('Est Cost: '+costNum):''}</div>
+        </div>`;
+      el.querySelectorAll('button').forEach(b=>{
+        b.addEventListener('click',()=>{
+          if (b.dataset.add === 'main') addToDeck('main', c);
+          if (b.dataset.add === 'frag') addToDeck('frags', c);
+          if (b.dataset.add === 'chief') setChief(c);
+          updateCounts();
+        });
+      });
+      cardsEl.appendChild(el);
+    });
+    $('results').textContent = `${list.length} results`;
+  }
+
+  function renderDeckList(container, list, bucket){
+    container.innerHTML='';
+    list.forEach((c,i)=>{
+      const li = document.createElement('div');
+      li.className='li';
+      const right = document.createElement('div');
+      right.innerHTML = `<button class="btn" data-remove="${bucket}" data-idx="${i}">Remove</button>`;
+      li.innerHTML = `<div><div class="name">${escapeHtml(c.name)}</div><div class="small muted">${escapeHtml(c.faction||'')} • ${escapeHtml(c.type||'')} • Cost ${escapeHtml(c.cost||'—')}</div></div>`;
+      li.appendChild(right);
+      container.appendChild(li);
+    });
+    container.querySelectorAll('button[data-remove]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const b = btn.dataset.remove, ix = +btn.dataset.idx;
+        deck[b].splice(ix,1);
+        renderAll();
+      });
+    });
+  }
+
+  function renderAll(){
+    renderDeckList(mainList, deck.main, 'main');
+    renderDeckList(fragList, deck.frags, 'frags');
+    renderDeckList(chiefList, deck.chief, 'chief');
+    updateCounts();
+  }
+
+  function updateCounts(){
+    $('countMain').textContent = `Main: ${deck.main.length} / 45`;
+    $('countFrags').textContent = `Fragments: ${deck.frags.length} / 20`;
+    $('countChief').textContent = `War Chiefs: ${deck.chief.length} / 1`;
+  }
+
+  function addToDeck(bucket, card){
+    const t = (card.type||'').toLowerCase();
+    if (bucket==='frags' && !/fragment/.test(t)){ toast('Only Fragment cards belong in the Fragment deck.'); return; }
+    if (bucket==='main' && /fragment/.test(t)){ toast('Fragments belong in the Fragment deck.'); return; }
+
+    if (bucket==='main'){
+      if (deck.main.some(x=>x.name===card.name)){ toast('Singleton rule: that card is already in Main.'); return; }
+      if (deck.main.length>=45){ toast('Main deck is already at 45.'); return; }
+      deck.main.push(card);
+    }
+    else if (bucket==='frags'){
+      if (deck.frags.length>=20){ toast('Fragment deck is already at 20.'); return; }
+      deck.frags.push(card);
+    }
+    renderAll();
+  }
+  function setChief(card){
+    if (!/war\s*chief/i.test(card.type||'')){ toast('Selected card is not a War Chief.'); return; }
+    deck.chief = [card];
+    renderAll();
+  }
+
+  function validateDeck(){
+    const msgs = [];
+    if (deck.main.length!==45) msgs.push(`Main must be 45 (current ${deck.main.length}).`);
+    if (deck.frags.length!==20) msgs.push(`Fragments must be 20 (current ${deck.frags.length}).`);
+    if (deck.chief.length!==1) msgs.push(`Exactly 1 War Chief required (current ${deck.chief.length}).`);
+    const names = deck.main.map(c=>c.name);
+    const dup = names.find((n,i)=>names.indexOf(n)!==i);
+    if (dup) msgs.push(`Singleton violated: duplicate ${dup}.`);
+    const el = $('validationMsg');
+    if (!msgs.length){ el.textContent = '✓ Deck is valid.'; el.className='small ok'; }
+    else { el.textContent = '⚠ ' + msgs.join(' '); el.className='small warn'; }
+  }
+
+  // ====== FILTERING ======
+  function parseCostNumber(costStr){
+    if (!costStr) return NaN;
+    const digits = [...costStr.matchAll(/\d+/g)].map(m=>+m[0]);
+    const symbols = [...costStr.matchAll(/[🔥🩸🕯️]/g)].length;
+    return (digits.reduce((a,b)=>a+b,0)) + symbols;
+  }
+  function filtered(){
+    const f = $('faction').value.trim().toLowerCase();
+    const t = $('type').value.trim().toLowerCase();
+    const q = $('text').value.trim().toLowerCase();
+    const cmin = $('costMin').value ? +$('costMin').value : -Infinity;
+    const cmax = $('costMax').value ? +$('costMax').value : +Infinity;
+    return allCards.filter(c=>{
+      if (f && (c.faction||'').toLowerCase()!==f) return false;
+      if (t){
+        const ct = (c.type||'').toLowerCase();
+        const matchType = t==='war chief' ? /war\s*chief/.test(ct)
+                          : t==='fragment' ? /fragment/.test(ct)
+                          : ct.startsWith(t);
+        if (!matchType) return false;
+      }
+      if (q){
+        const blob = `${c.name} ${c.type} ${c.faction} ${c.cost} ${c.text} ${c.flavor}`.toLowerCase();
+        if (!blob.includes(q)) return false;
+      }
+      const est = parseCostNumber(c.cost);
+      if (Number.isFinite(est) && (est < cmin || est > cmax)) return false;
+      return true;
+    });
+  }
+
+  // ====== EXPORTS ======
+  function download(filename, blobOrText){
+    let blob = blobOrText instanceof Blob ? blobOrText : new Blob([blobOrText], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  function exportJSON(){ download('star_of_ash_deck.json', JSON.stringify(deck, null, 2)); }
+  function exportCSV(){
+    const rows = [];
+    rows.push(['Section','Card Name','Faction','Card Type','Cost','ATK','HP','Rules Text','Flavor Text'].join(','));
+    const pushRow = (section, c) => rows.push([section,c.name,c.faction,c.type,c.cost,c.atk,c.hp,(c.text||'').replace(/,/g,';'),(c.flavor||'').replace(/,/g,';')].join(','));
+    deck.chief.forEach(c=>pushRow('War Chief', c));
+    deck.main.forEach(c=>pushRow('Main', c));
+    deck.frags.forEach(c=>pushRow('Fragment', c));
+    download('star_of_ash_deck.csv', rows.join('\n'));
+  }
+  function exportNames(){
+    const out = [];
+    if (deck.chief[0]) out.push(`# War Chief\n${deck.chief[0].name}\n`);
+    out.push(`# Main (${deck.main.length})`);
+    deck.main.forEach(c=>out.push(c.name));
+    out.push(`\n# Fragments (${deck.frags.length})`);
+    deck.frags.forEach(c=>out.push(c.name));
+    download('star_of_ash_deck.txt', out.join('\n'));
+  }
+
+  // ====== SHEET EXPORTER ======
+  const CAN = $('sheet');
+  const CTX = CAN.getContext('2d');
+
+  function pickSource(){
+    const src = $('sheetSource').value;
+    if (src==='main') return [...deck.main];
+    if (src==='frags') return [...deck.frags];
+    if (src==='chief') return [...deck.chief];
+    return [...deck.chief, ...deck.main, ...deck.frags];
+  }
+
+  function drawRoundedRect(ctx,x,y,w,h,r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rr);
+    ctx.arcTo(x+w,y+h,x,y+h,rr);
+    ctx.arcTo(x,y+h,x,y,rr);
+    ctx.arcTo(x,y,x+w,y,rr);
+    ctx.closePath();
+  }
+
+  function wrapText(ctx, text, x, y, maxW, lineH, maxLines){
+    if (!text) return y;
+    const words = text.split(/\s+/);
+    let line = '', lines = 0;
+    for (let n=0;n<words.length;n++){
+      const test = line ? (line+' '+words[n]) : words[n];
+      const w = ctx.measureText(test).width;
+      if (w > maxW && n>0){
+        ctx.fillText(line, x, y);
+        line = words[n];
+        y += lineH; lines++;
+        if (lines >= maxLines-1){ // last line with ellipsis if needed
+          let rest = words.slice(n).join(' ');
+          while (ctx.measureText(rest + '…').width > maxW && rest.length>0) rest = rest.slice(0,-1);
+          ctx.fillText(rest + '…', x, y);
+          return y + lineH;
+        }
+      } else {
+        line = test;
+      }
+    }
+    ctx.fillText(line, x, y);
+    return y + lineH;
+  }
+
+  function factionTint(faction){
+    const f=(faction||'').toLowerCase();
+    if (f.includes('flame')) return '#ff7a4a';
+    if (f.includes('blood')) return '#d94763';
+    if (f.includes('ash')) return '#b6b1a9';
+    return '#8aa3ff';
+  }
+
+  function renderCard(ctx, card, x, y, w, h, opts){
+    const { bleed=36, setCode='' } = opts;
+    // background
+    ctx.save();
+    drawRoundedRect(ctx, x, y, w, h, 24);
+    ctx.fillStyle = '#11151f'; ctx.fill(); ctx.strokeStyle='#2b3145'; ctx.lineWidth=2; ctx.stroke();
+
+    // top stripe
+    ctx.fillStyle = factionTint(card.faction);
+    ctx.fillRect(x, y, w, 12);
+
+    const pad = 20;
+    let cx = x + pad, cy = y + pad + 14;
+
+    // name + cost
+    ctx.fillStyle = '#e9ebef';
+    ctx.font = 'bold 28px system-ui';
+    ctx.fillText(card.name || 'Unnamed', cx, cy);
+    const cost = card.cost || '—';
+    ctx.font = 'bold 22px system-ui';
+    ctx.fillStyle = '#cfd3da';
+    ctx.textAlign = 'right';
+    ctx.fillText(cost, x + w - pad, cy);
+    ctx.textAlign = 'left';
+    cy += 12;
+
+    // type line + faction
+    cy += 16;
+    ctx.fillStyle = '#9aa0ac';
+    ctx.font = '14px system-ui';
+    ctx.fillText(`${card.type || '—'}  •  ${card.faction || '—'}`, cx, cy);
+    cy += 10;
+
+    // rules box
+    const boxY = cy + 10, boxH = h*0.46;
+    drawRoundedRect(ctx, x+pad-6, boxY-18, w-2*pad+12, boxH+28, 14);
+    ctx.fillStyle = '#141a26'; ctx.fill(); ctx.strokeStyle='#262d3f'; ctx.stroke();
+
+    // rules text
+    ctx.fillStyle = '#e1e4ea';
+    ctx.font = '16px system-ui';
+    const textMaxW = w - 2*pad - 10;
+    let ty = boxY;
+    ty = wrapText(ctx, (card.text||''), x+pad, ty, textMaxW, 20, 10);
+
+    // flavor
+    if (card.flavor){
+      ctx.fillStyle = '#a5acb8';
+      ctx.font = 'italic 14px system-ui';
+      wrapText(ctx, '“'+card.flavor+'”', x+pad, ty+6, textMaxW, 18, 3);
+    }
+
+    // ATK/HP or HP badge for War Chief
+    if (/war\s*chief/i.test(card.type||'')){
+      // HP badge
+      const r = 32;
+      ctx.beginPath();
+      ctx.arc(x + w - pad - r, y + h - pad - r, r, 0, Math.PI*2);
+      ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=3; ctx.stroke();
+      ctx.fillStyle='#e9ebef'; ctx.font='bold 22px system-ui';
+      const hp = (card.hp||'').toString() || '40';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(hp, x + w - pad - r, y + h - pad - r);
+      ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    } else if (!/fragment/i.test((card.type||'').toLowerCase())){
+      // ATK/HP box
+      const bw = 90, bh = 48;
+      drawRoundedRect(ctx, x + w - pad - bw, y + h - pad - bh, bw, bh, 10);
+      ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='#e9ebef'; ctx.font='bold 20px system-ui';
+      ctx.fillText(`${card.atk||'—'} / ${card.hp||'—'}`, x + w - pad - bw + 12, y + h - pad - bh + 30);
+    } else {
+      // fragment marker
+      ctx.fillStyle = '#8e95a3'; ctx.font='bold 16px system-ui';
+      ctx.fillText('Fragment', x + w - pad - 120, y + h - pad - 18);
+    }
+
+    // set code + number
+    if (setCode){
+      ctx.fillStyle = '#80889a';
+      ctx.font = 'bold 13px system-ui';
+      ctx.fillText(setCode, x+pad, y + h - pad);
+    }
+
+    ctx.restore();
+  }
+
+  function renderSheet(){
+    const srcCards = pickSource();
+    if (srcCards.length===0){ toast('No cards in the chosen section.'); return; }
+
+    const rows = +$('rows').value || 7;
+    const cols = +$('cols').value || 10;
+    const cardW = +$('cardW').value || 744;
+    const cardH = +$('cardH').value || 1038;
+    const margin = +$('margin').value || 24;
+    const scale = Math.max(1, +$('scale').value || 1);
+    const bleed = +$('bleed').value || 0;
+    const setCode = $('setCode').value.trim();
+
+    const gridW = cols*cardW + (cols+1)*margin;
+    const gridH = rows*cardH + (rows+1)*margin;
+    CAN.width = Math.floor(gridW * scale);
+    CAN.height = Math.floor(gridH * scale);
+    CTX.setTransform(scale,0,0,scale,0,0);
+
+    // background
+    CTX.fillStyle = '#0b0b0e';
+    CTX.fillRect(0,0,gridW,gridH);
+
+    // draw cells
+    let i = 0;
+    for (let r=0;r<rows;r++){
+      for (let c=0;c<cols;c++){
+        const x = margin + c*(cardW+margin);
+        const y = margin + r*(cardH+margin);
+        const card = srcCards[i++];
+        if (card) renderCard(CTX, card, x, y, cardW, cardH, {bleed, setCode});
+      }
+    }
+  }
+
+  function renderBacks(){
+    const rows = +$('rows').value || 7;
+    const cols = +$('cols').value || 10;
+    const cardW = +$('cardW').value || 744;
+    const cardH = +$('cardH').value || 1038;
+    const margin = +$('margin').value || 24;
+    const scale = Math.max(1, +$('scale').value || 1);
+    const label = $('backLabel').value || 'Star of Ash';
+    const color = $('backColor').value || '#0b0b0e';
+
+    const gridW = cols*cardW + (cols+1)*margin;
+    const gridH = rows*cardH + (rows+1)*margin;
+    CAN.width = Math.floor(gridW * scale);
+    CAN.height = Math.floor(gridH * scale);
+    CTX.setTransform(scale,0,0,scale,0,0);
+
+    CTX.fillStyle = '#0b0b0e';
+    CTX.fillRect(0,0,gridW,gridH);
+
+    for (let r=0;r<rows;r++){
+      for (let c=0;c<cols;c++){
+        const x = margin + c*(cardW+margin);
+        const y = margin + r*(cardH+margin);
+        drawRoundedRect(CTX, x, y, cardW, cardH, 24);
+        CTX.fillStyle = color; CTX.fill();
+        CTX.strokeStyle = '#222633'; CTX.lineWidth = 2; CTX.stroke();
+
+        // simple sigil
+        CTX.save();
+        CTX.translate(x + cardW/2, y + cardH/2);
+        CTX.fillStyle = '#e7e8ea';
+        CTX.font = 'bold 40px system-ui';
+        CTX.textAlign='center'; CTX.textBaseline='middle';
+        CTX.fillText(label, 0, 0);
+        CTX.restore();
+      }
+    }
+  }
+
+  function downloadSheet(){
+    CAN.toBlob(b => download('star_of_ash_cardsheet.png', b), 'image/png');
+  }
+
+  // ====== EVENTS ======
+  $('file').addEventListener('change', async e=>{
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const rows = parseCSV(text);
+    allCards = toCards(rows);
+    $('status').textContent = `Loaded ${allCards.length} cards`;
+    renderCards(filtered());
+  });
+
+  ['faction','type','text','costMin','costMax'].forEach(id=>{
+    $(id).addEventListener('input', ()=>renderCards(filtered()));
+  });
+
+  $('clear').addEventListener('click', ()=>{
+    ['faction','type','text','costMin','costMax'].forEach(id=>$(id).value='');
+    renderCards(filtered());
+  });
+
+  $('validate').addEventListener('click', validateDeck);
+  $('exportJson').addEventListener('click', exportJSON);
+  $('exportCsv').addEventListener('click', exportCSV);
+  $('exportTxt').addEventListener('click', exportNames);
+
+  $('renderSheet').addEventListener('click', renderSheet);
+  $('renderBacks').addEventListener('click', renderBacks);
+  $('downloadSheet').addEventListener('click', downloadSheet);
+
+  // ====== UTILS ======
+  function escapeHtml(s){ return (s??'').replace(/[&<>"]/g, ch=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[ch])); }
+  let toastTimer;
+  function toast(msg){
+    const el = $('validationMsg');
+    el.textContent = msg; el.className = 'small warn';
+    clearTimeout(toastTimer); toastTimer = setTimeout(()=>{el.textContent='';}, 3000);
+  }
+})();
+</script>
 </body>
 </html>
