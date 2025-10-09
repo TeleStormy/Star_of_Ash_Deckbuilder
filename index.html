@@ -8,12 +8,12 @@
 :root { --bg:#0f0f13; --panel:#171923; --muted:#9aa0ac; --text:#e7e8ea; --accent:#b389ff; --ok:#6dd37a; --warn:#ffb84d; --bad:#ff6b6b; --line:#222633; }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-header{padding:16px 20px;border-bottom:1px solid #222;display:flex;gap:16px;align-items:center;position:sticky;top:0;background:rgba(15,15,19,.95);backdrop-filter:saturate(140%) blur(6px);flex-wrap:wrap}
+header{padding:16px 20px;border-bottom:1px solid #222;display:flex;gap:12px;align-items:center;position:sticky;top:0;background:rgba(15,15,19,.95);backdrop-filter:saturate(140%) blur(6px);flex-wrap:wrap}
 header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.4px}
 .btn{padding:8px 12px;border-radius:10px;border:1px solid #2a2d3a;background:#1d2030;color:var(--text);cursor:pointer}
 .btn:hover{border-color:#3a3f52}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#0e061a;font-weight:700}
-.layout{display:grid;grid-template-columns:320px 1fr 360px;gap:16px;padding:16px}
+.layout{display:grid;grid-template-columns:360px 1fr 380px;gap:16px;padding:16px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 .panel h2{margin:0;padding:12px 14px;border-bottom:1px solid #23283a;font-size:13px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
 .panel .body{padding:12px;display:flex;flex-direction:column;gap:10px;min-height:0}
@@ -36,13 +36,9 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
 .field{display:flex;flex-direction:column;gap:4px}
 .field label{font-size:11px;color:var(--muted)}
 .hint{font-size:11px;color:var(--muted)}
-/* Responsive: the left panel can get skinny; collapse to 1 column fields */
-@media (max-width: 1200px){
-  .layout{grid-template-columns:1fr}
-}
-@media (max-width: 520px){
-  .grid{grid-template-columns:1fr}
-}
+hr.sep{border:0;border-top:1px solid #23283a;margin:6px 0}
+@media (max-width: 1200px){ .layout{grid-template-columns:1fr} }
+@media (max-width: 520px){ .grid{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -54,14 +50,42 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
   <button id="exportJson" class="btn">Export Deck (JSON)</button>
   <button id="exportCsv" class="btn">Export Deck (CSV)</button>
   <button id="exportTxt" class="btn">Export Names (TXT)</button>
-  <div class="small muted" id="status">No card file loaded</div>
+  <div class="small muted" id="status">Cards: built-in</div>
 </header>
 
 <div class="layout">
-  <!-- Filters -->
+  <!-- LEFT: Data & Filters -->
   <section class="panel">
-    <h2>Filters</h2>
+    <h2>Data & Presets</h2>
     <div class="body">
+      <div class="row">
+        <button id="useBuiltin" class="btn">Data: Use Built-in</button>
+        <button id="useSaved" class="btn">Data: Use Saved</button>
+        <button id="saveFromCSV" class="btn">Import Master CSV (save)</button>
+      </div>
+      <div class="row">
+        <button id="exportSavedJSON" class="btn">Export Saved as JSON</button>
+        <button id="clearSaved" class="btn">Clear Saved Data</button>
+      </div>
+      <div class="grid">
+        <div class="field"><label>Preset (starter deck)</label>
+          <select id="presetSelect"></select>
+        </div>
+        <div class="field"><label>&nbsp;</label>
+          <div class="row">
+            <button id="loadPresetAppend" class="btn">Append</button>
+            <button id="loadPresetReplace" class="btn">Replace</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <button id="importPresetCSV" class="btn">Presets: Import CSV (save)</button>
+        <button id="deletePreset" class="btn">Delete Preset</button>
+      </div>
+      <div class="hint">Saved data & presets live in your browser (localStorage). Built-in data ships inside this file.</div>
+      <hr class="sep">
+
+      <h2>Filters</h2>
       <div class="grid">
         <div class="field"><label>Faction</label><select id="faction">
           <option value="">All Factions</option><option>Flame</option><option>Blood</option><option>Ash</option>
@@ -80,7 +104,6 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
         <div class="small muted" id="results"></div>
       </div>
 
-      <!-- Add All controls (kept) -->
       <div class="row">
         <div class="field" style="min-width:180px"><label>Add Mode</label>
           <select id="addAllMode">
@@ -91,13 +114,11 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
           </select>
         </div>
         <button id="addAllFiltered" class="btn">Add All (Filtered)</button>
-        <button id="addAllAll" class="btn">Add All (CSV)</button>
+        <button id="addAllAll" class="btn">Add All (Library)</button>
         <button id="clearDeck" class="btn">Clear Deck</button>
       </div>
-    </div>
 
-    <h2>Card Sheet Exporter</h2>
-    <div class="body">
+      <h2>Card Sheet Exporter</h2>
       <div class="grid">
         <div class="field"><label>Source</label>
           <select id="sheetSource">
@@ -122,9 +143,7 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
         <div class="field"><label>Name Scale (×)</label><input id="nameScale" type="number" min="0.5" step="0.1" value="1" /></div>
         <div class="field"><label>Rules Scale (×)</label><input id="rulesScale" type="number" min="0.5" step="0.1" value="1" /></div>
       </div>
-
-      <div class="hint">Tip: 744×1038 ≈ 2.48″×3.46″ at 300 dpi. <b>Export Scale</b> multiplies output resolution. <b>Name/Rules Scale</b> only affect text sizes.</div>
-
+      <div class="hint">Tip: 744×1038 ≈ 2.48″×3.46″ at 300 dpi. Export Scale multiplies resolution; Name/Rules Scale adjust only text sizes.</div>
       <div class="row">
         <button id="renderSheet" class="btn primary">Render Card Sheet</button>
         <button id="downloadSheet" class="btn">Download PNG</button>
@@ -133,7 +152,6 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
         <button id="downloadAll" class="btn">Download ALL</button>
         <button id="previewAll" class="btn">Preview ALL</button>
       </div>
-
       <div class="grid">
         <div class="field"><label>Back Label</label><input id="backLabel" placeholder="Star of Ash" /></div>
         <div class="field"><label>Back Color</label><input id="backColor" type="color" value="#0b0b0e" /></div>
@@ -143,7 +161,7 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
     </div>
   </section>
 
-  <!-- Card Browser -->
+  <!-- CENTER: Card Browser -->
   <section class="panel">
     <h2>Cards</h2>
     <div class="body" style="min-height:400px">
@@ -151,7 +169,7 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
     </div>
   </section>
 
-  <!-- Deck Builder -->
+  <!-- RIGHT: Deck -->
   <section class="panel">
     <h2>Deck</h2>
     <div class="body deckcol">
@@ -175,82 +193,220 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
 </div>
 
 <script>
-(() => {
+(()=>{
+// ================== EMBED YOUR DATA HERE ==================
+const BUILTIN_CARDS = [
+  // Replace with your full master list as JSON objects:
+  // { "name":"Ember Vanguard","faction":"Flame","card type":"Creature","cost":"2","atk":"2","hp":"2","rules text":"Surge","flavor text":"" },
+  // Tip: keep property names like your CSV headers (we normalize below).
+];
+
+const BUILTIN_PRESETS = {
+  // Optional starter decks; list names only. Example:
+  // "Starter: Flame Rush": {
+  //   "chief": ["Ash Warchief"],
+  //   "main": ["Ember Vanguard","Flame Adept","Volcanic Titan"],
+  //   "frags": ["Cinder","Spark","Red coal","Soot"]
+  // }
+};
+// ===========================================================
+
+// Keys for persistence
+const LS_CARDS = 'soa_cards_library_v1';
+const LS_PRESETS = 'soa_presets_v1';
+
 // ====== STATE ======
-let allCards = [];  // parsed from CSV
+let allCards = [];             // current library in memory
 const deck = { main: [], frags: [], chief: [] };
+let presets = {};              // name -> {chief/main/frags: [names]}
 
 // ====== CSV PARSER ======
-function parseCSV(text) {
-  const rows = [];
-  let row = [], cell = '', inQuotes = false;
+function parseCSV(text){
+  const rows=[]; let row=[], cell='', q=false;
   for (let i=0;i<text.length;i++){
-    const c = text[i], n = text[i+1];
-    if (c === '"' && inQuotes && n === '"'){ cell+='"'; i++; continue; }
-    if (c === '"'){ inQuotes = !inQuotes; continue; }
-    if (c === ',' && !inQuotes){ row.push(cell.trim()); cell=''; continue; }
-    if ((c === '\n' || c === '\r') && !inQuotes){
-      if (cell.length || row.length){ row.push(cell.trim()); rows.push(row); row=[]; cell=''; }
-      continue;
-    }
-    cell += c;
+    const c=text[i], n=text[i+1];
+    if(q){ if(c==='"'&&n==='"'){cell+='"';i++;continue} if(c==='"'){q=false;continue} cell+=c; continue; }
+    if(c==='"'){q=true;continue}
+    if(c===','&&!q){row.push(cell.trim());cell='';continue}
+    if((c==='\n'||c==='\r')&&!q){ if(cell.length||row.length){row.push(cell.trim());rows.push(row);row=[];cell='';} continue }
+    cell+=c;
   }
-  if (cell.length || row.length){ row.push(cell.trim()); rows.push(row); }
+  if(cell.length||row.length){row.push(cell.trim());rows.push(row)}
   return rows.filter(r=>r.length>0);
 }
-function normalizeHeaders(h) { return h.map(x => x.toLowerCase().replace(/\s+/g,' ').trim()); }
-function toCards(rows) {
-  const headers = normalizeHeaders(rows[0]);
-  const idx = (name) => headers.indexOf(name);
-  const get = (r, name) => r[idx(name)] ?? '';
-  const out = [];
-  for (let i=1;i<rows.length;i++){
-    const r = rows[i];
-    if (!r.length) continue;
+const normalizeHeaders = h => h.map(x=>x.toLowerCase().replace(/\s+/g,' ').trim());
+function rowsToCards(rows){
+  const h = normalizeHeaders(rows[0]||[]);
+  const idx = (n)=>h.indexOf(n);
+  const get=(r,n)=> r[idx(n)] ?? r[h.findIndex(x=>x===n)] ?? '';
+  const out=[];
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i]; if(!r.length) continue;
     out.push({
-      name: get(r, 'card name'),
-      faction: get(r, 'faction'),
-      type: get(r, 'card type'),
-      cost: get(r, 'cost'),
-      atk: get(r, 'atk'),
-      hp: get(r, 'hp'),
-      text: get(r, 'rules text'),
-      flavor: get(r, 'flavor text')
+      name: get(r,'card name') || get(r,'name'),
+      faction: get(r,'faction'),
+      type: get(r,'card type') || get(r,'type'),
+      cost: get(r,'cost'),
+      atk: get(r,'atk'),
+      hp: get(r,'hp'),
+      text: get(r,'rules text') || get(r,'text'),
+      flavor: get(r,'flavor text') || get(r,'flavor'),
     });
   }
-  return out.filter(c => c.name);
+  return out.filter(c=>c.name);
+}
+function objectsToCards(objs){
+  // Accepts objects with CSV-like keys or our normalized keys
+  return (objs||[]).map(o=>({
+    name: o.name || o['card name'] || '',
+    faction: o.faction || '',
+    type: o.type || o['card type'] || '',
+    cost: o.cost || '',
+    atk: o.atk || '',
+    hp: o.hp || '',
+    text: o.text || o['rules text'] || '',
+    flavor: o.flavor || o['flavor text'] || '',
+  })).filter(c=>c.name);
+}
+
+// ====== LIBRARY LOADING ======
+function useBuiltin(){
+  allCards = objectsToCards(BUILTIN_CARDS);
+  $('status').textContent = `Cards: built-in (${allCards.length})`;
+  renderCards(filtered());
+}
+function useSaved(){
+  const raw = localStorage.getItem(LS_CARDS);
+  if(!raw){ toast('No saved library yet. Use “Import Master CSV (save)”.'); return; }
+  try{
+    const data = JSON.parse(raw);
+    allCards = objectsToCards(data);
+    $('status').textContent = `Cards: saved (${allCards.length})`;
+    renderCards(filtered());
+  }catch(e){ toast('Saved data is corrupted.'); }
+}
+async function importMasterCSVAndSave(file){
+  const text = await file.text();
+  const rows = parseCSV(text);
+  const cards = rowsToCards(rows);
+  localStorage.setItem(LS_CARDS, JSON.stringify(cards));
+  allCards = cards.slice();
+  $('status').textContent = `Cards: saved (${allCards.length})`;
+  renderCards(filtered());
+}
+function exportSavedJSON(){
+  const raw = localStorage.getItem(LS_CARDS);
+  if(!raw){ toast('No saved library to export.'); return; }
+  download('soa_saved_cards.json', raw);
+}
+function clearSaved(){
+  localStorage.removeItem(LS_CARDS);
+  $('status').textContent = 'Cards: (cleared saved) — using built-in';
+  useBuiltin();
+}
+
+// ====== PRESETS ======
+function loadPresets(){
+  const raw = localStorage.getItem(LS_PRESETS);
+  const builtin = BUILTIN_PRESETS || {};
+  if(raw){
+    try{ presets = {...builtin, ...JSON.parse(raw)}; }
+    catch{ presets = {...builtin}; }
+  } else presets = {...builtin};
+  refreshPresetSelect();
+}
+function refreshPresetSelect(){
+  const sel = $('presetSelect');
+  sel.innerHTML = '';
+  const names = Object.keys(presets).sort();
+  if(!names.length){ const o=document.createElement('option'); o.value=''; o.textContent='(no presets yet)'; sel.appendChild(o); return; }
+  names.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); });
+}
+function namesToDeck(names, bucket){
+  const arr = [];
+  const nameSet = new Set(names.map(s=>String(s).trim().toLowerCase()));
+  for(const c of allCards){
+    if(nameSet.has(c.name.toLowerCase())) arr.push(c);
+  }
+  if(arr.length !== nameSet.size){
+    toast(`Preset “${bucket}”: ${nameSet.size-arr.length} name(s) not found in library`);
+  }
+  return arr;
+}
+function applyPreset(name, mode){ // mode: 'append' | 'replace'
+  const p = presets[name]; if(!p){ toast('Select a preset first.'); return; }
+  if(mode==='replace'){ clearDeck(); }
+  if(p.chief) deck.chief.push(...namesToDeck(p.chief,'chief'));
+  if(p.main)  deck.main.push(...namesToDeck(p.main,'main'));
+  if(p.frags) deck.frags.push(...namesToDeck(p.frags,'frags'));
+  renderAll();
+}
+async function importPresetCSVAndSave(file){
+  const text = await file.text();
+  const rows = parseCSV(text);
+  if(!rows.length){ toast('Preset CSV empty.'); return; }
+  const h = normalizeHeaders(rows[0]);
+  const idx = (t)=>h.indexOf(t);
+  // Flexible: accept “Section, Card Name” columns or just “Card Name” (all -> main)
+  const iName = Math.max(idx('card name'), idx('name'));
+  const iSection = Math.max(idx('section'), idx('deck section'));
+  if(iName<0){ toast('Preset CSV must include “Card Name”.'); return; }
+  const preset = { chief:[], main:[], frags:[] };
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i]; if(!r.length) continue;
+    const name = r[iName]?.trim(); if(!name) continue;
+    let sec = (r[iSection]||'').toLowerCase();
+    if(sec.includes('chief')) preset.chief.push(name);
+    else if(sec.includes('frag')) preset.frags.push(name);
+    else preset.main.push(name);
+  }
+  const suggested = file.name.replace(/\.(csv|txt)$/i,'');
+  const key = prompt('Preset name:', suggested) || suggested || `Preset ${Date.now()}`;
+  const existing = JSON.parse(localStorage.getItem(LS_PRESETS)||'{}');
+  existing[key] = preset;
+  localStorage.setItem(LS_PRESETS, JSON.stringify(existing));
+  loadPresets();
+  $('presetSelect').value = key;
+  toast(`Preset “${key}” saved.`);
+}
+function deletePreset(name){
+  const existing = JSON.parse(localStorage.getItem(LS_PRESETS)||'{}');
+  if(!(name in existing)){ toast('Only custom (saved) presets can be deleted.'); return; }
+  delete existing[name];
+  localStorage.setItem(LS_PRESETS, JSON.stringify(existing));
+  loadPresets();
+  toast('Preset removed.');
 }
 
 // ====== UI HELPERS ======
-const $ = (id)=>document.getElementById(id);
-const cardsEl = $('cards'), mainList = $('mainList'), fragList = $('fragList'), chiefList = $('chiefList');
+const $ = id=>document.getElementById(id);
+const cardsEl = $('cards'), mainList=$('mainList'), fragList=$('fragList'), chiefList=$('chiefList');
 
 function renderCards(list){
-  cardsEl.innerHTML = '';
+  cardsEl.innerHTML='';
   list.forEach(c=>{
-    const el = document.createElement('div');
-    el.className='card';
+    const el=document.createElement('div'); el.className='card';
     const costNum = parseCostNumber(c.cost);
-    el.innerHTML = `
-       <div class="row"><span class="name">${escapeHtml(c.name)}</span></div>
-       <div class="row">
-         <span class="tag">${c.faction||'—'}</span>
-         <span class="tag">${c.type||'—'}</span>
-         <span class="tag">Cost: ${c.cost||'—'}</span>
-         ${c.atk && c.hp ? `<span class="tag">ATK ${c.atk} / HP ${c.hp}</span>` : ""}
-       </div>
-       <div class="muted small">${escapeHtml(c.text||'')}</div>
-       <div class="row" style="margin-top:6px;gap:6px;">
-         <button class="btn" data-add="main">+ Main</button>
-         <button class="btn" data-add="frag">+ Fragment</button>
-         <button class="btn" data-add="chief">Set Chief</button>
-         <div class="small muted" style="margin-left:auto">${Number.isFinite(costNum)?('Est Cost: '+costNum):''}</div>
-       </div>`;
+    el.innerHTML=`
+      <div class="row"><span class="name">${escapeHtml(c.name)}</span></div>
+      <div class="row">
+        <span class="tag">${c.faction||'—'}</span>
+        <span class="tag">${c.type||'—'}</span>
+        <span class="tag">Cost: ${c.cost||'—'}</span>
+        ${c.atk&&c.hp?`<span class="tag">ATK ${c.atk} / HP ${c.hp}</span>`:''}
+      </div>
+      <div class="muted small">${escapeHtml(c.text||'')}</div>
+      <div class="row" style="margin-top:6px;gap:6px;">
+        <button class="btn" data-add="main">+ Main</button>
+        <button class="btn" data-add="frag">+ Fragment</button>
+        <button class="btn" data-add="chief">Set Chief</button>
+        <div class="small muted" style="margin-left:auto">${Number.isFinite(costNum)?('Est Cost: '+costNum):''}</div>
+      </div>`;
     el.querySelectorAll('button').forEach(b=>{
       b.addEventListener('click',()=>{
-        if (b.dataset.add === 'main') addToDeck('main', c);
-        if (b.dataset.add === 'frag') addToDeck('frags', c);
-        if (b.dataset.add === 'chief') setChief(c);
+        if(b.dataset.add==='main') addToDeck('main',c);
+        if(b.dataset.add==='frag') addToDeck('frags',c);
+        if(b.dataset.add==='chief') setChief(c);
         updateCounts();
       });
     });
@@ -262,457 +418,142 @@ function renderCards(list){
 function renderDeckList(container, list, bucket){
   container.innerHTML='';
   list.forEach((c,i)=>{
-    const li = document.createElement('div');
-    li.className='li';
-    const leftHTML = `
+    const li=document.createElement('div'); li.className='li';
+    li.innerHTML = `
       <div>
         <div class="name">${escapeHtml(c.name)}</div>
         <div class="small muted">
           ${escapeHtml(c.faction||'')} • ${escapeHtml(c.type||'')} • Cost ${escapeHtml(c.cost||'—')}
-          ${c.atk && c.hp ? ` • ATK ${c.atk} / HP ${c.hp}` : ""}
+          ${c.atk&&c.hp?` • ATK ${c.atk} / HP ${c.hp}`:''}
         </div>
       </div>`;
-    const right = document.createElement('div');
-    right.innerHTML = `<button class="btn" data-remove="${bucket}" data-idx="${i}">Remove</button>`;
-    li.innerHTML = leftHTML;
-    li.appendChild(right);
-    container.appendChild(li);
+    const r=document.createElement('div'); r.innerHTML=`<button class="btn" data-remove="${bucket}" data-idx="${i}">Remove</button>`;
+    li.appendChild(r); container.appendChild(li);
   });
   container.querySelectorAll('button[data-remove]').forEach(btn=>{
     btn.addEventListener('click',()=>{
-      const b = btn.dataset.remove, ix = +btn.dataset.idx;
-      deck[b].splice(ix,1);
-      renderAll();
+      const b=btn.dataset.remove, ix=+btn.dataset.idx;
+      deck[b].splice(ix,1); renderAll();
     });
   });
 }
+function renderAll(){ renderDeckList(mainList,deck.main,'main'); renderDeckList(fragList,deck.frags,'frags'); renderDeckList(chiefList,deck.chief,'chief'); updateCounts(); }
+function updateCounts(){ $('countMain').textContent=`Main: ${deck.main.length}`; $('countFrags').textContent=`Fragments: ${deck.frags.length}`; $('countChief').textContent=`War Chiefs: ${deck.chief.length}`; }
 
-function renderAll(){
-  renderDeckList(mainList, deck.main, 'main');
-  renderDeckList(fragList, deck.frags, 'frags');
-  renderDeckList(chiefList, deck.chief, 'chief');
-  updateCounts();
-}
-
-function updateCounts(){
-  $('countMain').textContent  = `Main: ${deck.main.length}`;
-  $('countFrags').textContent = `Fragments: ${deck.frags.length}`;
-  $('countChief').textContent = `War Chiefs: ${deck.chief.length}`;
-}
-
-// === Limits removed ===
 function addToDeck(bucket, card){
-  const t = (card.type||'').toLowerCase();
-  if (bucket==='frags' && !/fragment/.test(t)){ toast('Tip: only Fragment cards belong in the Fragment deck.'); }
-  if (bucket==='main'  && /fragment/.test(t)){ toast('Tip: Fragments usually go in the Fragment deck.'); }
-  if (bucket==='main'){ deck.main.push(card); }
-  else if (bucket==='frags'){ deck.frags.push(card); }
+  const t=(card.type||'').toLowerCase();
+  if(bucket==='frags' && !/fragment/.test(t)) toast('Tip: only Fragment cards belong in the Fragment deck.');
+  if(bucket==='main' && /fragment/.test(t))  toast('Tip: Fragments usually go in the Fragment deck.');
+  if(bucket==='main') deck.main.push(card);
+  else if(bucket==='frags') deck.frags.push(card);
   renderAll();
 }
 function setChief(card){
-  if (!/war\s*chief/i.test(card.type||'')){ toast('Selected card is not a War Chief.'); return; }
-  deck.chief.push(card);
-  renderAll();
+  if(!/war\s*chief/i.test(card.type||'')){ toast('Selected card is not a War Chief.'); return; }
+  deck.chief.push(card); renderAll();
 }
-
-// Add All
 function addAll(cards, mode){
-  const list = cards || [];
-  const m = mode || 'auto';
-  for (const c of list){
-    const t = (c.type||'').toLowerCase();
-    if (m==='main'){ deck.main.push(c); continue; }
-    if (m==='frags'){ deck.frags.push(c); continue; }
-    if (m==='chief'){ if (/war\s*chief/.test(t)) deck.chief.push(c); continue; }
-    if (/fragment/.test(t)) deck.frags.push(c);
-    else if (/war\s*chief/.test(t)) deck.chief.push(c);
-    else deck.main.push(c);
+  const list=cards||[], m=mode||'auto';
+  for(const c of list){
+    const t=(c.type||'').toLowerCase();
+    if(m==='main') deck.main.push(c);
+    else if(m==='frags') deck.frags.push(c);
+    else if(m==='chief'){ if(/war\s*chief/.test(t)) deck.chief.push(c); }
+    else{ if(/fragment/.test(t)) deck.frags.push(c); else if(/war\s*chief/.test(t)) deck.chief.push(c); else deck.main.push(c); }
   }
   renderAll();
 }
 function clearDeck(){ deck.main.length=deck.frags.length=deck.chief.length=0; renderAll(); }
-
-// Summary
-function validateDeck(){
-  const msg = `Summary — Main: ${deck.main.length} • Fragments: ${deck.frags.length} • War Chiefs: ${deck.chief.length}`;
-  const el = $('validationMsg'); el.textContent = msg; el.className='small';
-}
+function validateDeck(){ $('validationMsg').textContent=`Summary — Main: ${deck.main.length} • Fragments: ${deck.frags.length} • War Chiefs: ${deck.chief.length}`; $('validationMsg').className='small'; }
 
 // ====== FILTERING ======
-function parseCostNumber(costStr){
-  if (!costStr) return NaN;
-  const digits = [...costStr.matchAll(/\d+/g)].map(m=>+m[0]);
-  const symbols = [...costStr.matchAll(/[🔥🩸🕯️]/g)].length;
-  return (digits.reduce((a,b)=>a+b,0)) + symbols;
-}
+function parseCostNumber(costStr){ if(!costStr) return NaN; const digits=[...costStr.matchAll(/\d+/g)].map(m=>+m[0]); const symbols=[...costStr.matchAll(/[🔥🩸🕯️]/g)].length; return (digits.reduce((a,b)=>a+b,0))+symbols; }
 function filtered(){
-  const f = $('faction').value.trim().toLowerCase();
-  const t = $('type').value.trim().toLowerCase();
-  const q = $('text').value.trim().toLowerCase();
-  const cmin = $('costMin').value ? +$('costMin').value : -Infinity;
-  const cmax = $('costMax').value ? +$('costMax').value : +Infinity;
+  const f=$('faction').value.trim().toLowerCase();
+  const t=$('type').value.trim().toLowerCase();
+  const q=$('text').value.trim().toLowerCase();
+  const cmin=$('costMin').value?+$('costMin').value:-Infinity;
+  const cmax=$('costMax').value?+$('costMax').value:+Infinity;
   return allCards.filter(c=>{
-    if (f && (c.faction||'').toLowerCase()!==f) return false;
-    if (t){
-      const ct = (c.type||'').toLowerCase();
-      const matchType = t==='war chief' ? /war\s*chief/.test(ct)
-                        : t==='fragment' ? /fragment/.test(ct)
-                        : ct.startsWith(t);
-      if (!matchType) return false;
+    if(f && (c.faction||'').toLowerCase()!==f) return false;
+    if(t){
+      const ct=(c.type||'').toLowerCase();
+      const matchType = t==='war chief' ? /war\s*chief/.test(ct) : t==='fragment' ? /fragment/.test(ct) : ct.startsWith(t);
+      if(!matchType) return false;
     }
-    if (q){
-      const blob = `${c.name} ${c.type} ${c.faction} ${c.cost} ${c.text} ${c.flavor}`.toLowerCase();
-      if (!blob.includes(q)) return false;
-    }
-    const est = parseCostNumber(c.cost);
-    if (Number.isFinite(est) && (est < cmin || est > cmax)) return false;
+    if(q){ const blob=`${c.name} ${c.type} ${c.faction} ${c.cost} ${c.text} ${c.flavor}`.toLowerCase(); if(!blob.includes(q)) return false; }
+    const est=parseCostNumber(c.cost); if(Number.isFinite(est) && (est<cmin||est>cmax)) return false;
     return true;
   });
 }
 
 // ====== EXPORTS ======
 function download(filename, blobOrText){
-  let blob = blobOrText instanceof Blob ? blobOrText : new Blob([blobOrText], {type:'text/plain'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const blob = blobOrText instanceof Blob ? blobOrText : new Blob([blobOrText], {type:'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href);
 }
-function exportJSON(){ download('star_of_ash_deck.json', JSON.stringify(deck, null, 2)); }
+function exportJSON(){ download('star_of_ash_deck.json', JSON.stringify(deck,null,2)); }
 function exportCSV(){
-  const rows = [];
-  rows.push(['Section','Card Name','Faction','Card Type','Cost','ATK','HP','Rules Text','Flavor Text'].join(','));
-  const pushRow = (section, c) => rows.push([section,c.name,c.faction,c.type,c.cost,c.atk,c.hp,(c.text||'').replace(/,/g,';'),(c.flavor||'').replace(/,/g,';')].join(','));
-  deck.chief.forEach(c=>pushRow('War Chief', c));
-  deck.main.forEach(c=>pushRow('Main', c));
-  deck.frags.forEach(c=>pushRow('Fragment', c));
+  const rows=[['Section','Card Name','Faction','Card Type','Cost','ATK','HP','Rules Text','Flavor Text'].join(',')];
+  const push=(s,c)=>rows.push([s,c.name,c.faction,c.type,c.cost,c.atk,c.hp,(c.text||'').replace(/,/g,';'),(c.flavor||'').replace(/,/g,';')].join(','));
+  deck.chief.forEach(c=>push('War Chief',c)); deck.main.forEach(c=>push('Main',c)); deck.frags.forEach(c=>push('Fragment',c));
   download('star_of_ash_deck.csv', rows.join('\n'));
 }
 function exportNames(){
-  const out = [];
-  if (deck.chief.length) out.push(`# War Chief (${deck.chief.length})`, ...deck.chief.map(c=>c.name), '');
-  out.push(`# Main (${deck.main.length})`, ...deck.main.map(c=>c.name), '');
-  out.push(`# Fragments (${deck.frags.length})`, ...deck.frags.map(c=>c.name));
+  const out=[]; if(deck.chief.length) out.push(`# War Chief (${deck.chief.length})`,...deck.chief.map(c=>c.name),'');
+  out.push(`# Main (${deck.main.length})`,...deck.main.map(c=>c.name),'');
+  out.push(`# Fragments (${deck.frags.length})`,...deck.frags.map(c=>c.name));
   download('star_of_ash_deck.txt', out.join('\n'));
 }
 
 // ====== SHEET EXPORTER ======
-const CAN = $('sheet');
-const CTX = CAN.getContext('2d');
-
-function pickSource(){
-  const src = $('sheetSource').value;
-  if (src==='main') return [...deck.main];
-  if (src==='frags') return [...deck.frags];
-  if (src==='chief') return [...deck.chief];
-  return [...deck.chief, ...deck.main, ...deck.frags];
-}
-
-function drawRoundedRect(ctx,x,y,w,h,r){
-  const rr = Math.min(r, w/2, h/2);
-  ctx.beginPath();
-  ctx.moveTo(x+rr,y);
-  ctx.arcTo(x+w,y,x+w,y+h,rr);
-  ctx.arcTo(x+w,y+h,x,y+h,rr);
-  ctx.arcTo(x,y+h,x,y,rr);
-  ctx.arcTo(x,y,x+w,y,rr);
-  ctx.closePath();
-}
-
-function wrapText(ctx, text, x, y, maxW, lineH, maxLines){
-  if (!text) return y;
-  const words = String(text).split(/\s+/);
-  let line = '', lines = 0;
-  for (let n=0;n<words.length;n++){
-    const test = line ? (line+' '+words[n]) : words[n];
-    const w = ctx.measureText(test).width;
-    if (w > maxW && line){
-      ctx.fillText(line, x, y);
-      line = words[n];
-      y += lineH; lines++;
-      if (maxLines && lines >= maxLines-1){
-        let rest = words.slice(n).join(' ');
-        while (ctx.measureText(rest + '…').width > maxW && rest.length>0) rest = rest.slice(0,-1);
-        ctx.fillText(rest + '…', x, y);
-        return y + lineH;
-      }
-    } else {
-      line = test;
-    }
-  }
-  if (line){ ctx.fillText(line, x, y); y += lineH; }
-  return y;
-}
-
-function factionTint(faction){
-  const f=(faction||'').toLowerCase();
-  if (f.includes('flame')) return '#ff7a4a';
-  if (f.includes('blood')) return '#d94763';
-  if (f.includes('ash')) return '#b6b1a9';
-  return '#8aa3ff';
-}
-
-function renderCard(ctx, card, x, y, w, h, opts){
-  const { bleed=36, setCode='' } = opts;
-
-  // NEW: separate scales
-  const nameScale  = Math.max(0.5, parseFloat(($('nameScale').value||'1')));
-  const rulesScale = Math.max(0.5, parseFloat(($('rulesScale').value||'1')));
-
-  ctx.save();
-  // base
-  drawRoundedRect(ctx, x, y, w, h, 24);
-  ctx.fillStyle = '#11151f'; ctx.fill(); ctx.strokeStyle='#2b3145'; ctx.lineWidth=2; ctx.stroke();
-
-  // top tint
-  ctx.fillStyle = factionTint(card.faction);
-  ctx.fillRect(x, y, w, 12);
-
-  const pad = 20;
-  let cx = x + pad, cy = y + pad + Math.round(14*nameScale);
-
-  // Name + Cost
-  ctx.fillStyle = '#e9ebef';
-  ctx.font = `bold ${Math.round(28*nameScale)}px system-ui`;
-  ctx.fillText(card.name || 'Unnamed', cx, cy);
-  const cost = card.cost || '—';
-  ctx.font = `bold ${Math.round(22*nameScale)}px system-ui`;
-  ctx.fillStyle = '#cfd3da';
-  ctx.textAlign = 'right';
-  ctx.fillText(cost, x + w - pad, cy);
-  ctx.textAlign = 'left';
-  cy += Math.round(28*nameScale);
-
-  // Type • Faction
-  ctx.fillStyle = '#9aa0ac';
-  ctx.font = `${Math.round(14*nameScale)}px system-ui`;
-  ctx.fillText(`${card.type || '—'}  •  ${card.faction || '—'}`, cx, cy);
-  cy += Math.round(14*nameScale);
-
-  // Rules box
-  const boxY = cy + Math.round(10*rulesScale), boxH = h*0.46;
-  drawRoundedRect(ctx, x+pad-6, boxY-18, w-2*pad+12, boxH+28, 14);
-  ctx.fillStyle = '#141a26'; ctx.fill(); ctx.strokeStyle='#262d3f'; ctx.stroke();
-
-  // Rules text
-  ctx.fillStyle = '#e1e4ea';
-  const rulesSize = Math.round(16*rulesScale);
-  ctx.font = `${rulesSize}px system-ui`;
-  const textMaxW = w - 2*pad - 10;
-  let ty = boxY;
-  ty = wrapText(ctx, (card.text||''), x+pad, ty, textMaxW, Math.round(20*rulesScale), 10);
-
-  // Flavor
-  if (card.flavor){
-    ctx.fillStyle = '#a5acb8';
-    ctx.font = `italic ${Math.round(14*rulesScale)}px system-ui`;
-    wrapText(ctx, '“'+card.flavor+'”', x+pad, ty+Math.round(6*rulesScale), textMaxW, Math.round(18*rulesScale), 3);
-  }
-
-  // ATK/HP / Chief / Fragment mark
-  if (/war\s*chief/i.test(card.type||'')){
-    const r = Math.round(32*nameScale);
-    ctx.beginPath();
-    ctx.arc(x + w - pad - r, y + h - pad - r, r, 0, Math.PI*2);
-    ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=Math.max(2,Math.round(3*nameScale)); ctx.stroke();
-    ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(22*nameScale)}px system-ui`;
-    const hp = (card.hp||'').toString() || '40';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(hp, x + w - pad - r, y + h - pad - r);
-    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
-  } else if (!/fragment/i.test((card.type||'').toLowerCase())){
-    const bw = Math.round(90*nameScale), bh = Math.round(48*nameScale);
-    drawRoundedRect(ctx, x + w - pad - bw, y + h - pad - bh, bw, bh, Math.round(10*nameScale));
-    ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=Math.max(1,Math.round(2*nameScale)); ctx.stroke();
-    ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(20*nameScale)}px system-ui`;
-    ctx.fillText(`${card.atk||'—'} / ${card.hp||'—'}`, x + w - pad - bw + Math.round(12*nameScale), y + h - pad - bh + Math.round(30*nameScale));
-  } else {
-    ctx.fillStyle = '#8e95a3'; ctx.font=`bold ${Math.round(16*nameScale)}px system-ui`;
-    ctx.fillText('Fragment', x + w - pad - Math.round(120*nameScale), y + h - pad - Math.round(18*nameScale));
-  }
-
-  // Set code
-  if (setCode){
-    ctx.fillStyle = '#80889a';
-    ctx.font = `bold ${Math.round(13*nameScale)}px system-ui`;
-    ctx.fillText(setCode, x+pad, y + h - pad);
-  }
-
+const CAN=$('sheet'); const CTX=CAN.getContext('2d');
+function pickSource(){ const s=$('sheetSource').value; if(s==='main') return [...deck.main]; if(s==='frags') return [...deck.frags]; if(s==='chief') return [...deck.chief]; return [...deck.chief,...deck.main,...deck.frags]; }
+function drawRoundedRect(ctx,x,y,w,h,r){ const rr=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+rr,y); ctx.arcTo(x+w,y,x+w,y+h,rr); ctx.arcTo(x+w,y+h,x,y+h,rr); ctx.arcTo(x,y+h,x,y,rr); ctx.arcTo(x,y,x+w,y,rr); ctx.closePath(); }
+function wrapText(ctx,text,x,y,maxW,lineH,maxLines){ if(!text) return y; const words=String(text).split(/\s+/); let line='', lines=0; for(let n=0;n<words.length;n++){ const test=line?line+' '+words[n]:words[n]; const w=ctx.measureText(test).width; if(w>maxW && line){ ctx.fillText(line,x,y); line=words[n]; y+=lineH; lines++; if(maxLines && lines>=maxLines-1){ let rest=words.slice(n).join(' '); while(ctx.measureText(rest+'…').width>maxW && rest.length>0) rest=rest.slice(0,-1); ctx.fillText(rest+'…',x,y); return y+lineH; } } else { line=test; } } if(line){ ctx.fillText(line,x,y); y+=lineH; } return y; }
+function factionTint(f){ f=(f||'').toLowerCase(); if(f.includes('flame')) return '#ff7a4a'; if(f.includes('blood')) return '#d94763'; if(f.includes('ash')) return '#b6b1a9'; return '#8aa3ff'; }
+function renderCard(ctx,card,x,y,w,h,opts){ const {bleed=36,setCode=''}=opts; const nameScale=Math.max(0.5,parseFloat(($('nameScale').value||'1'))); const rulesScale=Math.max(0.5,parseFloat(($('rulesScale').value||'1')));
+  ctx.save(); drawRoundedRect(ctx,x,y,w,h,24); ctx.fillStyle='#11151f'; ctx.fill(); ctx.strokeStyle='#2b3145'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle=factionTint(card.faction); ctx.fillRect(x,y,w,12);
+  const pad=20; let cx=x+pad, cy=y+pad+Math.round(14*nameScale);
+  ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(28*nameScale)}px system-ui`; ctx.fillText(card.name||'Unnamed',cx,cy);
+  const cost=card.cost||'—'; ctx.font=`bold ${Math.round(22*nameScale)}px system-ui`; ctx.fillStyle='#cfd3da'; ctx.textAlign='right'; ctx.fillText(cost,x+w-pad,cy); ctx.textAlign='left'; cy+=Math.round(28*nameScale);
+  ctx.fillStyle='#9aa0ac'; ctx.font=`${Math.round(14*nameScale)}px system-ui`; ctx.fillText(`${card.type||'—'}  •  ${card.faction||'—'}`,cx,cy); cy+=Math.round(14*nameScale);
+  const boxY=cy+Math.round(10*rulesScale), boxH=h*0.46; drawRoundedRect(ctx,x+pad-6,boxY-18,w-2*pad+12,boxH+28,14); ctx.fillStyle='#141a26'; ctx.fill(); ctx.strokeStyle='#262d3f'; ctx.stroke();
+  ctx.fillStyle='#e1e4ea'; const rulesSize=Math.round(16*rulesScale); ctx.font=`${rulesSize}px system-ui`; const textMaxW=w-2*pad-10; let ty=boxY; ty=wrapText(ctx,(card.text||''),x+pad,ty,textMaxW,Math.round(20*rulesScale),10);
+  if(card.flavor){ ctx.fillStyle='#a5acb8'; ctx.font=`italic ${Math.round(14*rulesScale)}px system-ui`; wrapText(ctx,'“'+card.flavor+'”',x+pad,ty+Math.round(6*rulesScale),textMaxW,Math.round(18*rulesScale),3); }
+  if(/war\s*chief/i.test(card.type||'')){ const r=Math.round(32*nameScale); ctx.beginPath(); ctx.arc(x+w-pad-r,y+h-pad-r,r,0,Math.PI*2); ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=Math.max(2,Math.round(3*nameScale)); ctx.stroke(); ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(22*nameScale)}px system-ui`; const hp=(card.hp||'').toString()||'40'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(hp,x+w-pad-r,y+h-pad-r); ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  } else if(!/fragment/i.test((card.type||'').toLowerCase())){ const bw=Math.round(90*nameScale), bh=Math.round(48*nameScale); drawRoundedRect(ctx,x+w-pad-bw,y+h-pad-bh,bw,bh,Math.round(10*nameScale)); ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=Math.max(1,Math.round(2*nameScale)); ctx.stroke(); ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(20*nameScale)}px system-ui`; ctx.fillText(`${card.atk||'—'} / ${card.hp||'—'}`, x+w-pad-bw+Math.round(12*nameScale), y+h-pad-bh+Math.round(30*nameScale));
+  } else { ctx.fillStyle='#8e95a3'; ctx.font=`bold ${Math.round(16*nameScale)}px system-ui`; ctx.fillText('Fragment', x+w-pad-Math.round(120*nameScale), y+h-pad-Math.round(18*nameScale)); }
+  if(setCode){ ctx.fillStyle='#80889a'; ctx.font=`bold ${Math.round(13*nameScale)}px system-ui`; ctx.fillText(setCode, x+pad, y+h-pad); }
   ctx.restore();
 }
-
-function computeGrid(){
-  const rows = +$('rows').value || 7;
-  const cols = +$('cols').value || 10;
-  const cardW = +$('cardW').value || 744;
-  const cardH = +$('cardH').value || 1038;
-  const margin = +$('margin').value || 24;
-  const scale = Math.max(1, +$('scale').value || 1);
-  const bleed = +$('bleed').value || 0;
-  const setCode = $('setCode').value.trim();
-  return { rows, cols, cardW, cardH, margin, scale, bleed, setCode };
-}
-
-function allocCanvas(W,H,scale){
-  const c = document.createElement('canvas');
-  c.width = Math.floor(W*scale);
-  c.height = Math.floor(H*scale);
-  const ctx = c.getContext('2d');
-  ctx.setTransform(scale,0,0,scale,0,0);
-  return { c, ctx };
-}
-
-function drawPage(ctx, cards, grid){
-  const { rows, cols, cardW, cardH, margin, bleed, setCode } = grid;
-  const gridW = cols*cardW + (cols+1)*margin;
-  const gridH = rows*cardH + (rows+1)*margin;
-
-  ctx.fillStyle = '#0b0b0e';
-  ctx.fillRect(0,0,gridW,gridH);
-
-  for (let i=0;i<cards.length;i++){
-    const r = Math.floor(i/cols), c = i%cols;
-    const x = margin + c*(cardW+margin);
-    const y = margin + r*(cardH+margin);
-    renderCard(ctx, cards[i], x, y, cardW, cardH, {bleed, setCode});
-  }
-}
-
-function renderSheet(){
-  const srcCards = pickSource();
-  if (srcCards.length===0){ toast('No cards in the chosen section.'); return; }
-  const grid = computeGrid();
-  const perPage = grid.rows * grid.cols;
-  const pageCards = srcCards.slice(0, perPage);
-
-  const gridW = grid.cols*grid.cardW + (grid.cols+1)*grid.margin;
-  const gridH = grid.rows*grid.cardH + (grid.rows+1)*grid.margin;
-
-  CAN.width = Math.floor(gridW * grid.scale);
-  CAN.height = Math.floor(gridH * grid.scale);
-  CTX.setTransform(grid.scale,0,0,grid.scale,0,0);
-
-  drawPage(CTX, pageCards, grid);
-}
-
-async function downloadAllSheets(){
-  const srcCards = pickSource();
-  if (!srcCards.length){ toast('No cards to export.'); return; }
-  const grid = computeGrid();
-  const perPage = grid.rows * grid.cols;
-  const totalPages = Math.ceil(srcCards.length / perPage);
-  const base = sheetLabel();
-
-  for (let p=0;p<totalPages;p++){
-    const slice = srcCards.slice(p*perPage, (p+1)*perPage);
-    const gridW = grid.cols*grid.cardW + (grid.cols+1)*grid.margin;
-    const gridH = grid.rows*grid.cardH + (grid.rows+1)*grid.margin;
-    const { c, ctx } = allocCanvas(gridW, gridH, grid.scale);
-    drawPage(ctx, slice, grid);
-    await new Promise(res=>c.toBlob(b=>{ download(`${base}_p${p+1}.png`, b); res(); }, 'image/png'));
-  }
-}
-
-function previewAllSheets(){
-  const srcCards = pickSource();
-  if (!srcCards.length){ toast('No cards to preview.'); return; }
-  const grid = computeGrid();
-  const perPage = grid.rows * grid.cols;
-  const totalPages = Math.ceil(srcCards.length / perPage);
-
-  for (let p=0;p<totalPages;p++){
-    const slice = srcCards.slice(p*perPage, (p+1)*perPage);
-    const gridW = grid.cols*grid.cardW + (grid.cols+1)*grid.margin;
-    const gridH = grid.rows*grid.cardH + (rows+1)*grid.margin;
-  }
-}
-
-function sheetLabel(){
-  const src = $('sheetSource').value;
-  if (src==='main') return 'star_of_ash_main';
-  if (src==='frags') return 'star_of_ash_fragments';
-  if (src==='chief') return 'star_of_ash_chiefs';
-  return 'star_of_ash_all';
-}
-
-function renderBacks(){
-  const grid = computeGrid();
-  const { rows, cols, cardW, cardH, margin } = grid;
-  const label = $('backLabel').value || 'Star of Ash';
-  const color = $('backColor').value || '#0b0b0e';
-
-  const gridW = cols*cardW + (cols+1)*margin;
-  const gridH = rows*cardH + (rows+1)*margin;
-  CAN.width = Math.floor(gridW * grid.scale);
-  CAN.height = Math.floor(gridH * grid.scale);
-  CTX.setTransform(grid.scale,0,0,grid.scale,0,0);
-
-  CTX.fillStyle = '#0b0b0e';
-  CTX.fillRect(0,0,gridW,gridH);
-
-  for (let r=0;r<rows;r++){
-    for (let c=0;c<cols;c++){
-      const x = margin + c*(cardW+margin);
-      const y = margin + r*(cardH+margin);
-      drawRoundedRect(CTX, x, y, cardW, cardH, 24);
-      CTX.fillStyle = color; CTX.fill();
-      CTX.strokeStyle = '#222633'; CTX.lineWidth = 2; CTX.stroke();
-
-      CTX.save();
-      CTX.translate(x + cardW/2, y + cardH/2);
-      CTX.fillStyle = '#e7e8ea';
-      CTX.font = 'bold 40px system-ui';
-      CTX.textAlign='center'; CTX.textBaseline='middle';
-      CTX.fillText(label, 0, 0);
-      CTX.restore();
-    }
-  }
-}
-
-function downloadSheet(){
-  CAN.toBlob(b => download(`${sheetLabel()}_p1.png`, b), 'image/png');
-}
-
-function openLargePreview(){
-  if (CAN.width === 0 || CAN.height === 0) renderSheet();
-  const url = CAN.toDataURL('image/png');
-  const w = window.open('', '_blank');
-  if (!w) { toast('Popup blocked'); return; }
-  w.document.write(`<title>Card Sheet Preview</title>
-    <style>html,body{margin:0;background:#0b0b0e}img{display:block;margin:0 auto;max-width:100%;height:auto}</style>
-    <img src="${url}" alt="Card Sheet Preview">`);
-  w.document.close();
-}
+function computeGrid(){ const rows=+$('rows').value||7; const cols=+$('cols').value||10; const cardW=+$('cardW').value||744; const cardH=+$('cardH').value||1038; const margin=+$('margin').value||24; const scale=Math.max(1,+$('scale').value||1); const bleed=+$('bleed').value||0; const setCode=$('setCode').value.trim(); return {rows,cols,cardW,cardH,margin,scale,bleed,setCode}; }
+function allocCanvas(W,H,scale){ const c=document.createElement('canvas'); c.width=Math.floor(W*scale); c.height=Math.floor(H*scale); const ctx=c.getContext('2d'); ctx.setTransform(scale,0,0,scale,0,0); return {c,ctx}; }
+function drawPage(ctx,cards,grid){ const {rows,cols,cardW,cardH,margin,bleed,setCode}=grid; const gridW=cols*cardW+(cols+1)*margin; const gridH=rows*cardH+(rows+1)*margin; ctx.fillStyle='#0b0b0e'; ctx.fillRect(0,0,gridW,gridH); for(let i=0;i<cards.length;i++){ const r=Math.floor(i/cols), c=i%cols; const x=margin+c*(cardW+margin); const y=margin+r*(cardH+margin); renderCard(ctx,cards[i],x,y,cardW,cardH,{bleed,setCode}); } }
+function renderSheet(){ const src=pickSource(); if(!src.length){ toast('No cards in the chosen section.'); return; } const g=computeGrid(); const per=g.rows*g.cols; const pageCards=src.slice(0,per); const W=g.cols*g.cardW+(g.cols+1)*g.margin; const H=g.rows*g.cardH+(g.rows+1)*g.margin; CAN.width=Math.floor(W*g.scale); CAN.height=Math.floor(H*g.scale); CTX.setTransform(g.scale,0,0,g.scale,0,0); drawPage(CTX,pageCards,g); }
+async function downloadAllSheets(){ const src=pickSource(); if(!src.length){ toast('No cards to export.'); return; } const g=computeGrid(); const per=g.rows*g.cols; const total=Math.ceil(src.length/per); const base=sheetLabel(); for(let p=0;p<total;p++){ const slice=src.slice(p*per,(p+1)*per); const W=g.cols*g.cardW+(g.cols+1)*g.margin; const H=g.rows*g.cardH+(g.rows+1)*g.margin; const {c,ctx}=allocCanvas(W,H,g.scale); drawPage(ctx,slice,g); await new Promise(res=>c.toBlob(b=>{download(`${base}_p${p+1}.png`,b);res();},'image/png')); } }
+function previewAllSheets(){ const src=pickSource(); if(!src.length){ toast('No cards to preview.'); return; } const g=computeGrid(); const per=g.rows*g.cols; const total=Math.ceil(src.length/per); for(let p=0;p<total;p++){ const slice=src.slice(p*per,(p+1)*per); const W=g.cols*g.cardW+(g.cols+1)*g.margin; const H=g.rows*g.cardH+(g.rows+1)*g.margin; const {c,ctx}=allocCanvas(W,H,g.scale); drawPage(ctx,slice,g); const url=c.toDataURL('image/png'); const w=window.open('','_blank'); if(w){ w.document.write(`<title>Sheet ${p+1}/${total}</title><style>html,body{margin:0;background:#0b0b0e}img{display:block;margin:0 auto;max-width:100%;height:auto}</style><img src="${url}" alt="Card Sheet ${p+1}">`); w.document.close(); } } }
+function sheetLabel(){ const s=$('sheetSource').value; if(s==='main') return 'star_of_ash_main'; if(s==='frags') return 'star_of_ash_fragments'; if(s==='chief') return 'star_of_ash_chiefs'; return 'star_of_ash_all'; }
+function renderBacks(){ const g=computeGrid(); const {rows,cols,cardW,cardH,margin}=g; const label=$('backLabel').value||'Star of Ash'; const color=$('backColor').value||'#0b0b0e'; const W=cols*cardW+(cols+1)*margin; const H=rows*cardH+(rows+1)*margin; CAN.width=Math.floor(W*g.scale); CAN.height=Math.floor(H*g.scale); CTX.setTransform(g.scale,0,0,g.scale,0,0); CTX.fillStyle='#0b0b0e'; CTX.fillRect(0,0,W,H); for(let r=0;r<rows;r++){ for(let c=0;c<cols;c++){ const x=margin+c*(cardW+margin), y=margin+r*(cardH+margin); drawRoundedRect(CTX,x,y,cardW,cardH,24); CTX.fillStyle=color; CTX.fill(); CTX.strokeStyle='#222633'; CTX.lineWidth=2; CTX.stroke(); CTX.save(); CTX.translate(x+cardW/2,y+cardH/2); CTX.fillStyle='#e7e8ea'; CTX.font='bold 40px system-ui'; CTX.textAlign='center'; CTX.textBaseline='middle'; CTX.fillText(label,0,0); CTX.restore(); } } }
+function downloadSheet(){ CAN.toBlob(b=>download(`${sheetLabel()}_p1.png`,b),'image/png'); }
+function openLargePreview(){ if(CAN.width===0||CAN.height===0) renderSheet(); const url=CAN.toDataURL('image/png'); const w=window.open('','_blank'); if(!w){ toast('Popup blocked'); return; } w.document.write(`<title>Card Sheet Preview</title><style>html,body{margin:0;background:#0b0b0e}img{display:block;margin:0 auto;max-width:100%;height:auto}</style><img src="${url}" alt="Card Sheet Preview">`); w.document.close(); }
 
 // ====== EVENTS ======
 $('file').addEventListener('change', async e=>{
-  const file = e.target.files[0];
-  if (!file) return;
-  const text = await file.text();
-  const rows = parseCSV(text);
-  allCards = toCards(rows);
-  $('status').textContent = `Loaded ${allCards.length} cards`;
+  const file=e.target.files[0]; if(!file) return;
+  const text=await file.text();
+  const rows=parseCSV(text);
+  allCards = rowsToCards(rows);
+  $('status').textContent = `Cards: from CSV (${allCards.length})`;
   renderCards(filtered());
 });
 
-['faction','type','text','costMin','costMax'].forEach(id=>{
-  $(id).addEventListener('input', ()=>renderCards(filtered()));
-});
-$('clear').addEventListener('click', ()=>{
-  ['faction','type','text','costMin','costMax'].forEach(id=>$(id).value='');
-  renderCards(filtered());
-});
+['faction','type','text','costMin','costMax'].forEach(id=>$(id).addEventListener('input', ()=>renderCards(filtered())));
+$('clear').addEventListener('click', ()=>{ ['faction','type','text','costMin','costMax'].forEach(id=>$(id).value=''); renderCards(filtered()); });
 
-// Add All events
-$('addAllFiltered').addEventListener('click', ()=>{
-  const mode = $('addAllMode').value;
-  addAll(filtered(), mode);
-});
-$('addAllAll').addEventListener('click', ()=>{
-  const mode = $('addAllMode').value;
-  addAll(allCards, mode);
-});
+$('addAllFiltered').addEventListener('click', ()=> addAll(filtered(), $('addAllMode').value));
+$('addAllAll').addEventListener('click', ()=> addAll(allCards, $('addAllMode').value));
 $('clearDeck').addEventListener('click', clearDeck);
 
 $('validate').addEventListener('click', validateDeck);
@@ -725,37 +566,32 @@ $('renderBacks').addEventListener('click', renderBacks);
 $('downloadSheet').addEventListener('click', downloadSheet);
 $('previewFull').addEventListener('click', openLargePreview);
 $('downloadAll').addEventListener('click', downloadAllSheets);
-$('previewAll').addEventListener('click', ()=>{
-  const srcCards = pickSource();
-  if (!srcCards.length){ toast('No cards to preview.'); return; }
-  const grid = computeGrid();
-  const perPage = grid.rows * grid.cols;
-  const totalPages = Math.ceil(srcCards.length / perPage);
-  for (let p=0;p<totalPages;p++){
-    const slice = srcCards.slice(p*perPage, (p+1)*perPage);
-    const gridW = grid.cols*grid.cardW + (grid.cols+1)*grid.margin;
-    const gridH = grid.rows*grid.cardH + (grid.rows+1)*grid.margin;
-    const { c, ctx } = (function(W,H,S){ const cv=document.createElement('canvas'); cv.width=W*S; cv.height=H*S; const ct=cv.getContext('2d'); ct.setTransform(S,0,0,S,0,0); return {c:cv,ctx:ct};})(gridW,gridH,grid.scale);
-    drawPage(ctx, slice, grid);
-    const url = c.toDataURL('image/png');
-    const w = window.open('', '_blank');
-    if (w){
-      w.document.write(`<title>Sheet ${p+1}/${totalPages}</title>
-        <style>html,body{margin:0;background:#0b0b0e}img{display:block;margin:0 auto;max-width:100%;height:auto}</style>
-        <img src="${url}" alt="Card Sheet ${p+1}">`);
-      w.document.close();
-    }
-  }
+$('previewAll').addEventListener('click', previewAllSheets);
+
+// Data & Presets
+$('useBuiltin').addEventListener('click', useBuiltin);
+$('useSaved').addEventListener('click', useSaved);
+$('saveFromCSV').addEventListener('click', ()=>{
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='.csv'; inp.onchange=()=>inp.files[0]&&importMasterCSVAndSave(inp.files[0]); inp.click();
 });
+$('exportSavedJSON').addEventListener('click', exportSavedJSON);
+$('clearSaved').addEventListener('click', clearSaved);
+
+$('loadPresetAppend').addEventListener('click', ()=>{ const n=$('presetSelect').value; if(n) applyPreset(n,'append'); });
+$('loadPresetReplace').addEventListener('click', ()=>{ const n=$('presetSelect').value; if(n) applyPreset(n,'replace'); });
+$('importPresetCSV').addEventListener('click', ()=>{
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='.csv'; inp.onchange=()=>inp.files[0]&&importPresetCSVAndSave(inp.files[0]); inp.click();
+});
+$('deletePreset').addEventListener('click', ()=>{ const n=$('presetSelect').value; if(n) deletePreset(n); });
 
 // ====== UTILS ======
-function escapeHtml(s){ return (s??'').replace(/[&<>"]/g, ch=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[ch])); }
-let toastTimer;
-function toast(msg){
-  const el = $('validationMsg');
-  el.textContent = msg; el.className = 'small warn';
-  clearTimeout(toastTimer); toastTimer = setTimeout(()=>{el.textContent='';}, 3000);
-}
+function $(id){ return document.getElementById(id); }
+function escapeHtml(s){ return (s??'').replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+let toastTimer; function toast(msg){ const el=$('validationMsg'); el.textContent=msg; el.className='small warn'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>{el.textContent='';},3000); }
+
+// ====== INIT ======
+useBuiltin();         // default to built-in list on first load
+loadPresets();        // load presets (built-in + saved)
 })();
 </script>
 </body>
