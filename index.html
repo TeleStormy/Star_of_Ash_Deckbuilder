@@ -227,31 +227,63 @@ function addToDeck(bucket, card){
 }
 
 function setChief(card){
-  if (!/war\s*chief/i.test(card.type || '')) { toast('Selected card is not a War Chief.'); return; }
+  if (!/war\s*chief/i.test(card.type || '')) {
+    toast('Selected card is not a War Chief.');
+    return;
+  }
   deck.chief.push(card);
   renderAll();
 }
 
-
-function addAll(cards, mode){
-  const list=cards||[], m=mode||'auto';
-  for(const c of list){
-    const t=(c.type||'').toLowerCase();
-    if(m==='main') deck.main.push(c);
-    else if(m==='frags') deck.frags.push(c);
-    else if(m==='chief'){ if(/war\\s*chief/.test(t)) deck.chief.push(c); }
-    else{ if(/fragment/.test(t)) deck.frags.push(c); else if(/war\\s*chief/.test(t)) deck.chief.push(c); else deck.main.push(c); }
- }
+function clearDeck(){
+  deck.main.length = 0;
+  deck.frags.length = 0;
+  deck.chief.length = 0;
   renderAll();
 }
-function clearDeck(){ deck.main.length=deck.frags.length=deck.chief.length=0; renderAll(); }
-function validateDeck(){ ...
+
+function validateDeck(){
+  $('validationMsg').textContent =
+    `Summary — Main: ${deck.main.length} • Fragments: ${deck.frags.length} • War Chiefs: ${deck.chief.length}`;
+  $('validationMsg').className = 'small';
+}
 
 // EXPORTS
-function download(filename, blobOrText){ const blob=blobOrText instanceof Blob?blobOrText:new Blob([blobOrText],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
-function exportJSON(){ download('star_of_ash_deck.json', JSON.stringify(deck,null,2)); }
-function exportCSV(){ const rows=[['Section','Card Name','Faction','Card Type','Cost','ATK','HP','Rules Text','Flavor Text'].join(',')]; const push=(s,c)=>rows.push([s,c.name,c.faction,c.type,c.cost,c.atk,c.hp,(c.text||'').replace(/,/g,';'),(c.flavor||'').replace(/,/g,';')].join(',')); deck.chief.forEach(c=>push('War Chief',c)); deck.main.forEach(c=>push('Main',c)); deck.frags.forEach(c=>push('Fragment',c)); download('star_of_ash_deck.csv', rows.join('\\n')); }
-function exportNames(){ const out=[]; if(deck.chief.length) out.push(\`# War Chief (\${deck.chief.length})\`,...deck.chief.map(c=>c.name),''); out.push(\`# Main (\${deck.main.length})\`,...deck.main.map(c=>c.name),''); out.push(\`# Fragments (\${deck.frags.length})\`,...deck.frags.map(c=>c.name)); download('star_of_ash_deck.txt', out.join('\\n')); }
+function download(filename, blobOrText){
+  const blob = blobOrText instanceof Blob
+    ? blobOrText
+    : new Blob([blobOrText], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportJSON(){
+  download('star_of_ash_deck.json', JSON.stringify(deck, null, 2));
+}
+
+function exportCSV(){
+  const rows = [['Section','Card Name','Faction','Type','Cost','ATK','HP','Rules Text','Flavor Text']];
+  const pushRow = (section, c) => rows.push([
+    section, c.name, c.faction||'', c.type||'', c.cost||'', c.atk||'', c.hp||'',
+    (c.text||'').replace(/\r?\n/g,' '), (c.flavor||'').replace(/\r?\n/g,' ')
+  ]);
+  deck.chief.forEach(c => pushRow('War Chief', c));
+  deck.main.forEach(c => pushRow('Main', c));
+  deck.frags.forEach(c => pushRow('Fragments', c));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  download('star_of_ash_deck.csv', csv);
+}
+
+function exportNames(){
+  const out = [];
+  if (deck.chief.length) out.push('# War Chief', ...deck.chief.map(c => c.name), '');
+  if (deck.main.length)  out.push(`# Main (${deck.main.length})`,  ...deck.main.map(c => c.name), '');
+  if (deck.frags.length) out.push(`# Fragments (${deck.frags.length})`, ...deck.frags.map(c => c.name), '');
+  download('star_of_ash_deck.txt', out.join('\n'));
+}
 
 // SHEET EXPORTER
 const CAN=$('sheet'); const CTX=CAN.getContext('2d');
