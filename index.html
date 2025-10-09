@@ -177,37 +177,61 @@ function renderCards(list){
       </div>`;
     el.querySelectorAll('button').forEach(b=>{
       b.addEventListener('click',()=>{
-        if(b.dataset.add==='main') addToDeck('main',c);
-        if(b.dataset.add==='frag') addToDeck('frags',c);
-        if(b.dataset.add==='chief') setChief(c);
-        updateCounts();
-      });
-    });
-    cardsEl.appendChild(el);
-  });
-  $('results').textContent = `${list.length} results`;
-}
-
-function renderDeckList(container, list, bucket){
+       function renderDeckList(container, list, bucket){
   container.innerHTML='';
   list.forEach((c,i)=>{
-    const li=document.createElement('div'); li.className='li';
-    li.innerHTML=`<div><div class="name">${escapeHtml(c.name)}</div><div class="small muted">${escapeHtml(c.faction||'')} • ${escapeHtml(c.type||'')} • Cost ${escapeHtml(c.cost||'—')} ${c.atk&&c.hp?` • ATK ${c.atk} / HP ${c.hp}`:''}</div></div>`;
-    const r=document.createElement('div'); r.innerHTML=\`<button class="btn" data-remove="\${bucket}" data-idx="\${i}">Remove</button>\`;
-    li.appendChild(r); container.appendChild(li);
+    const li = document.createElement('div');
+    li.className = 'li';
+    li.innerHTML = `<div>
+        <div class="name">${escapeHtml(c.name)}</div>
+        <div class="small muted">
+          ${escapeHtml(c.faction || '')} • ${escapeHtml(c.type || '')} • Cost ${escapeHtml(c.cost || '—')}
+          ${c.atk && c.hp ? ` • ATK ${c.atk} / HP ${c.hp}` : ''}
+        </div>
+      </div>`;
+    const r = document.createElement('div');
+    r.innerHTML = `<button class="btn" data-remove="${bucket}" data-idx="${i}">Remove</button>`;
+    li.appendChild(r);
+    container.appendChild(li);
   });
-  container.querySelectorAll('button[data-remove]').forEach(btn=> btn.addEventListener('click',()=>{ const b=btn.dataset.remove, ix=+btn.dataset.idx; deck[b].splice(ix,1); renderAll(); }));
+
+  container.querySelectorAll('button[data-remove]').forEach(btn =>
+    btn.addEventListener('click', () => {
+      const b = btn.dataset.remove, ix = +btn.dataset.idx;
+      deck[b].splice(ix, 1);
+      renderAll();
+    })
+  );
 }
-function renderAll(){ renderDeckList(mainList,deck.main,'main'); renderDeckList(fragList,deck.frags,'frags'); renderDeckList(chiefList,deck.chief,'chief'); updateCounts(); }
-function updateCounts(){ $('countMain').textContent=\`Main: \${deck.main.length}\`; $('countFrags').textContent=\`Fragments: \${deck.frags.length}\`; $('countChief').textContent=\`War Chiefs: \${deck.chief.length}\`; }
+
+function renderAll(){
+  renderDeckList(mainList, deck.main, 'main');
+  renderDeckList(fragList, deck.frags, 'frags');
+  renderDeckList(chiefList, deck.chief, 'chief');
+  updateCounts();
+}
+
+function updateCounts(){
+  $('countMain').textContent = `Main: ${deck.main.length}`;
+  $('countFrags').textContent = `Fragments: ${deck.frags.length}`;
+  $('countChief').textContent = `War Chiefs: ${deck.chief.length}`;
+}
 
 function addToDeck(bucket, card){
-  const t=(card.type||'').toLowerCase();
-  if(bucket==='frags' && !/fragment/.test(t)) toast('Tip: only Fragment cards belong in the Fragment deck.');
-  if(bucket==='main' && /fragment/.test(t))  toast('Tip: Fragments usually go in the Fragment deck.');
-  if(bucket==='main') deck.main.push(card); else if(bucket==='frags') deck.frags.push(card); renderAll();
+  const t = (card.type || '').toLowerCase();
+  if (bucket === 'frags' && !/fragment/.test(t)) toast('Tip: only Fragment cards belong in the Fragment deck.');
+  if (bucket === 'main'  &&  /fragment/.test(t))  toast('Tip: Fragments usually go in the Fragment deck.');
+  if (bucket === 'main') deck.main.push(card);
+  else if (bucket === 'frags') deck.frags.push(card);
+  renderAll();
 }
-function setChief(card){ if(!/war\\s*chief/i.test(card.type||'')){ toast('Selected card is not a War Chief.'); return; } deck.chief.push(card); renderAll(); }
+
+function setChief(card){
+  if (!/war\s*chief/i.test(card.type || '')) { toast('Selected card is not a War Chief.'); return; }
+  deck.chief.push(card);
+  renderAll();
+}
+
 
 function addAll(cards, mode){
   const list=cards||[], m=mode||'auto';
