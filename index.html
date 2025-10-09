@@ -98,17 +98,20 @@ Import Cards (CSV)
 <input id="bleed" type="number" min="0" value="36" placeholder="Bleed (px)" title="Bleed (px)" />
 <input id="margin" type="number" min="0" value="24" placeholder="Margin (px)" title="Margin (px)" />
 <input id="scale" type="number" min="1" value="1" placeholder="Export Scale" title="Export resolution scale" />
-<!-- NEW: Font Scale (text size control) -->
+<!-- Font Scale (text size control) -->
 <input id="fontScale" type="number" min="0.6" step="0.1" value="1" placeholder="Font Scale" title="Font size multiplier" />
 </div>
 <div class="small muted">
-Tips: cardW×cardH in px (e.g., 744×1038 ~ 2.48″×3.46″ @300dpi). Bleed adds to the draw area border. Scale multiplies output resolution.
+Tips: cardW×cardH in px (e.g., 744×1038 ≈ 2.48″×3.46″ @300dpi). Bleed is extra draw border. Scale multiplies output resolution.
 </div>
 <div class="row">
 <button id="renderSheet" class="btn primary">Render Card Sheet</button>
 <button id="downloadSheet" class="btn">Download PNG</button>
 <button id="renderBacks" class="btn">Render Back Sheet</button>
 <button id="previewFull" class="btn">Open Large Preview</button>
+<!-- NEW tiny additions for multipage -->
+<button id="downloadAll" class="btn">Download ALL</button>
+<button id="previewAll" class="btn">Preview ALL</button>
 <input id="backLabel" placeholder="Back label (e.g., Star of Ash)" title="Back label text" />
 <input id="backColor" type="color" value="#0b0b0e" title="Back color" />
 </div>
@@ -129,18 +132,18 @@ Tips: cardW×cardH in px (e.g., 744×1038 ~ 2.48″×3.46″ @300dpi). Bleed add
 <h2>Deck</h2>
 <div class="body deckcol">
 <div class="counts">
-<div class="pill" id="countMain">Main: 0 / 45</div>
-<div class="pill" id="countFrags">Fragments: 0 / 20</div>
-<div class="pill" id="countChief">War Chiefs: 0 / 1</div>
+<div class="pill" id="countMain">Main: 0</div>
+<div class="pill" id="countFrags">Fragments: 0</div>
+<div class="pill" id="countChief">War Chiefs: 0</div>
 </div>
-<div class="small muted">Main Deck (singleton, 45 cards)</div>
+<div class="small muted">Main Deck (no limits)</div>
 <div class="list" id="mainList"></div>
-<div class="small muted">Fragment Deck (20 cards)</div>
+<div class="small muted">Fragment Deck (no limits)</div>
 <div class="list" id="fragList"></div>
-<div class="small muted">War Chief (exactly 1)</div>
+<div class="small muted">War Chiefs (no limits)</div>
 <div class="list" id="chiefList"></div>
 <footer>
-<button id="validate" class="btn primary">Validate Deck</button>
+<button id="validate" class="btn primary">Summary</button>
 <div id="validationMsg" class="small"></div>
 </footer>
 </div>
@@ -268,44 +271,35 @@ function renderAll(){
 }
 
 function updateCounts(){
-  $('countMain').textContent = `Main: ${deck.main.length} / 45`;
-  $('countFrags').textContent = `Fragments: ${deck.frags.length} / 20`;
-  $('countChief').textContent = `War Chiefs: ${deck.chief.length} / 1`;
+  $('countMain').textContent  = `Main: ${deck.main.length}`;
+  $('countFrags').textContent = `Fragments: ${deck.frags.length}`;
+  $('countChief').textContent = `War Chiefs: ${deck.chief.length}`;
 }
 
+// === Limits removed here ===
 function addToDeck(bucket, card){
   const t = (card.type||'').toLowerCase();
-  if (bucket==='frags' && !/fragment/.test(t)){ toast('Only Fragment cards belong in the Fragment deck.'); return; }
-  if (bucket==='main' && /fragment/.test(t)){ toast('Fragments belong in the Fragment deck.'); return; }
+  // Keep helpful routing guard, but no hard caps/dup checks.
+  if (bucket==='frags' && !/fragment/.test(t)){ toast('Tip: only Fragment cards belong in the Fragment deck.'); }
+  if (bucket==='main'  && /fragment/.test(t)){ toast('Tip: Fragments usually go in the Fragment deck.'); }
 
-  if (bucket==='main'){
-    if (deck.main.some(x=>x.name===card.name)){ toast('Singleton rule: that card is already in Main.'); return; }
-    if (deck.main.length>=45){ toast('Main deck is already at 45.'); return; }
-    deck.main.push(card);
-  }
-  else if (bucket==='frags'){
-    if (deck.frags.length>=20){ toast('Fragment deck is already at 20.'); return; }
-    deck.frags.push(card);
-  }
+  if (bucket==='main'){ deck.main.push(card); }
+  else if (bucket==='frags'){ deck.frags.push(card); }
   renderAll();
 }
+
+// Set Chief now ADDS instead of replacing, duplicates allowed
 function setChief(card){
   if (!/war\s*chief/i.test(card.type||'')){ toast('Selected card is not a War Chief.'); return; }
-  deck.chief = [card];
+  deck.chief.push(card);
   renderAll();
 }
 
+// Validation becomes a neutral summary
 function validateDeck(){
-  const msgs = [];
-  if (deck.main.length!==45) msgs.push(`Main must be 45 (current ${deck.main.length}).`);
-  if (deck.frags.length!==20) msgs.push(`Fragments must be 20 (current ${deck.frags.length}).`);
-  if (deck.chief.length!==1) msgs.push(`Exactly 1 War Chief required (current ${deck.chief.length}).`);
-  const names = deck.main.map(c=>c.name);
-  const dup = names.find((n,i)=>names.indexOf(n)!==i);
-  if (dup) msgs.push(`Singleton violated: duplicate ${dup}.`);
+  const msg = `Summary — Main: ${deck.main.length} • Fragments: ${deck.frags.length} • War Chiefs: ${deck.chief.length}`;
   const el = $('validationMsg');
-  if (!msgs.length){ el.textContent = '✓ Deck is valid.'; el.className='small ok'; }
-  else { el.textContent = '⚠ ' + msgs.join(' '); el.className='small warn'; }
+  el.textContent = msg; el.className='small';
 }
 
 // ====== FILTERING ======
@@ -361,11 +355,9 @@ function exportCSV(){
 }
 function exportNames(){
   const out = [];
-  if (deck.chief[0]) out.push(`# War Chief\n${deck.chief[0].name}\n`);
-  out.push(`# Main (${deck.main.length})`);
-  deck.main.forEach(c=>out.push(c.name));
-  out.push(`\n# Fragments (${deck.frags.length})`);
-  deck.frags.forEach(c=>out.push(c.name));
+  if (deck.chief.length) out.push(`# War Chief (${deck.chief.length})`, ...deck.chief.map(c=>c.name), '');
+  out.push(`# Main (${deck.main.length})`, ...deck.main.map(c=>c.name), '');
+  out.push(`# Fragments (${deck.frags.length})`, ...deck.frags.map(c=>c.name));
   download('star_of_ash_deck.txt', out.join('\n'));
 }
 
@@ -427,23 +419,18 @@ function factionTint(faction){
 
 function renderCard(ctx, card, x, y, w, h, opts){
   const { bleed=36, setCode='' } = opts;
-
-  // font scale
   const fs = Math.max(0.6, parseFloat($('fontScale').value || '1'));
 
   ctx.save();
-  // background
   drawRoundedRect(ctx, x, y, w, h, 24);
   ctx.fillStyle = '#11151f'; ctx.fill(); ctx.strokeStyle='#2b3145'; ctx.lineWidth=2; ctx.stroke();
 
-  // top stripe
   ctx.fillStyle = factionTint(card.faction);
   ctx.fillRect(x, y, w, 12);
 
   const pad = 20;
   let cx = x + pad, cy = y + pad + Math.round(14*fs);
 
-  // name + cost
   ctx.fillStyle = '#e9ebef';
   ctx.font = `bold ${Math.round(28*fs)}px system-ui`;
   ctx.fillText(card.name || 'Unnamed', cx, cy);
@@ -455,18 +442,15 @@ function renderCard(ctx, card, x, y, w, h, opts){
   ctx.textAlign = 'left';
   cy += Math.round(28*fs);
 
-  // type line + faction
   ctx.fillStyle = '#9aa0ac';
   ctx.font = `${Math.round(14*fs)}px system-ui`;
   ctx.fillText(`${card.type || '—'}  •  ${card.faction || '—'}`, cx, cy);
   cy += Math.round(14*fs);
 
-  // rules box
   const boxY = cy + Math.round(10*fs), boxH = h*0.46;
   drawRoundedRect(ctx, x+pad-6, boxY-18, w-2*pad+12, boxH+28, 14);
   ctx.fillStyle = '#141a26'; ctx.fill(); ctx.strokeStyle='#262d3f'; ctx.stroke();
 
-  // rules text
   ctx.fillStyle = '#e1e4ea';
   const rulesSize = Math.round(16*fs);
   ctx.font = `${rulesSize}px system-ui`;
@@ -474,14 +458,12 @@ function renderCard(ctx, card, x, y, w, h, opts){
   let ty = boxY;
   ty = wrapText(ctx, (card.text||''), x+pad, ty, textMaxW, Math.round(20*fs), 10);
 
-  // flavor
   if (card.flavor){
     ctx.fillStyle = '#a5acb8';
     ctx.font = `italic ${Math.round(14*fs)}px system-ui`;
     wrapText(ctx, '“'+card.flavor+'”', x+pad, ty+Math.round(6*fs), textMaxW, Math.round(18*fs), 3);
   }
 
-  // ATK/HP or HP badge for War Chief
   if (/war\s*chief/i.test(card.type||'')){
     const r = Math.round(32*fs);
     ctx.beginPath();
@@ -503,7 +485,6 @@ function renderCard(ctx, card, x, y, w, h, opts){
     ctx.fillText('Fragment', x + w - pad - Math.round(120*fs), y + h - pad - Math.round(18*fs));
   }
 
-  // set code
   if (setCode){
     ctx.fillStyle = '#80889a';
     ctx.font = `bold ${Math.round(13*fs)}px system-ui`;
@@ -513,10 +494,7 @@ function renderCard(ctx, card, x, y, w, h, opts){
   ctx.restore();
 }
 
-function renderSheet(){
-  const srcCards = pickSource();
-  if (srcCards.length===0){ toast('No cards in the chosen section.'); return; }
-
+function computeGrid(){
   const rows = +$('rows').value || 7;
   const cols = +$('cols').value || 10;
   const cardW = +$('cardW').value || 744;
@@ -525,42 +503,113 @@ function renderSheet(){
   const scale = Math.max(1, +$('scale').value || 1);
   const bleed = +$('bleed').value || 0;
   const setCode = $('setCode').value.trim();
+  return { rows, cols, cardW, cardH, margin, scale, bleed, setCode };
+}
 
+function allocCanvas(W,H,scale){
+  const c = document.createElement('canvas');
+  c.width = Math.floor(W*scale);
+  c.height = Math.floor(H*scale);
+  const ctx = c.getContext('2d');
+  ctx.setTransform(scale,0,0,scale,0,0);
+  return { c, ctx };
+}
+
+function drawPage(ctx, cards, grid, pageIndex){
+  const { rows, cols, cardW, cardH, margin, bleed, setCode } = grid;
   const gridW = cols*cardW + (cols+1)*margin;
   const gridH = rows*cardH + (rows+1)*margin;
-  CAN.width = Math.floor(gridW * scale);
-  CAN.height = Math.floor(gridH * scale);
-  CTX.setTransform(scale,0,0,scale,0,0);
 
-  CTX.fillStyle = '#0b0b0e';
-  CTX.fillRect(0,0,gridW,gridH);
+  ctx.fillStyle = '#0b0b0e';
+  ctx.fillRect(0,0,gridW,gridH);
 
-  let i = 0;
-  for (let r=0;r<rows;r++){
-    for (let c=0;c<cols;c++){
-      const x = margin + c*(cardW+margin);
-      const y = margin + r*(cardH+margin);
-      const card = srcCards[i++];
-      if (card) renderCard(CTX, card, x, y, cardW, cardH, {bleed, setCode});
+  for (let i=0;i<cards.length;i++){
+    const r = Math.floor(i/cols), c = i%cols;
+    const x = margin + c*(cardW+margin);
+    const y = margin + r*(cardH+margin);
+    renderCard(ctx, cards[i], x, y, cardW, cardH, {bleed, setCode});
+  }
+}
+
+function renderSheet(){
+  const srcCards = pickSource();
+  if (srcCards.length===0){ toast('No cards in the chosen section.'); return; }
+
+  const grid = computeGrid();
+  const perPage = grid.rows * grid.cols;
+  const pageCards = srcCards.slice(0, perPage);
+
+  const gridW = grid.cols*grid.cardW + (grid.cols+1)*grid.margin;
+  const gridH = grid.rows*grid.cardH + (grid.rows+1)*grid.margin;
+
+  CAN.width = Math.floor(gridW * grid.scale);
+  CAN.height = Math.floor(gridH * grid.scale);
+  CTX.setTransform(grid.scale,0,0,grid.scale,0,0);
+
+  drawPage(CTX, pageCards, grid, 0);
+}
+
+async function downloadAllSheets(){
+  const srcCards = pickSource();
+  if (!srcCards.length){ toast('No cards to export.'); return; }
+  const grid = computeGrid();
+  const perPage = grid.rows * grid.cols;
+  const totalPages = Math.ceil(srcCards.length / perPage);
+  const base = sheetLabel();
+
+  for (let p=0;p<totalPages;p++){
+    const slice = srcCards.slice(p*perPage, (p+1)*perPage);
+    const gridW = grid.cols*grid.cardW + (grid.cols+1)*grid.margin;
+    const gridH = grid.rows*grid.cardH + (grid.rows+1)*grid.margin;
+    const { c, ctx } = allocCanvas(gridW, gridH, grid.scale);
+    drawPage(ctx, slice, grid, p);
+    await new Promise(res=>c.toBlob(b=>{ download(`${base}_p${p+1}.png`, b); res(); }, 'image/png'));
+  }
+}
+
+function previewAllSheets(){
+  const srcCards = pickSource();
+  if (!srcCards.length){ toast('No cards to preview.'); return; }
+  const grid = computeGrid();
+  const perPage = grid.rows * grid.cols;
+  const totalPages = Math.ceil(srcCards.length / perPage);
+
+  for (let p=0;p<totalPages;p++){
+    const slice = srcCards.slice(p*perPage, (p+1)*perPage);
+    const gridW = grid.cols*grid.cardW + (grid.cols+1)*grid.margin;
+    const gridH = grid.rows*grid.cardH + (grid.rows+1)*grid.margin;
+    const { c, ctx } = allocCanvas(gridW, gridH, grid.scale);
+    drawPage(ctx, slice, grid, p);
+    const url = c.toDataURL('image/png');
+    const w = window.open('', '_blank');
+    if (w){
+      w.document.write(`<title>Sheet ${p+1}/${totalPages}</title>
+        <style>html,body{margin:0;background:#0b0b0e}img{display:block;margin:0 auto;max-width:100%;height:auto}</style>
+        <img src="${url}" alt="Card Sheet ${p+1}">`);
+      w.document.close();
     }
   }
 }
 
+function sheetLabel(){
+  const src = $('sheetSource').value;
+  if (src==='main') return 'star_of_ash_main';
+  if (src==='frags') return 'star_of_ash_fragments';
+  if (src==='chief') return 'star_of_ash_chiefs';
+  return 'star_of_ash_all';
+}
+
 function renderBacks(){
-  const rows = +$('rows').value || 7;
-  const cols = +$('cols').value || 10;
-  const cardW = +$('cardW').value || 744;
-  const cardH = +$('cardH').value || 1038;
-  const margin = +$('margin').value || 24;
-  const scale = Math.max(1, +$('scale').value || 1);
+  const grid = computeGrid();
+  const { rows, cols, cardW, cardH, margin } = grid;
   const label = $('backLabel').value || 'Star of Ash';
   const color = $('backColor').value || '#0b0b0e';
 
   const gridW = cols*cardW + (cols+1)*margin;
   const gridH = rows*cardH + (rows+1)*margin;
-  CAN.width = Math.floor(gridW * scale);
-  CAN.height = Math.floor(gridH * scale);
-  CTX.setTransform(scale,0,0,scale,0,0);
+  CAN.width = Math.floor(gridW * grid.scale);
+  CAN.height = Math.floor(gridH * grid.scale);
+  CTX.setTransform(grid.scale,0,0,grid.scale,0,0);
 
   CTX.fillStyle = '#0b0b0e';
   CTX.fillRect(0,0,gridW,gridH);
@@ -585,11 +634,10 @@ function renderBacks(){
 }
 
 function downloadSheet(){
-  CAN.toBlob(b => download('star_of_ash_cardsheet.png', b), 'image/png');
+  CAN.toBlob(b => download(`${sheetLabel()}_p1.png`, b), 'image/png');
 }
 
 function openLargePreview(){
-  // ensure something is rendered
   if (CAN.width === 0 || CAN.height === 0) renderSheet();
   const url = CAN.toDataURL('image/png');
   const w = window.open('', '_blank');
@@ -629,6 +677,10 @@ $('renderSheet').addEventListener('click', renderSheet);
 $('renderBacks').addEventListener('click', renderBacks);
 $('downloadSheet').addEventListener('click', downloadSheet);
 $('previewFull').addEventListener('click', openLargePreview);
+
+// NEW: multipage actions
+$('downloadAll').addEventListener('click', downloadAllSheets);
+$('previewAll').addEventListener('click', previewAllSheets);
 
 // ====== UTILS ======
 function escapeHtml(s){ return (s??'').replace(/[&<>"]/g, ch=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[ch])); }
