@@ -5,20 +5,21 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Star of Ash — Deck Builder + Sheet Exporter</title>
 <style>
-:root { --bg:#0f0f13; --panel:#171923; --muted:#9aa0ac; --text:#e7e8ea; --accent:#b389ff; --ok:#6dd37a; --warn:#ffb84d; --bad:#ff6b6b; }
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial}
-header{padding:16px 20px;border-bottom:1px solid #222;display:flex;gap:16px;align-items:center;position:sticky;top:0;background:rgba(15,15,19,.95);backdrop-filter:saturate(140%) blur(6px)}
+:root { --bg:#0f0f13; --panel:#171923; --muted:#9aa0ac; --text:#e7e8ea; --accent:#b389ff; --ok:#6dd37a; --warn:#ffb84d; --bad:#ff6b6b; --line:#222633; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+header{padding:16px 20px;border-bottom:1px solid #222;display:flex;gap:16px;align-items:center;position:sticky;top:0;background:rgba(15,15,19,.95);backdrop-filter:saturate(140%) blur(6px);flex-wrap:wrap}
 header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.4px}
 .btn{padding:8px 12px;border-radius:10px;border:1px solid #2a2d3a;background:#1d2030;color:var(--text);cursor:pointer}
 .btn:hover{border-color:#3a3f52}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#0e061a;font-weight:700}
 .layout{display:grid;grid-template-columns:320px 1fr 360px;gap:16px;padding:16px}
-.panel{background:var(--panel);border:1px solid #222633;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 .panel h2{margin:0;padding:12px 14px;border-bottom:1px solid #23283a;font-size:13px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
 .panel .body{padding:12px;display:flex;flex-direction:column;gap:10px;min-height:0}
-input,select{background:#141722;border:1px solid #2a2d3a;color:var(--text);border-radius:10px;padding:8px}
+input,select{width:100%;background:#141722;border:1px solid #2a2d3a;color:var(--text);border-radius:10px;padding:8px;min-height:38px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .cards{overflow:auto;min-height:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
 .card{background:#141722;border:1px solid #252a3a;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
 .tag{font-size:11px;color:#b7bdc9;background:#1e2230;border:1px solid #2a2f43;border-radius:999px;padding:2px 8px;margin-right:6px}
@@ -29,137 +30,148 @@ input,select{background:#141722;border:1px solid #2a2d3a;color:var(--text);borde
 .li{display:flex;justify-content:space-between;gap:8px;border:1px solid #2a2d3a;background:#111421;border-radius:10px;padding:8px}
 .counts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .pill{padding:6px 8px;border-radius:999px;text-align:center;background:#141722;border:1px solid #2a2d3a}
-.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
-footer{padding:12px 16px;border-top:1px solid #222633;display:flex;gap:8px;justify-content:flex-end}
+footer{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
 .small{font-size:12px}
 canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:12px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;color:var(--muted)}
+.hint{font-size:11px;color:var(--muted)}
+/* Responsive: the left panel can get skinny; collapse to 1 column fields */
+@media (max-width: 1200px){
+  .layout{grid-template-columns:1fr}
+}
+@media (max-width: 520px){
+  .grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 <header>
-<h1>Star of Ash — Deck Builder + Sheet Exporter</h1>
-<label class="btn">
-Import Cards (CSV)
-<input id="file" type="file" accept=".csv" hidden />
-</label>
-<button id="exportJson" class="btn">Export Deck (JSON)</button>
-<button id="exportCsv" class="btn">Export Deck (CSV)</button>
-<button id="exportTxt" class="btn">Export Names (TXT)</button>
-<div class="small muted" id="status">No card file loaded</div>
+  <h1>Star of Ash — Deck Builder + Sheet Exporter</h1>
+  <label class="btn">Import Cards (CSV)
+    <input id="file" type="file" accept=".csv" hidden />
+  </label>
+  <button id="exportJson" class="btn">Export Deck (JSON)</button>
+  <button id="exportCsv" class="btn">Export Deck (CSV)</button>
+  <button id="exportTxt" class="btn">Export Names (TXT)</button>
+  <div class="small muted" id="status">No card file loaded</div>
 </header>
 
 <div class="layout">
-<!-- Filters -->
-<section class="panel">
-<h2>Filters</h2>
-<div class="body">
-<div class="grid">
-<select id="faction" title="Faction">
-<option value="">All Factions</option>
-<option>Flame</option>
-<option>Blood</option>
-<option>Ash</option>
-<option>Flame/Blood</option>
-<option>Blood/Ash</option>
-<option>Flame/Ash</option>
-</select>
-<select id="type" title="Card Type">
-<option value="">All Types</option>
-<option>Creature</option>
-<option>Spell</option>
-<option>Relic</option>
-<option>War Chief</option>
-<option>Fragment</option>
-</select>
-<input id="text" placeholder="Search name or rules…" title="Search" />
-<input id="costMin" type="number" min="0" placeholder="Min Cost" title="Minimum Cost" />
-<input id="costMax" type="number" min="0" placeholder="Max Cost" title="Maximum Cost" />
-</div>
-<div class="row">
-<button id="clear" class="btn">Clear Filters</button>
-<div class="small muted" id="results"></div>
-</div>
+  <!-- Filters -->
+  <section class="panel">
+    <h2>Filters</h2>
+    <div class="body">
+      <div class="grid">
+        <div class="field"><label>Faction</label><select id="faction">
+          <option value="">All Factions</option><option>Flame</option><option>Blood</option><option>Ash</option>
+          <option>Flame/Blood</option><option>Blood/Ash</option><option>Flame/Ash</option>
+        </select></div>
+        <div class="field"><label>Card Type</label><select id="type">
+          <option value="">All Types</option><option>Creature</option><option>Spell</option>
+          <option>Relic</option><option>War Chief</option><option>Fragment</option>
+        </select></div>
+        <div class="field"><label>Search</label><input id="text" placeholder="Name, rules, flavor…" /></div>
+        <div class="field"><label>Min Cost (est.)</label><input id="costMin" type="number" min="0" placeholder="0" /></div>
+        <div class="field"><label>Max Cost (est.)</label><input id="costMax" type="number" min="0" placeholder="∞" /></div>
+      </div>
+      <div class="row">
+        <button id="clear" class="btn">Clear Filters</button>
+        <div class="small muted" id="results"></div>
+      </div>
 
-<!-- NEW: Add All controls -->
-<div class="row">
-<select id="addAllMode" title="Where to add">
-  <option value="auto">Add by Type (Auto)</option>
-  <option value="main">Add to Main</option>
-  <option value="frags">Add to Fragments</option>
-  <option value="chief">Add to War Chiefs</option>
-</select>
-<button id="addAllFiltered" class="btn">Add All (Filtered)</button>
-<button id="addAllAll" class="btn">Add All (CSV)</button>
-<button id="clearDeck" class="btn">Clear Deck</button>
-</div>
-</div>
+      <!-- Add All controls (kept) -->
+      <div class="row">
+        <div class="field" style="min-width:180px"><label>Add Mode</label>
+          <select id="addAllMode">
+            <option value="auto">Add by Type (Auto)</option>
+            <option value="main">Add to Main</option>
+            <option value="frags">Add to Fragments</option>
+            <option value="chief">Add to War Chiefs</option>
+          </select>
+        </div>
+        <button id="addAllFiltered" class="btn">Add All (Filtered)</button>
+        <button id="addAllAll" class="btn">Add All (CSV)</button>
+        <button id="clearDeck" class="btn">Clear Deck</button>
+      </div>
+    </div>
 
-<h2>Card Sheet Exporter</h2>
-<div class="body">
-<div class="grid">
-<select id="sheetSource" title="Which deck section to render">
-<option value="all">All Deck Sections</option>
-<option value="main">Main Only</option>
-<option value="frags">Fragments Only</option>
-<option value="chief">War Chief Only</option>
-</select>
-<input id="setCode" placeholder="Set code (optional)" title="Set code printed on each card" />
-<input id="rows" type="number" min="1" value="7" placeholder="Rows" title="Rows" />
-<input id="cols" type="number" min="1" value="10" placeholder="Cols" title="Columns" />
-<input id="cardW" type="number" min="100" value="744" placeholder="Card W (px)" title="Card width (px)" />
-<input id="cardH" type="number" min="140" value="1038" placeholder="Card H (px)" title="Card height (px)" />
-<input id="bleed" type="number" min="0" value="36" placeholder="Bleed (px)" title="Bleed (px)" />
-<input id="margin" type="number" min="0" value="24" placeholder="Margin (px)" title="Margin (px)" />
-<input id="scale" type="number" min="1" value="1" placeholder="Export Scale" title="Export resolution scale" />
-<!-- Font Scale (text size control) -->
-<input id="fontScale" type="number" min="0.6" step="0.1" value="1" placeholder="Font Scale" title="Font size multiplier" />
-</div>
-<div class="small muted">
-Tips: cardW×cardH in px (e.g., 744×1038 ≈ 2.48″×3.46″ @300dpi). Bleed is extra draw border. Scale multiplies output resolution.
-</div>
-<div class="row">
-<button id="renderSheet" class="btn primary">Render Card Sheet</button>
-<button id="downloadSheet" class="btn">Download PNG</button>
-<button id="renderBacks" class="btn">Render Back Sheet</button>
-<button id="previewFull" class="btn">Open Large Preview</button>
-<button id="downloadAll" class="btn">Download ALL</button>
-<button id="previewAll" class="btn">Preview ALL</button>
-<input id="backLabel" placeholder="Back label (e.g., Star of Ash)" title="Back label text" />
-<input id="backColor" type="color" value="#0b0b0e" title="Back color" />
-</div>
-<canvas id="sheet" width="0" height="0"></canvas>
-</div>
-</section>
+    <h2>Card Sheet Exporter</h2>
+    <div class="body">
+      <div class="grid">
+        <div class="field"><label>Source</label>
+          <select id="sheetSource">
+            <option value="all">All Deck Sections</option>
+            <option value="main">Main Only</option>
+            <option value="frags">Fragments Only</option>
+            <option value="chief">War Chief Only</option>
+          </select>
+        </div>
+        <div class="field"><label>Set Code (optional)</label><input id="setCode" placeholder="e.g., SOA-ALPHA" /></div>
 
-<!-- Card Browser -->
-<section class="panel">
-<h2>Cards</h2>
-<div class="body" style="min-height:400px">
-<div class="cards" id="cards"></div>
-</div>
-</section>
+        <div class="field"><label>Rows</label><input id="rows" type="number" min="1" value="7" /></div>
+        <div class="field"><label>Columns</label><input id="cols" type="number" min="1" value="10" /></div>
 
-<!-- Deck Builder -->
-<section class="panel">
-<h2>Deck</h2>
-<div class="body deckcol">
-<div class="counts">
-<div class="pill" id="countMain">Main: 0</div>
-<div class="pill" id="countFrags">Fragments: 0</div>
-<div class="pill" id="countChief">War Chiefs: 0</div>
-</div>
-<div class="small muted">Main Deck (no limits)</div>
-<div class="list" id="mainList"></div>
-<div class="small muted">Fragment Deck (no limits)</div>
-<div class="list" id="fragList"></div>
-<div class="small muted">War Chiefs (no limits)</div>
-<div class="list" id="chiefList"></div>
-<footer>
-<button id="validate" class="btn primary">Summary</button>
-<div id="validationMsg" class="small"></div>
-</footer>
-</div>
-</section>
+        <div class="field"><label>Card Width (px)</label><input id="cardW" type="number" min="100" value="744" /></div>
+        <div class="field"><label>Card Height (px)</label><input id="cardH" type="number" min="140" value="1038" /></div>
+
+        <div class="field"><label>Bleed (px)</label><input id="bleed" type="number" min="0" value="36" /></div>
+        <div class="field"><label>Margin (px)</label><input id="margin" type="number" min="0" value="24" /></div>
+
+        <div class="field"><label>Export Scale (×)</label><input id="scale" type="number" min="1" step="0.25" value="1" /></div>
+        <div class="field"><label>Name Scale (×)</label><input id="nameScale" type="number" min="0.5" step="0.1" value="1" /></div>
+        <div class="field"><label>Rules Scale (×)</label><input id="rulesScale" type="number" min="0.5" step="0.1" value="1" /></div>
+      </div>
+
+      <div class="hint">Tip: 744×1038 ≈ 2.48″×3.46″ at 300 dpi. <b>Export Scale</b> multiplies output resolution. <b>Name/Rules Scale</b> only affect text sizes.</div>
+
+      <div class="row">
+        <button id="renderSheet" class="btn primary">Render Card Sheet</button>
+        <button id="downloadSheet" class="btn">Download PNG</button>
+        <button id="renderBacks" class="btn">Render Back Sheet</button>
+        <button id="previewFull" class="btn">Open Large Preview</button>
+        <button id="downloadAll" class="btn">Download ALL</button>
+        <button id="previewAll" class="btn">Preview ALL</button>
+      </div>
+
+      <div class="grid">
+        <div class="field"><label>Back Label</label><input id="backLabel" placeholder="Star of Ash" /></div>
+        <div class="field"><label>Back Color</label><input id="backColor" type="color" value="#0b0b0e" /></div>
+      </div>
+
+      <canvas id="sheet" width="0" height="0"></canvas>
+    </div>
+  </section>
+
+  <!-- Card Browser -->
+  <section class="panel">
+    <h2>Cards</h2>
+    <div class="body" style="min-height:400px">
+      <div class="cards" id="cards"></div>
+    </div>
+  </section>
+
+  <!-- Deck Builder -->
+  <section class="panel">
+    <h2>Deck</h2>
+    <div class="body deckcol">
+      <div class="counts">
+        <div class="pill" id="countMain">Main: 0</div>
+        <div class="pill" id="countFrags">Fragments: 0</div>
+        <div class="pill" id="countChief">War Chiefs: 0</div>
+      </div>
+      <div class="small muted">Main Deck (no limits)</div>
+      <div class="list" id="mainList"></div>
+      <div class="small muted">Fragment Deck (no limits)</div>
+      <div class="list" id="fragList"></div>
+      <div class="small muted">War Chiefs (no limits)</div>
+      <div class="list" id="chiefList"></div>
+      <footer>
+        <button id="validate" class="btn primary">Summary</button>
+        <div id="validationMsg" class="small"></div>
+      </footer>
+    </div>
+  </section>
 </div>
 
 <script>
@@ -288,25 +300,22 @@ function updateCounts(){
   $('countChief').textContent = `War Chiefs: ${deck.chief.length}`;
 }
 
-// === Limits removed here ===
+// === Limits removed ===
 function addToDeck(bucket, card){
   const t = (card.type||'').toLowerCase();
   if (bucket==='frags' && !/fragment/.test(t)){ toast('Tip: only Fragment cards belong in the Fragment deck.'); }
   if (bucket==='main'  && /fragment/.test(t)){ toast('Tip: Fragments usually go in the Fragment deck.'); }
-
   if (bucket==='main'){ deck.main.push(card); }
   else if (bucket==='frags'){ deck.frags.push(card); }
   renderAll();
 }
-
-// Set Chief now ADDS instead of replacing, duplicates allowed
 function setChief(card){
   if (!/war\s*chief/i.test(card.type||'')){ toast('Selected card is not a War Chief.'); return; }
   deck.chief.push(card);
   renderAll();
 }
 
-// NEW: Add All logic
+// Add All
 function addAll(cards, mode){
   const list = cards || [];
   const m = mode || 'auto';
@@ -315,26 +324,18 @@ function addAll(cards, mode){
     if (m==='main'){ deck.main.push(c); continue; }
     if (m==='frags'){ deck.frags.push(c); continue; }
     if (m==='chief'){ if (/war\s*chief/.test(t)) deck.chief.push(c); continue; }
-    // auto routing
     if (/fragment/.test(t)) deck.frags.push(c);
     else if (/war\s*chief/.test(t)) deck.chief.push(c);
     else deck.main.push(c);
   }
   renderAll();
 }
+function clearDeck(){ deck.main.length=deck.frags.length=deck.chief.length=0; renderAll(); }
 
-function clearDeck(){
-  deck.main.length = 0;
-  deck.frags.length = 0;
-  deck.chief.length = 0;
-  renderAll();
-}
-
-// Validation becomes a neutral summary
+// Summary
 function validateDeck(){
   const msg = `Summary — Main: ${deck.main.length} • Fragments: ${deck.frags.length} • War Chiefs: ${deck.chief.length}`;
-  const el = $('validationMsg');
-  el.textContent = msg; el.className='small';
+  const el = $('validationMsg'); el.textContent = msg; el.className='small';
 }
 
 // ====== FILTERING ======
@@ -454,75 +455,87 @@ function factionTint(faction){
 
 function renderCard(ctx, card, x, y, w, h, opts){
   const { bleed=36, setCode='' } = opts;
-  const fs = Math.max(0.6, parseFloat($('fontScale').value || '1'));
+
+  // NEW: separate scales
+  const nameScale  = Math.max(0.5, parseFloat(($('nameScale').value||'1')));
+  const rulesScale = Math.max(0.5, parseFloat(($('rulesScale').value||'1')));
 
   ctx.save();
+  // base
   drawRoundedRect(ctx, x, y, w, h, 24);
   ctx.fillStyle = '#11151f'; ctx.fill(); ctx.strokeStyle='#2b3145'; ctx.lineWidth=2; ctx.stroke();
 
+  // top tint
   ctx.fillStyle = factionTint(card.faction);
   ctx.fillRect(x, y, w, 12);
 
   const pad = 20;
-  let cx = x + pad, cy = y + pad + Math.round(14*fs);
+  let cx = x + pad, cy = y + pad + Math.round(14*nameScale);
 
+  // Name + Cost
   ctx.fillStyle = '#e9ebef';
-  ctx.font = `bold ${Math.round(28*fs)}px system-ui`;
+  ctx.font = `bold ${Math.round(28*nameScale)}px system-ui`;
   ctx.fillText(card.name || 'Unnamed', cx, cy);
   const cost = card.cost || '—';
-  ctx.font = `bold ${Math.round(22*fs)}px system-ui`;
+  ctx.font = `bold ${Math.round(22*nameScale)}px system-ui`;
   ctx.fillStyle = '#cfd3da';
   ctx.textAlign = 'right';
   ctx.fillText(cost, x + w - pad, cy);
   ctx.textAlign = 'left';
-  cy += Math.round(28*fs);
+  cy += Math.round(28*nameScale);
 
+  // Type • Faction
   ctx.fillStyle = '#9aa0ac';
-  ctx.font = `${Math.round(14*fs)}px system-ui`;
+  ctx.font = `${Math.round(14*nameScale)}px system-ui`;
   ctx.fillText(`${card.type || '—'}  •  ${card.faction || '—'}`, cx, cy);
-  cy += Math.round(14*fs);
+  cy += Math.round(14*nameScale);
 
-  const boxY = cy + Math.round(10*fs), boxH = h*0.46;
+  // Rules box
+  const boxY = cy + Math.round(10*rulesScale), boxH = h*0.46;
   drawRoundedRect(ctx, x+pad-6, boxY-18, w-2*pad+12, boxH+28, 14);
   ctx.fillStyle = '#141a26'; ctx.fill(); ctx.strokeStyle='#262d3f'; ctx.stroke();
 
+  // Rules text
   ctx.fillStyle = '#e1e4ea';
-  const rulesSize = Math.round(16*fs);
+  const rulesSize = Math.round(16*rulesScale);
   ctx.font = `${rulesSize}px system-ui`;
   const textMaxW = w - 2*pad - 10;
   let ty = boxY;
-  ty = wrapText(ctx, (card.text||''), x+pad, ty, textMaxW, Math.round(20*fs), 10);
+  ty = wrapText(ctx, (card.text||''), x+pad, ty, textMaxW, Math.round(20*rulesScale), 10);
 
+  // Flavor
   if (card.flavor){
     ctx.fillStyle = '#a5acb8';
-    ctx.font = `italic ${Math.round(14*fs)}px system-ui`;
-    wrapText(ctx, '“'+card.flavor+'”', x+pad, ty+Math.round(6*fs), textMaxW, Math.round(18*fs), 3);
+    ctx.font = `italic ${Math.round(14*rulesScale)}px system-ui`;
+    wrapText(ctx, '“'+card.flavor+'”', x+pad, ty+Math.round(6*rulesScale), textMaxW, Math.round(18*rulesScale), 3);
   }
 
+  // ATK/HP / Chief / Fragment mark
   if (/war\s*chief/i.test(card.type||'')){
-    const r = Math.round(32*fs);
+    const r = Math.round(32*nameScale);
     ctx.beginPath();
     ctx.arc(x + w - pad - r, y + h - pad - r, r, 0, Math.PI*2);
-    ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=Math.max(2,Math.round(3*fs)); ctx.stroke();
-    ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(22*fs)}px system-ui`;
+    ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=Math.max(2,Math.round(3*nameScale)); ctx.stroke();
+    ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(22*nameScale)}px system-ui`;
     const hp = (card.hp||'').toString() || '40';
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(hp, x + w - pad - r, y + h - pad - r);
     ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   } else if (!/fragment/i.test((card.type||'').toLowerCase())){
-    const bw = Math.round(90*fs), bh = Math.round(48*fs);
-    drawRoundedRect(ctx, x + w - pad - bw, y + h - pad - bh, bw, bh, Math.round(10*fs));
-    ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=Math.max(1,Math.round(2*fs)); ctx.stroke();
-    ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(20*fs)}px system-ui`;
-    ctx.fillText(`${card.atk||'—'} / ${card.hp||'—'}`, x + w - pad - bw + Math.round(12*fs), y + h - pad - bh + Math.round(30*fs));
+    const bw = Math.round(90*nameScale), bh = Math.round(48*nameScale);
+    drawRoundedRect(ctx, x + w - pad - bw, y + h - pad - bh, bw, bh, Math.round(10*nameScale));
+    ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=Math.max(1,Math.round(2*nameScale)); ctx.stroke();
+    ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(20*nameScale)}px system-ui`;
+    ctx.fillText(`${card.atk||'—'} / ${card.hp||'—'}`, x + w - pad - bw + Math.round(12*nameScale), y + h - pad - bh + Math.round(30*nameScale));
   } else {
-    ctx.fillStyle = '#8e95a3'; ctx.font=`bold ${Math.round(16*fs)}px system-ui`;
-    ctx.fillText('Fragment', x + w - pad - Math.round(120*fs), y + h - pad - Math.round(18*fs));
+    ctx.fillStyle = '#8e95a3'; ctx.font=`bold ${Math.round(16*nameScale)}px system-ui`;
+    ctx.fillText('Fragment', x + w - pad - Math.round(120*nameScale), y + h - pad - Math.round(18*nameScale));
   }
 
+  // Set code
   if (setCode){
     ctx.fillStyle = '#80889a';
-    ctx.font = `bold ${Math.round(13*fs)}px system-ui`;
+    ctx.font = `bold ${Math.round(13*nameScale)}px system-ui`;
     ctx.fillText(setCode, x+pad, y + h - pad);
   }
 
@@ -550,7 +563,7 @@ function allocCanvas(W,H,scale){
   return { c, ctx };
 }
 
-function drawPage(ctx, cards, grid, pageIndex){
+function drawPage(ctx, cards, grid){
   const { rows, cols, cardW, cardH, margin, bleed, setCode } = grid;
   const gridW = cols*cardW + (cols+1)*margin;
   const gridH = rows*cardH + (rows+1)*margin;
@@ -569,7 +582,6 @@ function drawPage(ctx, cards, grid, pageIndex){
 function renderSheet(){
   const srcCards = pickSource();
   if (srcCards.length===0){ toast('No cards in the chosen section.'); return; }
-
   const grid = computeGrid();
   const perPage = grid.rows * grid.cols;
   const pageCards = srcCards.slice(0, perPage);
@@ -581,7 +593,7 @@ function renderSheet(){
   CAN.height = Math.floor(gridH * grid.scale);
   CTX.setTransform(grid.scale,0,0,grid.scale,0,0);
 
-  drawPage(CTX, pageCards, grid, 0);
+  drawPage(CTX, pageCards, grid);
 }
 
 async function downloadAllSheets(){
@@ -597,7 +609,7 @@ async function downloadAllSheets(){
     const gridW = grid.cols*grid.cardW + (grid.cols+1)*grid.margin;
     const gridH = grid.rows*grid.cardH + (grid.rows+1)*grid.margin;
     const { c, ctx } = allocCanvas(gridW, gridH, grid.scale);
-    drawPage(ctx, slice, grid, p);
+    drawPage(ctx, slice, grid);
     await new Promise(res=>c.toBlob(b=>{ download(`${base}_p${p+1}.png`, b); res(); }, 'image/png'));
   }
 }
@@ -612,17 +624,7 @@ function previewAllSheets(){
   for (let p=0;p<totalPages;p++){
     const slice = srcCards.slice(p*perPage, (p+1)*perPage);
     const gridW = grid.cols*grid.cardW + (grid.cols+1)*grid.margin;
-    const gridH = grid.rows*grid.cardH + (grid.rows+1)*grid.margin;
-    const { c, ctx } = allocCanvas(gridW, gridH, grid.scale);
-    drawPage(ctx, slice, grid, p);
-    const url = c.toDataURL('image/png');
-    const w = window.open('', '_blank');
-    if (w){
-      w.document.write(`<title>Sheet ${p+1}/${totalPages}</title>
-        <style>html,body{margin:0;background:#0b0b0e}img{display:block;margin:0 auto;max-width:100%;height:auto}</style>
-        <img src="${url}" alt="Card Sheet ${p+1}">`);
-      w.document.close();
-    }
+    const gridH = grid.rows*grid.cardH + (rows+1)*grid.margin;
   }
 }
 
@@ -697,7 +699,6 @@ $('file').addEventListener('change', async e=>{
 ['faction','type','text','costMin','costMax'].forEach(id=>{
   $(id).addEventListener('input', ()=>renderCards(filtered()));
 });
-
 $('clear').addEventListener('click', ()=>{
   ['faction','type','text','costMin','costMax'].forEach(id=>$(id).value='');
   renderCards(filtered());
@@ -724,7 +725,28 @@ $('renderBacks').addEventListener('click', renderBacks);
 $('downloadSheet').addEventListener('click', downloadSheet);
 $('previewFull').addEventListener('click', openLargePreview);
 $('downloadAll').addEventListener('click', downloadAllSheets);
-$('previewAll').addEventListener('click', previewAllSheets);
+$('previewAll').addEventListener('click', ()=>{
+  const srcCards = pickSource();
+  if (!srcCards.length){ toast('No cards to preview.'); return; }
+  const grid = computeGrid();
+  const perPage = grid.rows * grid.cols;
+  const totalPages = Math.ceil(srcCards.length / perPage);
+  for (let p=0;p<totalPages;p++){
+    const slice = srcCards.slice(p*perPage, (p+1)*perPage);
+    const gridW = grid.cols*grid.cardW + (grid.cols+1)*grid.margin;
+    const gridH = grid.rows*grid.cardH + (grid.rows+1)*grid.margin;
+    const { c, ctx } = (function(W,H,S){ const cv=document.createElement('canvas'); cv.width=W*S; cv.height=H*S; const ct=cv.getContext('2d'); ct.setTransform(S,0,0,S,0,0); return {c:cv,ctx:ct};})(gridW,gridH,grid.scale);
+    drawPage(ctx, slice, grid);
+    const url = c.toDataURL('image/png');
+    const w = window.open('', '_blank');
+    if (w){
+      w.document.write(`<title>Sheet ${p+1}/${totalPages}</title>
+        <style>html,body{margin:0;background:#0b0b0e}img{display:block;margin:0 auto;max-width:100%;height:auto}</style>
+        <img src="${url}" alt="Card Sheet ${p+1}">`);
+      w.document.close();
+    }
+  }
+});
 
 // ====== UTILS ======
 function escapeHtml(s){ return (s??'').replace(/[&<>"]/g, ch=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[ch])); }
