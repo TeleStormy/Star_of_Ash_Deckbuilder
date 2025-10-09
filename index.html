@@ -1350,7 +1350,7 @@ function normalizeCard(c){
   const flavor = c['Flavor Text'] ?? c.flavor ?? '';
   return { name, faction, type, cost, atk, hp, text, flavor };
 }
-const BUILTIN_CARDS = RAW_V9_CARDS.map(normalizeCard);
+const BUILTIN_CARDS = RAW_V9_CARDS.map(normalizeCard).concat(RAW_FRAGMENT_CARDS.map(normalizeCard));
 const BUILTIN_PRESETS = {
   "Starter: Ash — Warden of Ashes (v3)": {
     "chief": [
