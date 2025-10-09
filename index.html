@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Star of Ash — Deck Builder + Sheet Exporter (Embedded)</title>
-<!-- App code trimmed: same features as previous message (unlimited, add-all, presets, independent font scales) -->
+<title>Star of Ash — Deck Builder + Sheet Exporter (v9)</title>
 <style>
 :root { --bg:#0f0f13; --panel:#171923; --muted:#9aa0ac; --text:#e7e8ea; --accent:#b389ff; --ok:#6dd37a; --warn:#ffb84d; --bad:#ff6b6b; --line:#222633; }
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial}
@@ -29,34 +28,26 @@ input,select{width:100%;background:#141722;border:1px solid #2a2d3a;color:var(--
 .counts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .pill{padding:6px 8px;border-radius:999px;text-align:center;background:#141722;border:1px solid #2a2d3a}
 footer{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
-.small{font-size:12px} canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:12px}
+.small{font-size:12px}
+canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:12px}
 .field{display:flex;flex-direction:column;gap:4px} .field label{font-size:11px;color:var(--muted)} .hint{font-size:11px;color:var(--muted)}
-@media (max-width: 1200px){ .layout{grid-template-columns:1fr} } @media (max-width: 520px){ .grid{grid-template-columns:1fr} }
+@media (max-width:1200px){.layout{grid-template-columns:1fr}}
+@media (max-width:520px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
-  <h1>Star of Ash — Deck Builder + Sheet Exporter</h1>
+  <h1>Star of Ash — Deck Builder + Sheet Exporter (v9)</h1>
   <button id="exportJson" class="btn">Export Deck (JSON)</button>
   <button id="exportCsv" class="btn">Export Deck (CSV)</button>
   <button id="exportTxt" class="btn">Export Names (TXT)</button>
-  <div class="small muted" id="status">Cards: built-in</div>
+  <div class="small muted" id="status">Cards: Built-in v9</div>
 </header>
 
 <div class="layout">
   <section class="panel">
-    <h2>Data & Presets</h2>
+    <h2>Filters</h2>
     <div class="body">
-      <div class="grid">
-        <div class="field"><label>Preset (starter deck)</label>
-          <select id="presetSelect"></select>
-        </div>
-        <div class="field"><label>&nbsp;</label>
-          <div class="row"><button id="loadPresetAppend" class="btn">Append</button><button id="loadPresetReplace" class="btn">Replace</button></div>
-        </div>
-      </div>
-
-      <h2>Filters</h2>
       <div class="grid">
         <div class="field"><label>Faction</label><select id="faction">
           <option value="">All Factions</option><option>Flame</option><option>Blood</option><option>Ash</option>
@@ -66,65 +57,1241 @@ footer{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;j
           <option value="">All Types</option><option>Creature</option><option>Spell</option><option>Relic</option><option>War Chief</option><option>Fragment</option>
         </select></div>
         <div class="field"><label>Search</label><input id="text" placeholder="Name, rules, flavor…" /></div>
-        <div class="field"><label>Min Cost (est.)</label><input id="costMin" type="number" min="0" placeholder="0" /></div>
-        <div class="field"><label>Max Cost (est.)</label><input id="costMax" type="number" min="0" placeholder="∞" /></div>
       </div>
       <div class="row"><button id="clear" class="btn">Clear Filters</button><div class="small muted" id="results"></div></div>
-
-      <div class="row">
-        <div class="field" style="min-width:180px"><label>Add Mode</label>
-          <select id="addAllMode"><option value="auto">Add by Type (Auto)</option><option value="main">Add to Main</option><option value="frags">Add to Fragments</option><option value="chief">Add to War Chiefs</option></select>
-        </div>
-        <button id="addAllFiltered" class="btn">Add All (Filtered)</button>
-        <button id="addAllAll" class="btn">Add All (Library)</button>
-        <button id="clearDeck" class="btn">Clear Deck</button>
-      </div>
-
-      <h2>Card Sheet Exporter</h2>
-      <div class="grid">
-        <div class="field"><label>Source</label><select id="sheetSource"><option value="all">All Deck Sections</option><option value="main">Main Only</option><option value="frags">Fragments Only</option><option value="chief">War Chief Only</option></select></div>
-        <div class="field"><label>Set Code (optional)</label><input id="setCode" placeholder="e.g., SOA-ALPHA" /></div>
-        <div class="field"><label>Rows</label><input id="rows" type="number" min="1" value="7" /></div>
-        <div class="field"><label>Columns</label><input id="cols" type="number" min="1" value="10" /></div>
-        <div class="field"><label>Card Width (px)</label><input id="cardW" type="number" min="100" value="744" /></div>
-        <div class="field"><label>Card Height (px)</label><input id="cardH" type="number" min="140" value="1038" /></div>
-        <div class="field"><label>Bleed (px)</label><input id="bleed" type="number" min="0" value="36" /></div>
-        <div class="field"><label>Margin (px)</label><input id="margin" type="number" min="0" value="24" /></div>
-        <div class="field"><label>Export Scale (×)</label><input id="scale" type="number" min="1" step="0.25" value="1" /></div>
-        <div class="field"><label>Name Scale (×)</label><input id="nameScale" type="number" min="0.5" step="0.1" value="1" /></div>
-        <div class="field"><label>Rules Scale (×)</label><input id="rulesScale" type="number" min="0.5" step="0.1" value="1" /></div>
-      </div>
-      <div class="row">
-        <button id="renderSheet" class="btn primary">Render Card Sheet</button>
-        <button id="downloadSheet" class="btn">Download PNG</button>
-        <button id="renderBacks" class="btn">Render Back Sheet</button>
-        <button id="previewFull" class="btn">Open Large Preview</button>
-        <button id="downloadAll" class="btn">Download ALL</button>
-        <button id="previewAll" class="btn">Preview ALL</button>
-      </div>
-      <div class="grid">
-        <div class="field"><label>Back Label</label><input id="backLabel" placeholder="Star of Ash" /></div>
-        <div class="field"><label>Back Color</label><input id="backColor" type="color" value="#0b0b0e" /></div>
-      </div>
-      <canvas id="sheet" width="0" height="0"></canvas>
     </div>
   </section>
 
   <section class="panel"><h2>Cards</h2><div class="body" style="min-height:400px"><div class="cards" id="cards"></div></div></section>
   <section class="panel"><h2>Deck</h2><div class="body deckcol">
     <div class="counts"><div class="pill" id="countMain">Main: 0</div><div class="pill" id="countFrags">Fragments: 0</div><div class="pill" id="countChief">War Chiefs: 0</div></div>
-    <div class="small muted">Main Deck (no limits)</div><div class="list" id="mainList"></div>
-    <div class="small muted">Fragment Deck (no limits)</div><div class="list" id="fragList"></div>
-    <div class="small muted">War Chiefs (no limits)</div><div class="list" id="chiefList"></div>
+    <div class="small muted">Main Deck</div><div class="list" id="mainList"></div>
+    <div class="small muted">Fragments</div><div class="list" id="fragList"></div>
+    <div class="small muted">War Chiefs</div><div class="list" id="chiefList"></div>
     <footer><button id="validate" class="btn primary">Summary</button><div id="validationMsg" class="small"></div></footer>
   </div></section>
 </div>
 
 <script>
-(()=>{
-// ===== Embedded data =====
-const BUILTIN_CARDS = [{"name": "Hollow Acolyte", "faction": "Ash", "type": "Creature — Acolyte", "cost": "1🕯️, 1 Any", "atk": "1", "hp": "3", "text": "At the beginning of your upkeep, create a 1/1 Ember creature token with Fading 4..", "flavor": ""}, {"name": "Dustling", "faction": "Ash", "type": "Creature — Ash Spawn", "cost": "1🕯️", "atk": "1", "hp": "1", "text": "When Dustling dies, if Ash fragment was burned this turn, draw 1 card.", "flavor": ""}, {"name": "Soulkeeper", "faction": "Ash", "type": "Creature — Cleric", "cost": "1🕯️, 1 Any", "atk": "1", "hp": "3", "text": "Exhaust: Exile a card from any graveyard → Create a 1/1 Ember creature token with Fading 4..", "flavor": ""}, {"name": "Gravepyre Colossus", "faction": "Ash", "type": "Creature — Colossus", "cost": "7🕯️", "atk": "5", "hp": "6", "text": "When this enters, you may exile two Fragments from your Graveyard. If you do, return a creature from your Graveyard to the battlefield.", "flavor": "Every fall of ash builds the mountain higher."}, {"name": "Ashspawn", "faction": "Ash", "type": "Creature — Elemental", "cost": "2🕯️", "atk": "3", "hp": "1", "text": "Exile all graveyards. Create a 1/1 Ember creature token with Fading 4. for each 2 cards exiled this way (rounded down).", "flavor": ""}, {"name": "Ashen Colossus", "faction": "Ash", "type": "Creature — Golem", "cost": "4🕯️, 2 Any", "atk": "6", "hp": "6", "text": "When Ashen Colossus enters, exile up to 2 fragment from your graveyard: Create that many  1/1 Ember creature token with Fading 4.s.", "flavor": ""}, {"name": "Bone Ash Guardian", "faction": "Ash", "type": "Creature — Guardian", "cost": "2🕯️, 1 Any", "atk": "2", "hp": "4", "text": "Defender. When Bone Ash Guardian dies, your creatures get +1 ATK until end of turn.", "flavor": ""}, {"name": "Ash Herald", "faction": "Ash", "type": "Creature — Herald", "cost": "1🕯️, 1 Any", "atk": "2", "hp": "2", "text": "When Ash Herald enters, you may shuffle 1 Ash fragment from your graveyard into your fragment Deck.", "flavor": ""}, {"name": "Cinderweaver Adept", "faction": "Ash", "type": "Creature — Mystic", "cost": "2🕯️", "atk": "1", "hp": "3", "text": "ETB — Play the top card of your Fragment Deck into your Fragment Zone.", "flavor": "Each thread woven is ash reborn."}, {"name": "Corpse Collector", "faction": "Ash", "type": "Creature — Necromancer", "cost": "2🕯️, 1 Any", "atk": "2", "hp": "3", "text": "When Corpse Collector enters, return target creature card from your graveyard to your hand.", "flavor": ""}, {"name": "Cinder Phantom", "faction": "Ash", "type": "Creature — Phantom", "cost": "2🕯️, 1 Any", "atk": "2", "hp": "2", "text": "Unblockable. When Cinder Phantom deals combat damage to a player, exile up to 1 fragment from any graveyard.", "flavor": ""}, {"name": "Dust Prophet", "faction": "Ash", "type": "Creature — Prophet", "cost": "2🕯️", "atk": "1", "hp": "4", "text": "At the beginning of your upkeep, Foretell 1.", "flavor": ""}, {"name": "Gravehowl Shade", "faction": "Ash", "type": "Creature — Shade", "cost": "2🕯️", "atk": "2", "hp": "3", "text": "Whenever a creature dies, Gravehowl Shade gets +1 ATK until end of turn.", "flavor": ""}, {"name": "Ashfeather Shade", "faction": "Ash", "type": "Creature — Shade", "cost": "4🕯️", "atk": "3", "hp": "4", "text": "Soaring. Whenever you reburn a Fragment, Ashfeather Shade gets +1/+0 until end of turn.", "flavor": "It passes unseen, trailing cinders."}, {"name": "Ashborn Wraith", "faction": "Ash", "type": "Creature — Spirit", "cost": "2🕯️", "atk": "3", "hp": "3", "text": "When Ashborn Wraith dies, create two 0/1 Ember creature token with Fading 4.s.", "flavor": "From the dust, the prophecy whispers again."}, {"name": "Emberfiend Spirit", "faction": "Ash", "type": "Creature — Spirit", "cost": "2🕯️, 1 Any", "atk": "2", "hp": "2", "text": "You may cast Emberfiend Spirit from your graveyard by paying +1 Any.", "flavor": ""}, {"name": "Shade of the Gate", "faction": "Ash", "type": "Creature — Spirit", "cost": "2🕯️, 1 Any", "atk": "2", "hp": "2", "text": "Lifelink. When Shade of the Gate dies, create a 1/1 Ember creature token with Fading 4.", "flavor": ""}, {"name": "Dustborn Familiar", "faction": "Ash", "type": "Creature — Spirit", "cost": "1🕯️", "atk": "1", "hp": "1", "text": "Ashborn — When this dies, return a Fragment from your Graveyard to your Fragment Deck.", "flavor": "A spark in the dust, never truly gone."}, {"name": "Ember Witch", "faction": "Ash", "type": "Creature — Witch", "cost": "2🕯️", "atk": "2", "hp": "2", "text": "Exile 2 create a 1/1 Ember creature token with Fading 4.s: Draw a card. Activate only as a sorcery.", "flavor": ""}, {"name": "Wraith of the Gate", "faction": "Ash", "type": "Creature — Wraith", "cost": "3🕯️", "atk": "2", "hp": "2", "text": "Soaring. When Wraith of the Gate dies, create two 1/1 Ember creature token with Fading 4.", "flavor": "The gate never closes—it only whispers."}, {"name": "Ash Fragment", "faction": "Ash", "type": "Fragment", "cost": "", "atk": "", "hp": "", "text": "ProvidesBurn: Provides 🕯️ Ash to cast creatures, spells, or relics.\nReburn: Instead of exiling, shuffle this Fragment into your Fragment Deck.\nFlavor: “Even dust remembers the flame.”", "flavor": ""}, {"name": "Ash Fragment", "faction": "Ash", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: Provides 1 Ash resource. Reburn: Instead of exiling, shuffle this Fragment back into your Fragment Deck.", "flavor": "What burns to ash may rise again, ever circling."}, {"name": "Dust-Etched Fragment", "faction": "Ash", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Ash Fragments. Place on top of graveyard instead of normal.", "flavor": ""}, {"name": "Eternal Ember Fragment", "faction": "Ash", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +1 Ash Fragment. On reburn, shuffle into deck instead of exile.", "flavor": ""}, {"name": "Cinderfall Relic", "faction": "Ash", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +3 Ash Fragments. Exile 1 card from your hand.", "flavor": ""}, {"name": "Phantom Veil Fragment", "faction": "Ash", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Ash Fragments. Exile 1 card from your graveyard.", "flavor": ""}, {"name": "Bone-Ash Keystone", "faction": "Ash", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +1 any Fragment. Shuffle 2 cards from graveyard into deck.", "flavor": ""}, {"name": "Funeral Pyre Fragment", "faction": "Ash", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Ash Fragments. Exile after use.", "flavor": ""}, {"name": "Wraithfire Fragment", "faction": "Ash", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Ash Fragments. Exile after use. Opponent creates 1 Wraith token.", "flavor": ""}, {"name": "Eryth, Keeper of Cinders", "faction": "Ash", "type": "War Chief — Warden", "cost": "", "atk": "0", "hp": "38", "text": "Cindercall — Once per turn, when you reburn a Fragment, create a 1/1 Ember creature token with Fading 4.\nProphecy Trigger — If 5 or more Fragments are in your Graveyard, create a 1/1 Ember creature token with Fading 4.s you control gain +1/+1.", "flavor": ""}, {"name": "Censer of Dust", "faction": "Ash", "type": "Relic — Artifact", "cost": "2🕯️", "atk": "", "hp": "", "text": "Whenever a fragment is burned, create a 1/1 Ember creature token with Fading 4.. Exile 4 Embers: Return 1 fragment from your graveyard to your hand.", "flavor": ""}, {"name": "Banner of Ashfall", "faction": "Ash", "type": "Relic — Banner", "cost": "3 Any", "atk": "", "hp": "", "text": "Wraith and Spirit creatures you control get +1 ATK.", "flavor": ""}, {"name": "Crown of Ash", "faction": "Ash", "type": "Relic — Equipment", "cost": "2 Any", "atk": "", "hp": "", "text": "Equipped creature and tokens you control get +1/+1.", "flavor": ""}, {"name": "Furnace of Dust", "faction": "Ash", "type": "Relic — Furnace", "cost": "2🕯️", "atk": "", "hp": "", "text": "Exile 2 Embers: Add 1 Any this turn. Exile 4 Embers: Add 1 🕯️ this turn.", "flavor": ""}, {"name": "Ashstone Gate", "faction": "Ash", "type": "Relic — Gate", "cost": "2🕯️", "atk": "", "hp": "", "text": "Once per turn, you may shuffle 1 fragment from your graveyard into your fragment Deck.", "flavor": ""}, {"name": "Ashen Idol", "faction": "Ash", "type": "Relic — Idol", "cost": "3 Any", "atk": "", "hp": "", "text": "Your create a 1/1 Ember creature token with Fading 4.", "flavor": ""}, {"name": "Idol of Ruin", "faction": "Ash", "type": "Relic — Idol", "cost": "3🕯️", "atk": "", "hp": "", "text": "Sacrifice Idol of Ruin: Exile target creature.", "flavor": ""}, {"name": "Lamp of Cinders", "faction": "Ash", "type": "Relic — Lamp", "cost": "2 Any", "atk": "", "hp": "", "text": "At the beginning of your upkeep, create a 1/1 Ember creature token with Fading 4..", "flavor": ""}, {"name": "Mask of Ashen Prophet", "faction": "Ash", "type": "Relic — Mask", "cost": "2 Any", "atk": "", "hp": "", "text": "At the beginning of your upkeep, Foretell 1.", "flavor": ""}, {"name": "Relic of Silence", "faction": "Ash", "type": "Relic — Relic", "cost": "2🕯️", "atk": "", "hp": "", "text": "Activated abilities of opposing relics can’t be activated unless their controller pays 1 Any.", "flavor": ""}, {"name": "Tome of Embers", "faction": "Ash", "type": "Relic — Tome", "cost": "2 Any", "atk": "", "hp": "", "text": "Whenever you burn a fragment, you may draw a card. If you do, discard a card.", "flavor": ""}, {"name": "Boneforge Totem", "faction": "Ash", "type": "Relic — Totem", "cost": "3 Any", "atk": "", "hp": "", "text": "Tokens you control get +1 ATK and +1 HP.", "flavor": ""}, {"name": "Wither Veil", "faction": "Ash", "type": "Spell — Enchantment", "cost": "1🕯️, 1 Any", "atk": "", "hp": "", "text": "Enchant creature. Enchanted creature gets -3 ATK and loses abilities.", "flavor": ""}, {"name": "Gravebind", "faction": "Ash", "type": "Spell — Instant", "cost": "1🕯️, 1 Any", "atk": "", "hp": "", "text": "Exile target card from a graveyard. If it was a creature, create a 1/1 Ember creature token with Fading 4..", "flavor": ""}, {"name": "Dust’s Embrace", "faction": "Ash", "type": "Spell — Instant", "cost": "1🕯️, 1 Any", "atk": "", "hp": "", "text": "Prevent all combat damage that would be dealt this turn.", "flavor": ""}, {"name": "Echo of Ash", "faction": "Ash", "type": "Spell — Instant", "cost": "2🕯️", "atk": "", "hp": "", "text": "Copy the last spell you cast this turn. You may choose new targets.", "flavor": ""}, {"name": "Funeral Pyre", "faction": "Ash", "type": "Spell — Sorcery", "cost": "2🕯️, 1 Any", "atk": "", "hp": "", "text": "Destroy target creature. Shuffle 1 Ash fragment from your graveyard into your fragment Deck.", "flavor": ""}, {"name": "Emberstorm", "faction": "Ash", "type": "Spell — Sorcery", "cost": "3🕯️", "atk": "", "hp": "", "text": "Deal 1 damage to all creatures. Create an create a 1/1 Ember creature token with Fading 4. for each creature destroyed this way.", "flavor": ""}, {"name": "Embers of Fate", "faction": "Ash", "type": "Spell — Sorcery", "cost": "2🕯️, 1 Any", "atk": "", "hp": "", "text": "Exile up to 2 fragment from your graveyard: Create 2 create a 1/1 Ember creature token with Fading 4.s for each exiled this way.", "flavor": ""}, {"name": "Wailing Cinders", "faction": "Ash", "type": "Spell — Sorcery", "cost": "2🕯️, 1 Any", "atk": "", "hp": "", "text": "Target opponent discards two cards.", "flavor": ""}, {"name": "Shadow Pyre", "faction": "Ash", "type": "Spell — Sorcery", "cost": "3🕯️", "atk": "", "hp": "", "text": "Deal 2 damage to all creatures. Create a 1/1 Ember creature token with Fading 4. for each creature that died this turn.", "flavor": ""}, {"name": "Tombfire", "faction": "Ash", "type": "Spell — Sorcery", "cost": "2🕯️, 1 Any", "atk": "", "hp": "", "text": "Exile all graveyards. Create 1 create a 1/1 Ember creature token with Fading 4. for each 2 cards exiled this way (rounded down).", "flavor": ""}, {"name": "Ember Omen", "faction": "Ash", "type": "Spell — Sorcery", "cost": "1🕯️, 1 Any", "atk": "", "hp": "", "text": "Foretell 2, then draw a card.", "flavor": ""}, {"name": "Dustcall", "faction": "Ash", "type": "Spell — Sorcery", "cost": "2🕯️, 1 Any", "atk": "", "hp": "", "text": "Create three 1/1 Ash Spirit tokens.", "flavor": ""}, {"name": "Omen of Ruin", "faction": "Ash", "type": "Spell — Sorcery", "cost": "2🕯️, 1 Any", "atk": "", "hp": "", "text": "Exile target relic.", "flavor": ""}, {"name": "Dustwing Harrier", "faction": "Ash", "type": "Creature — Spirit", "cost": "2🕯️", "atk": "2", "hp": "2", "text": "Soar. (May attack back row; only blockable by Soar or Grasp.)", "flavor": ""}, {"name": "Ash Sentinel", "faction": "Ash", "type": "Creature — Guardian", "cost": "2🕯️, 1 Any", "atk": "2", "hp": "3", "text": "Grasp. (Can intercept Soar or across adjacent lanes.)", "flavor": ""}, {"name": "Bonecrush Abomination", "faction": "Ash", "type": "Creature — Horror", "cost": "4🕯️", "atk": "4", "hp": "4", "text": "Harrow. (Must be blocked by two or more creatures.)", "flavor": ""}, {"name": "Dust-Crusher Ogre", "faction": "Ash", "type": "Creature — Ogre", "cost": "3🕯️, 1 Any", "atk": "4", "hp": "2", "text": "Fleeting. When this dies, create a 1/1 Dustling.", "flavor": ""}, {"name": "Ashen Juggernaut", "faction": "Ash", "type": "Creature — Construct", "cost": "4🕯️", "atk": "3", "hp": "5", "text": "Stalwart. (Does not exhaust when attacking.)", "flavor": ""}, {"name": "Dustborn Shaman", "faction": "Ash", "type": "Creature — Shaman", "cost": "2🕯️, 1 Any", "atk": "2", "hp": "3", "text": "Ashborn. (When this dies, return a Fragment from your Graveyard to your Deck.)", "flavor": ""}, {"name": "Ashrise Totem", "faction": "Ash", "type": "Relic", "cost": "2🕯️", "atk": "", "hp": "", "text": "Ashborn. Whenever a creature you control dies, you may return a Fragment from your Graveyard to your Deck.", "flavor": ""}, {"name": "Crumbling Revenant", "faction": "Ash", "type": "Creature — Revenant", "cost": "3🕯️", "atk": "3", "hp": "2", "text": "Ashborn.", "flavor": ""}, {"name": "Waning Shade", "faction": "Ash", "type": "Creature — Shade", "cost": "2🕯️", "atk": "3", "hp": "3", "text": "Fading 3. (Enters with 3 fading counters; remove one each of your upkeeps. Sacrifice it when none remain.)", "flavor": ""}, {"name": "Ashwall Defender", "faction": "Ash", "type": "Creature — Construct", "cost": "2🕯️, 1 Any", "atk": "2", "hp": "3", "text": "Grasp.", "flavor": ""}, {"name": "Dustbound Gargoyle", "faction": "Ash", "type": "Creature — Gargoyle", "cost": "3🕯️, 1 Any", "atk": "3", "hp": "3", "text": "Grasp. When this dies, return a Fragment from your Graveyard to your Deck.", "flavor": ""}, {"name": "Sepulcher Statue", "faction": "Ash", "type": "Relic", "cost": "2🕯️", "atk": "", "hp": "", "text": "Creatures with Grasp you control gain +1 HP.", "flavor": ""}, {"name": "Soulflayer", "faction": "Blood", "type": "Creature — Demon", "cost": "3🩸, 1 Any", "atk": "4", "hp": "4", "text": "Lifelink. Whenever you gain life, target opponent loses 1 HP.", "flavor": ""}, {"name": "Bloodpit Horror", "faction": "Blood", "type": "Creature — Demon", "cost": "6🩸", "atk": "5", "hp": "5", "text": "Drain. Whenever you sacrifice a creature, Bloodpit Horror gets +1/+1 until end of turn.", "flavor": "The pit never empties; the Regent makes sure of it."}, {"name": "Demonbound Husk", "faction": "Blood", "type": "Creature — Horror", "cost": "4🩸", "atk": "4", "hp": "3", "text": "When this enters, sacrifice another creature or pay 2 HP.", "flavor": "A body is a vessel. Blood makes it move."}, {"name": "Noble Executioner", "faction": "Blood", "type": "Creature — Human Assassin", "cost": "2🩸, 1 Any", "atk": "3", "hp": "3", "text": "When Noble Executioner enters, target opponent sacrifices a creature.", "flavor": ""}, {"name": "Blood Priestess", "faction": "Blood", "type": "Creature — Human Cleric", "cost": "1🩸, 1 Any", "atk": "2", "hp": "2", "text": "When Blood Priestess enters, you may pay 2 HP. If you do, draw a card.", "flavor": ""}, {"name": "Bloodwright Acolyte", "faction": "Blood", "type": "Creature — Human Cultist", "cost": "1🩸", "atk": "1", "hp": "2", "text": "When Bloodwright Acolyte dies, shuffle up to 2 Blood fragment from your graveyard into your fragment Deck.", "flavor": ""}, {"name": "Cult Bladebearer", "faction": "Blood", "type": "Creature — Human Cultist", "cost": "1🩸, 1 Any", "atk": "2", "hp": "1", "text": "When Cult Bladebearer is sacrificed, draw a card.", "flavor": ""}, {"name": "Crimson Rider", "faction": "Blood", "type": "Creature — Human Knight", "cost": "2🩸, 1 Any", "atk": "3", "hp": "2", "text": "Menace (can’t be blocked except by two or more creatures).", "flavor": ""}, {"name": "Deathpact Knight", "faction": "Blood", "type": "Creature — Human Knight", "cost": "2🩸", "atk": "2", "hp": "2", "text": "Sacrifice a creature: Deathpact Knight gets +2 ATK until end of turn.", "flavor": ""}, {"name": "Royal Supplicant", "faction": "Blood", "type": "Creature — Human Noble", "cost": "2 Any", "atk": "1", "hp": "2", "text": "Sacrifice another creature: Gain 2 life.", "flavor": ""}, {"name": "Cursed Noble", "faction": "Blood", "type": "Creature — Human Noble", "cost": "1🩸, 1 Any", "atk": "3", "hp": "3", "text": "At the beginning of your upkeep, lose 1 HP unless you sacrifice another creature.", "flavor": ""}, {"name": "Bone Collector", "faction": "Blood", "type": "Creature — Human Priest", "cost": "1🩸, 1 Any", "atk": "2", "hp": "3", "text": "Whenever a creature an opponent controls dies, you gain 1 life.", "flavor": ""}, {"name": "Sanguine Knight", "faction": "Blood", "type": "Creature — Knight", "cost": "3🩸", "atk": "3", "hp": "2", "text": "Harrow. When Sanguine Knight dies, each opponent loses 2 HP.", "flavor": "Honor is written in blood."}, {"name": "Leechspawn", "faction": "Blood", "type": "Creature — Leech Horror", "cost": "2🩸", "atk": "2", "hp": "2", "text": "At the beginning of your end step, each opponent loses 1 HP and you gain 1 HP.", "flavor": ""}, {"name": "Veinborn Thrall", "faction": "Blood", "type": "Creature — Thrall", "cost": "1🩸", "atk": "1", "hp": "1", "text": "Sacrifice Veinborn Thrall: Add 1 Blood Fragment from your Graveyard to your Fragment Deck.", "flavor": "Every drop is tithe to the Regent."}, {"name": "Crimson Thrall", "faction": "Blood", "type": "Creature — Undead Servant", "cost": "1🩸", "atk": "2", "hp": "2", "text": "Sacrifice Crimson Thrall: Deal 2 damage to target opponent.", "flavor": ""}, {"name": "Vein Stalker", "faction": "Blood", "type": "Creature — Vampire", "cost": "2🩸", "atk": "3", "hp": "1", "text": "Lifelink.", "flavor": ""}, {"name": "Herald of Crimson Pact", "faction": "Blood", "type": "Creature — Warlock", "cost": "3🩸, 2 Any", "atk": "4", "hp": "5", "text": "When Herald of Crimson Pact enters, if you paid 5 or more HP this turn, create two 5/5 Demon tokens with Menace.", "flavor": ""}, {"name": "Crimson Witchling", "faction": "Blood", "type": "Creature — Warlock", "cost": "2🩸", "atk": "2", "hp": "2", "text": "Pactbound — You may pay 1 HP instead of 1 Fragment to cast this. Bloodbound — When this deals damage, gain that much HP.", "flavor": "Child of rituals, bound by crimson chains."}, {"name": "Ghoul Servant", "faction": "Blood", "type": "Creature — Zombie Servant", "cost": "1🩸, 1 Any", "atk": "2", "hp": "2", "text": "When Ghoul Servant dies, it deals 2 damage to target opponent.", "flavor": ""}, {"name": "Blood Fragment", "faction": "Blood", "type": "Fragment", "cost": "", "atk": "", "hp": "", "text": "Burn: Provides 🩸 Blood to cast creatures, spells, or relics.\nReburn: Pay 1 HP to shuffle this Fragment into your Fragment Deck, or sacrifice a creature to return it to your hand.\nFlavor: “The covenant of crimson demands either blood or bone.”", "flavor": ""}, {"name": "Blood Fragment", "faction": "Blood", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: Provides 1 Blood resource. Reburn: Pay 1 HP to return to Fragment Deck or sacrifice a creature to return to hand.", "flavor": "A shard steeped in crimson vows, binding life and death."}, {"name": "Crimson Pactstone", "faction": "Blood", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +3 Blood Fragments. Pay 3 HP.", "flavor": ""}, {"name": "Veinspire Shard", "faction": "Blood", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Blood Fragments. Sacrifice a creature.", "flavor": ""}, {"name": "Throne-Blood Fragment", "faction": "Blood", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Blood Fragments. Opponent gains 1 HP.", "flavor": ""}, {"name": "Sanguine Reliquary", "faction": "Blood", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Blood Fragments. Mill 3 cards from your deck.", "flavor": ""}, {"name": "Obsidian Chalice", "faction": "Blood", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Blood Fragments. While in graveyard, you lose 1 HP every Upkeep.", "flavor": ""}, {"name": "Hemorrhage Fragment", "faction": "Blood", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Blood Fragments. Exile after use.", "flavor": ""}, {"name": "Vampiric Surge Fragment", "faction": "Blood", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +3 Blood Fragments. Exile after use. Lose 2 HP.", "flavor": ""}, {"name": "Queen Serava, Bloodbound Regent", "faction": "Blood", "type": "War Chief — Noble", "cost": "", "atk": "0", "hp": "40", "text": "Crimson Pact — Once per turn, you may pay 2 HP: return a Blood Fragment from your Graveyard to your Fragment Deck.\nProphecy Trigger — When you sacrifice a creature, draw a card. (Once per turn)", "flavor": ""}, {"name": "Altar of Veins", "faction": "Blood", "type": "Relic — Altar", "cost": "2🩸", "atk": "", "hp": "", "text": "Sacrifice a creature: Shuffle 1 Blood fragment from your graveyard into your fragment Deck.", "flavor": ""}, {"name": "Banner of Crimson Pact", "faction": "Blood", "type": "Relic — Banner", "cost": "3 Any", "atk": "", "hp": "", "text": "Creatures you control get +1 ATK.", "flavor": ""}, {"name": "Chains of Dominion", "faction": "Blood", "type": "Relic — Chains", "cost": "3🩸", "atk": "", "hp": "", "text": "Sacrifice a creature: Gain control of target Exhaustped creature until end of turn. It gains Surge.", "flavor": ""}, {"name": "Crimson Crown", "faction": "Blood", "type": "Relic — Crown", "cost": "2🩸", "atk": "", "hp": "", "text": "Exhaust, Pay 2 HP: Draw a card. Activate only once each turn.", "flavor": ""}, {"name": "Dagger of Veins", "faction": "Blood", "type": "Relic — Equipment", "cost": "1 Any", "atk": "", "hp": "", "text": "Equipped creature gets +1 ATK. Whenever it deals combat damage, you gain 1 life.", "flavor": ""}, {"name": "Sanguine Blade", "faction": "Blood", "type": "Relic — Equipment", "cost": "2 Any", "atk": "", "hp": "", "text": "Equipped creature has Lifelink.", "flavor": ""}, {"name": "Goblet of Kingsblood", "faction": "Blood", "type": "Relic — Goblet", "cost": "2🩸", "atk": "", "hp": "", "text": "At the start of your upkeep, you may shuffle 1 Blood fragment from your graveyard into your fragment Deck.", "flavor": ""}, {"name": "Idol of Bone", "faction": "Blood", "type": "Relic — Idol", "cost": "2 Any", "atk": "", "hp": "", "text": "Sacrifice a creature: You gain 2 life.", "flavor": ""}, {"name": "Mask of the Regent", "faction": "Blood", "type": "Relic — Mask", "cost": "2 Any", "atk": "", "hp": "", "text": "Once per turn, you may sacrifice a creature: Draw a card.", "flavor": ""}, {"name": "Orb of Crimson Flame", "faction": "Blood", "type": "Relic — Orb", "cost": "2🩸", "atk": "", "hp": "", "text": "Exhaust: Exile 1 Blood fragment from your graveyard: Add 1 Blood fragment this turn.", "flavor": ""}, {"name": "Pactstone", "faction": "Blood", "type": "Relic — Stone", "cost": "3 Any", "atk": "", "hp": "", "text": "Exile up to 2 fragment cards from your graveyard: Shuffle them into your fragment Deck.", "flavor": ""}, {"name": "Throne of Blood", "faction": "Blood", "type": "Relic — Throne", "cost": "3🩸", "atk": "", "hp": "", "text": "Creatures you control get +1 ATK if you lost HP this turn.", "flavor": ""}, {"name": "Crown of Suffering", "faction": "Blood", "type": "Spell — Aura", "cost": "1🩸, 1 Any", "atk": "", "hp": "", "text": "Enchant creature. Enchanted creature gets +3 ATK and “At your upkeep, you lose 1 HP.”", "flavor": ""}, {"name": "Sanguine Chains", "faction": "Blood", "type": "Spell — Enchantment", "cost": "2🩸", "atk": "", "hp": "", "text": "Enchant creature. Enchanted creature can’t attack or block. At your upkeep, pay 1 HP or sacrifice Sanguine Chains.", "flavor": ""}, {"name": "Bleed Out", "faction": "Blood", "type": "Spell — Instant", "cost": "2🩸", "atk": "", "hp": "", "text": "Sacrifice a creature: Deal 4 damage to target creature.", "flavor": ""}, {"name": "Noble Sacrifice", "faction": "Blood", "type": "Spell — Instant", "cost": "1🩸, 1 Any", "atk": "", "hp": "", "text": "Sacrifice a creature: Prevent all damage that would be dealt to you and your War Chief this turn.", "flavor": ""}, {"name": "Crimson Feast", "faction": "Blood", "type": "Spell — Instant", "cost": "2🩸", "atk": "", "hp": "", "text": "Creatures you control gain Lifelink until end of turn.", "flavor": ""}, {"name": "Bone Oath", "faction": "Blood", "type": "Spell — Instant", "cost": "1🩸, 1 Any", "atk": "", "hp": "", "text": "Destroy target relic. You lose 2 HP.", "flavor": ""}, {"name": "Drain Life", "faction": "Blood", "type": "Spell — Sorcery", "cost": "1🩸, 1 Any", "atk": "", "hp": "", "text": "Target opponent loses 3 HP and you gain 3 HP.", "flavor": ""}, {"name": "Crimson Pact", "faction": "Blood", "type": "Spell — Sorcery", "cost": "3🩸, 2 Any", "atk": "", "hp": "", "text": "Create a 6/6 Demon with Menace. You lose 6 HP.", "flavor": ""}, {"name": "Thirst of Crowns", "faction": "Blood", "type": "Spell — Sorcery", "cost": "2🩸, 1 Any", "atk": "", "hp": "", "text": "Gain control of target creature until end of turn. UnExhaust it. It gains Surge.", "flavor": ""}, {"name": "Vein Ritual", "faction": "Blood", "type": "Spell — Sorcery", "cost": "1🩸", "atk": "", "hp": "", "text": "Sacrifice a creature: Return up to 2 Blood fragment from your graveyard into your fragment zone.", "flavor": ""}, {"name": "Hemorrhage", "faction": "Blood", "type": "Spell — Sorcery", "cost": "2🩸, 1 Any", "atk": "", "hp": "", "text": "As an additional cost, pay X HP. Hemorrhage deals half X damage to any target rounded down.", "flavor": ""}, {"name": "Vein Torrent", "faction": "Blood", "type": "Spell — Sorcery", "cost": "3🩸, 2 Any", "atk": "", "hp": "", "text": "Destroy all creatures. You lose 10 HP.", "flavor": ""}, {"name": "Feast of Kings", "faction": "Blood", "type": "Spell — Sorcery", "cost": "2🩸, 2 Any", "atk": "", "hp": "", "text": "War Chief gains 5 life. Sacrifice a creature. Deal 5 damage to target.", "flavor": ""}, {"name": "Crimson Raider", "faction": "Blood", "type": "Creature — Warrior", "cost": "2🩸, 1 Any", "atk": "3", "hp": "2", "text": "Surge. Whenever this deals damage, you may lose 1 HP → draw a card.", "flavor": ""}, {"name": "Bloodbat Familiar", "faction": "Blood", "type": "Creature — Bat", "cost": "1🩸, 1 Any", "atk": "2", "hp": "1", "text": "Soar. Whenever this deals damage to a War Chief, gain 1 HP.", "flavor": ""}, {"name": "Crimson Watcher", "faction": "Blood", "type": "Creature — Knight", "cost": "2🩸, 1 Any", "atk": "2", "hp": "4", "text": "Grasp. When this blocks, you may lose 1 HP → it gets +1 ATK until end of turn.", "flavor": ""}, {"name": "Bloodfang Ravager", "faction": "Blood", "type": "Creature — Berserker", "cost": "3🩸, 2 Any", "atk": "4", "hp": "3", "text": "Harrow. Whenever this is blocked, you gain 1 HP for each blocking creature.", "flavor": ""}, {"name": "Crimson Spearmaiden", "faction": "Blood", "type": "Creature — Soldier", "cost": "2🩸", "atk": "2", "hp": "2", "text": "Fleeting. Whenever this deals damage to a War Chief, you lose 1 HP.", "flavor": ""}, {"name": "Bloodsworn Knight", "faction": "Blood", "type": "Creature — Knight", "cost": "2🩸, 2 Any", "atk": "3", "hp": "4", "text": "Stalwart. Whenever you pay HP to cast a spell, untap this.", "flavor": ""}, {"name": "Crimson Thrall", "faction": "Blood", "type": "Creature — Thrall", "cost": "2🩸", "atk": "2", "hp": "2", "text": "Bloodbound. (When this deals damage, gain that much HP.)", "flavor": ""}, {"name": "Vampiric Blade", "faction": "Blood", "type": "Relic", "cost": "1🩸, 1 Any", "atk": "", "hp": "", "text": "Equipped creature gains Bloodbound. Equip 1 Any.", "flavor": ""}, {"name": "Bloodfeast Ritual", "faction": "Blood", "type": "Spell — Sorcery", "cost": "2🩸, 1 Any", "atk": "", "hp": "", "text": "Until end of turn, creatures you control gain Bloodbound.", "flavor": ""}, {"name": "Infernal Covenant", "faction": "Blood", "type": "Spell — Sorcery", "cost": "3🩸", "atk": "", "hp": "", "text": "Pactbound. Destroy target creature.", "flavor": ""}, {"name": "Brand of Pain", "faction": "Blood", "type": "Relic", "cost": "1🩸", "atk": "", "hp": "", "text": "Pactbound. Whenever you pay HP to cast a card, Brand of Pain deals 1 damage to target War Chief.", "flavor": ""}, {"name": "Bloodsiphon Adept", "faction": "Blood", "type": "Creature — Warlock", "cost": "2🩸, 1 Any", "atk": "2", "hp": "2", "text": "When this enters, Drain 2. (Opponent loses 2 HP; you gain 2 HP.)", "flavor": ""}, {"name": "Soulrend Ritual", "faction": "Blood", "type": "Spell — Sorcery", "cost": "2🩸, 2 Any", "atk": "", "hp": "", "text": "Target opponent loses 3 HP. You gain 3 HP.", "flavor": ""}, {"name": "Amulet of Hunger", "faction": "Blood", "type": "Relic", "cost": "1🩸, 1 Any", "atk": "", "hp": "", "text": "At the beginning of your upkeep, Drain 1.", "flavor": ""}, {"name": "Ephemeral Pact", "faction": "Blood", "type": "Spell — Sorcery", "cost": "2🩸, 1 Any", "atk": "", "hp": "", "text": "Fading 1. Until this fades, prevent the next 3 damage that would be dealt to you each turn.", "flavor": ""}, {"name": "Bloodfang Warden", "faction": "Blood", "type": "Creature — Beast", "cost": "2🩸, 1 Any", "atk": "2", "hp": "4", "text": "Grasp. Whenever this blocks, you may pay 1 HP → draw a card.", "flavor": ""}, {"name": "Crimson Prowler", "faction": "Blood", "type": "Creature — Rogue", "cost": "3🩸", "atk": "3", "hp": "2", "text": "Grasp. Whenever this blocks a Soar creature, deal 1 damage to that War Chief.", "flavor": ""}, {"name": "Chain of the Covenant", "faction": "Blood", "type": "Relic", "cost": "2🩸, 1 Any", "atk": "", "hp": "", "text": "Whenever a creature with Grasp you control blocks, gain 1 HP.", "flavor": ""}, {"name": "Serah’s Shade", "faction": "Blood/Ash", "type": "War Chief", "cost": "2🩸, 2🕯️, 1 Any", "atk": "", "hp": "35", "text": "Active (Exhaust): Pay 2 Fragments (at least 1 Blood, 1 Ash): Exile a creature from any graveyard → create a 1/1 Dustling token with Lifelink.\nPassive: Whenever a creature dies, you may lose 1 HP → return it to the battlefield under your control as a 1/1 Shade.", "flavor": "She slit her throat, yet her whispers still guide the Dustborn."}, {"name": "Carrion Devotee", "faction": "Blood/Ash", "type": "Creature — Acolyte", "cost": "1🩸, 1🕯️", "atk": "1", "hp": "2", "text": "When this dies, you may pay 1 HP → create a 1/1 Dustling.", "flavor": ""}, {"name": "Ashblood Harvester", "faction": "Blood/Ash", "type": "Creature — Cleric", "cost": "1🩸, 1🕯️", "atk": "2", "hp": "3", "text": "Whenever a creature dies, you gain 1 HP.", "flavor": ""}, {"name": "Crimson Wraith", "faction": "Blood/Ash", "type": "Creature — Spirit", "cost": "2🩸, 1🕯️", "atk": "3", "hp": "1", "text": "Enters tapped. When this dies, return it to the battlefield as a 1/1 Shade.", "flavor": ""}, {"name": "Dust-Feeder Rat", "faction": "Blood/Ash", "type": "Creature — Vermin", "cost": "1🩸", "atk": "1", "hp": "1", "text": "Whenever you lose HP, create a 1/1 Dustling.", "flavor": ""}, {"name": "Bloodrot Stalker", "faction": "Blood/Ash", "type": "Creature — Rogue", "cost": "1 Any, 1🩸", "atk": "2", "hp": "2", "text": "Whenever this deals combat damage to a War Chief, that player loses 1 HP.", "flavor": ""}, {"name": "Sacrosanct Lich", "faction": "Blood/Ash", "type": "Creature — Lich", "cost": "2 Any, 2🩸, 1🕯️", "atk": "4", "hp": "4", "text": "Once per turn, you may pay 2 HP instead of a Fragment cost for a spell you cast.", "flavor": ""}, {"name": "Shadeweaver Disciple", "faction": "Blood/Ash", "type": "Creature — Mystic", "cost": "1🩸, 1🕯️", "atk": "1", "hp": "3", "text": "Exhaust + pay 1 HP: Exile target creature card from a graveyard → gain 1 HP.", "flavor": ""}, {"name": "Ashblood Brute", "faction": "Blood/Ash", "type": "Creature — Warrior", "cost": "2 Any, 1🩸, 1🕯️", "atk": "3", "hp": "3", "text": "When this dies, each opponent loses 2 HP.", "flavor": ""}, {"name": "Sepulcher Herald", "faction": "Blood/Ash", "type": "Creature — Herald", "cost": "1 Any, 1🩸, 1🕯️", "atk": "2", "hp": "4", "text": "Whenever a creature dies, put a +1/+1 counter on another creature you control.", "flavor": ""}, {"name": "Bone-Scribed Prophet", "faction": "Blood/Ash", "type": "Creature — Prophet", "cost": "1🩸, 1🕯️", "atk": "2", "hp": "2", "text": "Whenever you sacrifice HP, scry 1.", "flavor": ""}, {"name": "Crimson Renewal", "faction": "Blood/Ash", "type": "Spell", "cost": "1 Any, 1🩸, 1🕯️", "atk": "", "hp": "", "text": "Return target creature card from your graveyard to your hand. Lose 1 HP.", "flavor": ""}, {"name": "Dust Covenant", "faction": "Blood/Ash", "type": "Spell", "cost": "2 Any, 1🩸, 1🕯️", "atk": "", "hp": "", "text": "Each player sacrifices a creature. Create X 1/1 Dustlings, where X is the number of creatures sacrificed this way.", "flavor": ""}, {"name": "Blood-Soaked Rite", "faction": "Blood/Ash", "type": "Spell", "cost": "1 Any, 2🩸", "atk": "", "hp": "", "text": "Lose 3 HP → Destroy target creature.", "flavor": ""}, {"name": "From the Ash of Bone", "faction": "Blood/Ash", "type": "Spell", "cost": "1 Any, 1🩸, 1🕯️", "atk": "", "hp": "", "text": "Return target creature card from a graveyard to the battlefield under your control as a 1/1 Shade.", "flavor": ""}, {"name": "Life for Dust", "faction": "Blood/Ash", "type": "Spell", "cost": "2 Any, 1🩸, 1🕯️", "atk": "", "hp": "", "text": "Lose up to 5 HP → Create that many 1/1 Dustlings.", "flavor": ""}, {"name": "Chalice of Clotted Ash", "faction": "Blood/Ash", "type": "Relic", "cost": "1 Any, 1🩸, 1🕯️", "atk": "", "hp": "", "text": "Whenever you pay HP, create a 1/1 Dustling.", "flavor": ""}, {"name": "Obelisk of Withering Blood", "faction": "Blood/Ash", "type": "Relic", "cost": "2 Any, 1🩸, 1🕯️", "atk": "", "hp": "", "text": "Creatures get -1 HP while this is on the battlefield.", "flavor": ""}, {"name": "Tome of Sorrow", "faction": "Blood/Ash", "type": "Relic", "cost": "1 Any, 1🩸", "atk": "", "hp": "", "text": "Exhaust + pay 1 HP → Draw a card.", "flavor": ""}, {"name": "Ashblood Cultist", "faction": "Blood/Ash", "type": "Creature — Acolyte", "cost": "2🩸", "atk": "2", "hp": "1", "text": "Pactbound. (You may pay HP instead of Fragments to cast this.)", "flavor": ""}, {"name": "Gravewatch Sentinel", "faction": "Blood/Ash", "type": "Creature — Guard", "cost": "1🩸, 1🕯️", "atk": "2", "hp": "2", "text": "Grasp.", "flavor": ""}, {"name": "Ashblood Paladin", "faction": "Blood/Ash", "type": "Creature — Paladin", "cost": "2 Any, 1🩸, 1🕯️", "atk": "3", "hp": "4", "text": "Grasp. Whenever this blocks, each opponent loses 1 HP.", "flavor": ""}, {"name": "Covenant Chains", "faction": "Blood/Ash", "type": "Relic", "cost": "1🩸, 1🕯️", "atk": "", "hp": "", "text": "Whenever a Grasp creature you control dies, create a 1/1 Dustling.", "flavor": ""}, {"name": "Flame Hound", "faction": "Flame", "type": "Creature — Beast", "cost": "1🔥, 1 Any", "atk": "2", "hp": "2", "text": "Whenever you burn Flame fragment, Flame Hound gets +1 ATK until end of turn.", "flavor": ""}, {"name": "Lava Charger", "faction": "Flame", "type": "Creature — Beast", "cost": "2🔥, 1 Any", "atk": "4", "hp": "2", "text": "Surge. Lava Charger attacks each turn if able.", "flavor": ""}, {"name": "Cinder Wolf", "faction": "Flame", "type": "Creature — Beast", "cost": "2🔥", "atk": "3", "hp": "2", "text": "Lifelink. Whenever Cinder Wolf deals damage, burn 1 Flame fragment.", "flavor": ""}, {"name": "Molten Charger", "faction": "Flame", "type": "Creature — Beast", "cost": "4🔥", "atk": "4", "hp": "3", "text": "Fleeting. Kindled — When this enters, deal 1 damage to each player.", "flavor": "The mount runs until it dies, carrying its rider into the flames."}, {"name": "Ashwing Drake", "faction": "Flame", "type": "Creature — Dragonkin", "cost": "2🔥, 1 Any", "atk": "3", "hp": "2", "text": "Soaring. At end of your turn, sacrifice Ashwing Drake if it was buffed this turn.", "flavor": ""}, {"name": "Ashscale Dragonkin", "faction": "Flame", "type": "Creature — Dragonkin", "cost": "3🔥", "atk": "3", "hp": "3", "text": "Exile a Flame fragment from your graveyard: Ashscale Dragonkin gets +2 ATK until end of turn.", "flavor": ""}, {"name": "Pyrefang Drake", "faction": "Flame", "type": "Creature — Drake", "cost": "5🔥", "atk": "3", "hp": "4", "text": "Soaring. Reburn — Exile a Flame Fragment from your Graveyard: Pyrefang Drake gets +2/+0 until end of turn.", "flavor": "It feeds on smoke, wings scattering embers."}, {"name": "Emberling Swarm", "faction": "Flame", "type": "Creature — Elemental", "cost": "2🔥", "atk": "1", "hp": "1", "text": "When Emberling Swarm enters, create two 1/1 Emberling tokens with Surge.", "flavor": ""}, {"name": "Magma Sprite", "faction": "Flame", "type": "Creature — Elemental", "cost": "1🔥", "atk": "1", "hp": "1", "text": "Soaring. Exile Magma Sprite from your graveyard: Deal 1 damage to any target.", "flavor": ""}, {"name": "Firestorm Elemental", "faction": "Flame", "type": "Creature — Elemental", "cost": "3🔥, 2 Any", "atk": "4", "hp": "4", "text": "When Firestorm Elemental enters, it deals 2 damage to all creatures.", "flavor": ""}, {"name": "Inferno Titanspawn", "faction": "Flame", "type": "Creature — Elemental Titan", "cost": "7🔥", "atk": "6", "hp": "5", "text": "When this enters, deal 3 damage divided among any targets. Whenever you burn a Fragment, Inferno Titanspawn deals 1 damage to any target.", "flavor": "Born from the Star’s falling sparks."}, {"name": "Flamebound Giant", "faction": "Flame", "type": "Creature — Giant", "cost": "3🔥, 2 Any", "atk": "5", "hp": "5", "text": "When Flamebound Giant enters, deal 3 damage to any target.", "flavor": ""}, {"name": "Blazing Zealot", "faction": "Flame", "type": "Creature — Human Cultist", "cost": "1🔥", "atk": "2", "hp": "1", "text": "When Blazing Zealot attacks, deal 1 damage to each War Chief.", "flavor": "Only flame can close the Gate, even if all must burn."}, {"name": "Cinderblade Duelist", "faction": "Flame", "type": "Creature — Human Raider", "cost": "2🔥", "atk": "2", "hp": "1", "text": "Surge. Kindled — When this enters, burn 1 Fragment. It gets +2 ATK until end of turn.", "flavor": "The fire in their heart is as brief as it is bright."}, {"name": "Firebound Mage", "faction": "Flame", "type": "Creature — Human Shaman", "cost": "1🔥, 2 Any", "atk": "1", "hp": "3", "text": "Whenever you burn Flame fragment, Firebound Mage deals 1 damage to any target.", "flavor": ""}, {"name": "Emberblade Knight", "faction": "Flame", "type": "Creature — Knight", "cost": "2🔥", "atk": "3", "hp": "2", "text": "Whenever Emberblade Knight attacks, it gains +1 ATK until end of turn.", "flavor": ""}, {"name": "Ashfang Raider", "faction": "Flame", "type": "Creature — Marauder", "cost": "3🔥", "atk": "3", "hp": "2", "text": "Harrow. Whenever Ashfang Raider attacks, you may burn 1 Fragment. If you do, it gains Fleeting this turn.", "flavor": "They burn everything, even their escape routes."}, {"name": "Volcanic Shaman", "faction": "Flame", "type": "Creature — Shaman", "cost": "2🔥, 1 Any", "atk": "2", "hp": "3", "text": "Whenever you burn Flame fragment, deal 1 damage to target opponent.", "flavor": ""}, {"name": "Furnace Spirit", "faction": "Flame", "type": "Creature — Spirit", "cost": "2🔥", "atk": "2", "hp": "2", "text": "When Furnace Spirit dies, it deals 2 damage to any target.", "flavor": ""}, {"name": "Ember Titan", "faction": "Flame", "type": "Creature — Titan", "cost": "4🔥, 2 Any", "atk": "6", "hp": "6", "text": "When Ember Titan enters, you may exile 1 Flame fragment from your graveyard. If you do, deal 3 damage to each opponent.", "flavor": ""}, {"name": "Flame Fragment", "faction": "Flame", "type": "Fragment", "cost": "", "atk": "", "hp": "", "text": "Burn: Provides 🔥 Flame to cast creatures, spells, or relics.\nReburn: Deal 1 damage to your own War Chief.\nFlavor: “The fire feeds your ambition, but every spark leaves a scar.”", "flavor": ""}, {"name": "Flame Fragment", "faction": "Flame", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: Provides 1 Flame resource. Reburn: Deal 1 damage to your War Chief.", "flavor": "The fury of the Inner Furnace, searing even its wielder."}, {"name": "Infernal Core", "faction": "Flame", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +3 Flame Fragments. Lose 2 HP.", "flavor": ""}, {"name": "Cinderheart", "faction": "Flame", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Flame Fragments. Exile top 2 cards of your deck.", "flavor": ""}, {"name": "Blazing Rift", "faction": "Flame", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Flame Fragments. Reburn: deal 1 damage to your Leader.", "flavor": ""}, {"name": "Volcanic Pulse", "faction": "Flame", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Flame Fragments. Opponent draws 1 card.", "flavor": ""}, {"name": "Ashstorm Vein", "faction": "Flame", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +1 any Fragment. Exile after use.", "flavor": ""}, {"name": "Magma Surge Fragment", "faction": "Flame", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Flame Fragments. Exile after use.", "flavor": ""}, {"name": "Dragonfire Fragment", "faction": "Flame", "type": "Fragment", "cost": "—", "atk": "—", "hp": "—", "text": "Burn: +2 Flame Fragments. Exile after use. Deal 2 damage to War Chief.", "flavor": ""}, {"name": "Kael, Pyre-Seer of Ashfall", "faction": "Flame", "type": "War Chief — Mystic", "cost": "", "atk": "0", "hp": "35", "text": "Inferno’s Vision — Once per turn, when you burn a Fragment, deal 1 damage to any target.\nProphecy Trigger — If you reburn 3 or more Fragments in a single turn, Kael deals 3 damage to each opponent.", "flavor": ""}, {"name": "Volcanic Altar", "faction": "Flame", "type": "Relic — Altar", "cost": "2🔥", "atk": "", "hp": "", "text": "Sacrifice a creature: Shuffle 1 Flame fragment from your graveyard into your fragment Deck.", "flavor": ""}, {"name": "Furnace of the Fallen", "faction": "Flame", "type": "Relic — Artifact", "cost": "2🔥", "atk": "", "hp": "", "text": "Once per turn, you may burn 1 Flame fragment from your graveyard. If you do, exile it and deal 1 damage to each War Chief.", "flavor": ""}, {"name": "Banner of Cinders", "faction": "Flame", "type": "Relic — Banner", "cost": "3 Any", "atk": "", "hp": "", "text": "Creatures you control get +1 ATK if Flame fragment was burned this turn.", "flavor": ""}, {"name": "Molten Banner", "faction": "Flame", "type": "Relic — Banner", "cost": "3 Any", "atk": "", "hp": "", "text": "Creatures you control get +1 ATK.", "flavor": ""}, {"name": "Crown of Fire", "faction": "Flame", "type": "Relic — Equipment", "cost": "2 Any", "atk": "", "hp": "", "text": "Equipped creature gets +2 ATK.", "flavor": ""}, {"name": "Ashfang Dagger", "faction": "Flame", "type": "Relic — Equipment", "cost": "1 Any", "atk": "", "hp": "", "text": "Equipped creature gets +1 ATK. Whenever it deals damage, burn 1 Flame fragment.", "flavor": ""}, {"name": "Ashforge Hammer", "faction": "Flame", "type": "Relic — Equipment", "cost": "2 Any", "atk": "", "hp": "", "text": "Equipped creature has Surge.", "flavor": ""}, {"name": "Obsidian Furnace", "faction": "Flame", "type": "Relic — Furnace", "cost": "3 Any", "atk": "", "hp": "", "text": "At the start of your upkeep, shuffle 1 Flame fragment from your graveyard into your fragment Deck.", "flavor": ""}, {"name": "Pyrestone Idol", "faction": "Flame", "type": "Relic — Idol", "cost": "3 Any", "atk": "", "hp": "", "text": "Exile Pyrestone Idol: Add 2 Flame fragment this turn.", "flavor": ""}, {"name": "Orb of Emberlight", "faction": "Flame", "type": "Relic — Orb", "cost": "2 Any", "atk": "", "hp": "", "text": "Exhaust: Exile 1 Flame fragment from your graveyard: Draw 1 card.", "flavor": ""}, {"name": "Ring of Cinders", "faction": "Flame", "type": "Relic — Ring", "cost": "2🔥", "atk": "", "hp": "", "text": "At the beginning of your upkeep, burn 1 Flame fragment. If you do, deal 2 damage to any target.", "flavor": ""}, {"name": "Flameheart Totem", "faction": "Flame", "type": "Relic — Totem", "cost": "2🔥", "atk": "", "hp": "", "text": "Whenever you burn Flame fragment, deal 1 damage to any target.", "flavor": ""}, {"name": "Flashfire Assault", "faction": "Flame", "type": "Spell — Instant", "cost": "2🔥", "atk": "", "hp": "", "text": "Target creature gains Double Strike until end of turn.", "flavor": ""}, {"name": "Ignite the Gate", "faction": "Flame", "type": "Spell — Prophecy", "cost": "4🔥, 2 Any", "atk": "", "hp": "", "text": "Deal 6 damage to any target. Exile 2 Flame fragment from your graveyard.", "flavor": ""}, {"name": "Immolation", "faction": "Flame", "type": "Spell — Sorcery", "cost": "1🔥, 1 Any", "atk": "", "hp": "", "text": "Target creature gets +3 ATK until end of turn. Sacrifice it at end step.", "flavor": ""}, {"name": "Inferno Surge", "faction": "Flame", "type": "Spell — Sorcery", "cost": "2🔥", "atk": "", "hp": "", "text": "Deal 3 damage divided among any targets.", "flavor": ""}, {"name": "Burn the World", "faction": "Flame", "type": "Spell — Sorcery", "cost": "3🔥, 2 Any", "atk": "", "hp": "", "text": "Destroy all creatures. Exile 2 Flame fragment from your graveyard.", "flavor": ""}, {"name": "Magma Jet", "faction": "Flame", "type": "Spell — Sorcery", "cost": "1🔥, 1 Any", "atk": "", "hp": "", "text": "Deal 2 damage to any target. Foretell 2.", "flavor": ""}, {"name": "Emberburst", "faction": "Flame", "type": "Spell — Sorcery", "cost": "3🔥", "atk": "", "hp": "", "text": "Deal damage equal to the number of Flame fragment in your graveyard to any target.", "flavor": ""}, {"name": "Molten Rain", "faction": "Flame", "type": "Spell — Sorcery", "cost": "2🔥", "atk": "", "hp": "", "text": "Destroy target relic.", "flavor": ""}, {"name": "Flame Rebirth", "faction": "Flame", "type": "Spell — Sorcery", "cost": "3🔥", "atk": "", "hp": "", "text": "Exile 1 Flame fragment from your graveyard: Return target creature from your graveyard to play.", "flavor": ""}, {"name": "Volcanic Torrent", "faction": "Flame", "type": "Spell — Sorcery", "cost": "3🔥, 1 Any", "atk": "", "hp": "", "text": "Deal X damage to all creatures, where X = Flame fragment burned this turn.", "flavor": ""}, {"name": "Blazing Path", "faction": "Flame", "type": "Spell — Sorcery", "cost": "2🔥", "atk": "", "hp": "", "text": "Creatures you control gain Surge until end of turn.", "flavor": ""}, {"name": "Ashstorm", "faction": "Flame", "type": "Spell — Sorcery", "cost": "2🔥", "atk": "", "hp": "", "text": "Deal 3 damage to all Soaring creatures.", "flavor": ""}, {"name": "Furnace Fuel", "faction": "Flame", "type": "Spell — Sorcery", "cost": "2🔥", "atk": "", "hp": "", "text": "Exile 2 Flame fragment from your graveyard: Draw 2 cards.", "flavor": ""}, {"name": "Blazehound Scout", "faction": "Flame", "type": "Creature — Hound", "cost": "2🔥", "atk": "2", "hp": "1", "text": "Surge. When this enters, deal 1 damage to target War Chief.", "flavor": ""}, {"name": "Ember-Talon Drake", "faction": "Flame", "type": "Creature — Drake", "cost": "3🔥", "atk": "3", "hp": "3", "text": "Soar. When this enters, deal 2 damage to target creature without Soar.", "flavor": ""}, {"name": "Flameclaw Warden", "faction": "Flame", "type": "Creature — Soldier", "cost": "3🔥", "atk": "3", "hp": "3", "text": "Grasp. Whenever this blocks a Soar creature, deal 1 damage to that creature before combat.", "flavor": ""}, {"name": "Flamebound Titan", "faction": "Flame", "type": "Creature — Giant", "cost": "5🔥", "atk": "5", "hp": "5", "text": "Harrow. When this enters, burn 1 Fragment.", "flavor": ""}, {"name": "Razorfang Hound", "faction": "Flame", "type": "Creature — Hound", "cost": "2🔥", "atk": "3", "hp": "1", "text": "Fleeting. (Excess damage carries to War Chief.)", "flavor": ""}, {"name": "Flameblade Champion", "faction": "Flame", "type": "Creature — Warrior", "cost": "3🔥, 1 Any", "atk": "4", "hp": "3", "text": "Stalwart. When this attacks, you may burn 1 Fragment. If you do, it gets +1 ATK until end of turn.", "flavor": ""}, {"name": "Emberborn Acolyte", "faction": "Flame", "type": "Creature — Acolyte", "cost": "1🔥, 1 Any", "atk": "2", "hp": "2", "text": "Kindled. (When this enters, burn 1 Fragment.)", "flavor": ""}, {"name": "Pyreflame Sorcery", "faction": "Flame", "type": "Spell — Sorcery", "cost": "2🔥", "atk": "", "hp": "", "text": "Kindled. Deal 3 damage to target creature.", "flavor": ""}, {"name": "Ashen Relic", "faction": "Flame", "type": "Relic", "cost": "1🔥", "atk": "", "hp": "", "text": "Kindled. When this enters, burn 1 Fragment, then draw a card.", "flavor": ""}, {"name": "Cinder Artisan", "faction": "Flame", "type": "Creature — Artificer", "cost": "2🔥", "atk": "2", "hp": "2", "text": "Embercraft — Exile 2 Fragments from your Graveyard: Draw a card.", "flavor": ""}, {"name": "Flame of Renewal", "faction": "Flame", "type": "Spell — Sorcery", "cost": "1🔥, 2 Any", "atk": "", "hp": "", "text": "Embercraft — Exile 3 Fragments from your Graveyard: Return target creature card from your graveyard to your hand.", "flavor": ""}, {"name": "Obsidian Crucible", "faction": "Flame", "type": "Relic", "cost": "3🔥", "atk": "", "hp": "", "text": "Embercraft — Exile 5 Fragments from your Graveyard: Deal 5 damage to any target.", "flavor": ""}, {"name": "Fading Emberling", "faction": "Flame", "type": "Creature — Elemental", "cost": "1🔥", "atk": "2", "hp": "1", "text": "Fading 2. (Enters with 2 fading counters; remove one each of your upkeeps. Sacrifice it when none remain.)", "flavor": ""}, {"name": "Pyreborn Guardian", "faction": "Flame", "type": "Creature — Elemental", "cost": "3🔥", "atk": "3", "hp": "3", "text": "Grasp. Whenever this blocks, it deals 1 damage to the blocked creature.", "flavor": ""}, {"name": "Cinderclaw Defender", "faction": "Flame", "type": "Creature — Beast", "cost": "2 Any, 2🔥", "atk": "4", "hp": "4", "text": "Grasp. When this blocks a Soar creature, it gains +1 ATK until end of turn.", "flavor": ""}, {"name": "Flameforge Sentinel", "faction": "Flame", "type": "Relic", "cost": "2🔥, 1 Any", "atk": "", "hp": "", "text": "Creatures you control with Grasp get +1 ATK.", "flavor": ""}, {"name": "Iriel Ashbrand", "faction": "Flame/Ash", "type": "War Chief", "cost": "2🔥, 2🕯️, 1 Any", "atk": "", "hp": "40", "text": "Passive: Whenever you burn a Flame Fragment, your next creature this turn gets +1 ATK. Whenever you burn an Ash Fragment, create a 1/1 Dustling.\nActive (Exhaust): Pay 4 Fragments (2🔥, 2🕯️): Destroy all creatures with 1 HP.", "flavor": "She burns the path and raises the dust to follow."}, {"name": "Ember-Dust Scavenger", "faction": "Flame/Ash", "type": "Creature — Scavenger", "cost": "1🔥, 1🕯️", "atk": "1", "hp": "1", "text": "When this dies, create a 1/1 Dustling.", "flavor": ""}, {"name": "Flame-Touched Revenant", "faction": "Flame/Ash", "type": "Creature — Revenant", "cost": "1 Any, 1🔥, 1🕯️", "atk": "2", "hp": "2", "text": "When this dies, deal 2 damage to any target.", "flavor": ""}, {"name": "Ashfire Sprite", "faction": "Flame/Ash", "type": "Creature — Sprite", "cost": "1🔥", "atk": "1", "hp": "1", "text": "Soaring. Whenever you burn a Flame Fragment, this gets +1 ATK until end of turn.", "flavor": ""}, {"name": "Cinderborn Raider", "faction": "Flame/Ash", "type": "Creature — Raider", "cost": "2🔥, 1🕯️", "atk": "3", "hp": "2", "text": "Haste. When this dies, create two 1/1 Dustlings.", "flavor": ""}, {"name": "Smoldering Shade", "faction": "Flame/Ash", "type": "Creature — Shade", "cost": "1 Any, 1🕯️", "atk": "2", "hp": "3", "text": "Whenever a creature dies, deal 1 damage to any War Chief.", "flavor": ""}, {"name": "Dustpyre Elemental", "faction": "Flame/Ash", "type": "Creature — Elemental", "cost": "2 Any, 2🔥, 1🕯️", "atk": "4", "hp": "3", "text": "Whenever you burn both Flame and Ash in one turn, this gains Double Strike until end of turn.", "flavor": ""}, {"name": "Bonefire Harbinger", "faction": "Flame/Ash", "type": "Creature — Shaman", "cost": "1🔥, 1🕯️", "atk": "2", "hp": "1", "text": "When this enters, deal 1 damage to all other creatures.", "flavor": ""}, {"name": "Ashfang Ravager", "faction": "Flame/Ash", "type": "Creature — Beast", "cost": "1 Any, 1🔥, 1🕯️", "atk": "3", "hp": "4", "text": "Whenever this destroys a creature, create a 1/1 Dustling.", "flavor": ""}, {"name": "Charveil Fiend", "faction": "Flame/Ash", "type": "Creature — Fiend", "cost": "2 Any, 2🔥, 1🕯️", "atk": "5", "hp": "5", "text": "When this enters, sacrifice a creature → deal damage equal to its ATK to target War Chief.", "flavor": ""}, {"name": "Glassfire Gargoyle", "faction": "Flame/Ash", "type": "Creature — Gargoyle", "cost": "1🔥, 1🕯️", "atk": "2", "hp": "2", "text": "Soaring. Whenever you burn an Ash Fragment, scry 1.", "flavor": ""}, {"name": "Cinderstorm", "faction": "Flame/Ash", "type": "Spell", "cost": "1 Any, 1🔥, 1🕯️", "atk": "", "hp": "", "text": "Deal 3 damage to any target. If both Flame and Ash were burned this turn, deal 1 damage to all creatures.", "flavor": ""}, {"name": "Ashbrand Invocation", "faction": "Flame/Ash", "type": "Spell", "cost": "2 Any, 1🔥, 1🕯️", "atk": "", "hp": "", "text": "Creatures you control get +1 ATK until end of turn. Dustlings also gain Haste until end of turn.", "flavor": ""}, {"name": "Funeral Pyre", "faction": "Flame/Ash", "type": "Spell", "cost": "1 Any, 1🔥, 1🕯️", "atk": "", "hp": "", "text": "Destroy target creature with 3 or less HP. Create a 1/1 Dustling.", "flavor": ""}, {"name": "Crackling Tombs", "faction": "Flame/Ash", "type": "Spell", "cost": "2 Any, 1🔥, 1🕯️", "atk": "", "hp": "", "text": "Exile target graveyard. Deal 2 damage to all creatures.", "flavor": ""}, {"name": "Infernal Renewal", "faction": "Flame/Ash", "type": "Spell", "cost": "2 Any, 1🔥, 1🕯️", "atk": "", "hp": "", "text": "Return target creature card from your graveyard to the battlefield. It gains Haste and “Exile this at end of turn.”", "flavor": ""}, {"name": "Obsidian Pyre", "faction": "Flame/Ash", "type": "Relic", "cost": "1 Any, 1🔥, 1🕯️", "atk": "", "hp": "", "text": "Whenever a creature dies, Obsidian Pyre deals 1 damage to any target. If an Ash Fragment was burned this turn, also create a 1/1 Dustling.", "flavor": ""}, {"name": "Crown of Soot and Flame", "faction": "Flame/Ash", "type": "Relic", "cost": "1 Any, 1🔥, 1🕯️", "atk": "", "hp": "", "text": "Equipped creature gets +1/+1 and Haste. When it dies, scry 2.", "flavor": ""}, {"name": "The Ember Reliquary", "faction": "Flame/Ash", "type": "Relic", "cost": "2 Any, 1🔥, 1🕯️", "atk": "", "hp": "", "text": "Pay 2 Fragments (1🔥, 1🕯️): Return a creature with 1 HP from your graveyard to the battlefield.", "flavor": ""}, {"name": "Ashfang Charger", "faction": "Flame/Ash", "type": "Creature — Raider", "cost": "1🔥, 1🕯️", "atk": "3", "hp": "1", "text": "Surge. At end of turn, sacrifice this unless you burn 1 additional Fragment.", "flavor": ""}, {"name": "Glassfire Gargoyle", "faction": "Flame/Ash", "type": "Creature — Gargoyle", "cost": "2🔥, 1🕯️", "atk": "3", "hp": "2", "text": "Grasp. Whenever you burn both Flame and Ash in a turn, this gets +1 ATK until end of turn.", "flavor": ""}, {"name": "Cinderborn Watcher", "faction": "Flame/Ash", "type": "Creature — Watcher", "cost": "3🔥, 1🕯️", "atk": "4", "hp": "3", "text": "Grasp. When this blocks a Soar creature, deal 1 damage to all creatures that opponent controls with Soar.", "flavor": ""}, {"name": "Obsidian Chains", "faction": "Flame/Ash", "type": "Relic", "cost": "1🔥, 1🕯️", "atk": "", "hp": "", "text": "Whenever a Grasp creature you control blocks, scry 1.", "flavor": ""}, {"name": "Kaelen the Blazeblood", "faction": "Flame/Blood", "type": "War Chief", "cost": "2🔥, 2🩸, 2 Any", "atk": "", "hp": "40", "text": "Active (Exhaust): Pay 3 Fragments (at least 1 Flame, 1 Blood): Deal 2 damage to any target, then you lose 1 HP.\nPassive: Whenever you sacrifice HP, deal that much damage to an enemy creature.", "flavor": "What is fire without blood to fuel it?"}, {"name": "Bloodfire Zealot", "faction": "Flame/Blood", "type": "Creature", "cost": "1🔥, 1🩸", "atk": "2", "hp": "2", "text": "Whenever you lose HP, this gains +1 ATK until end of turn.", "flavor": ""}, {"name": "Pyrefang Hound", "faction": "Flame/Blood", "type": "Creature — Beast", "cost": "2🔥, 1🩸", "atk": "3", "hp": "1", "text": "Haste. When it dies, deal 1 damage to any target.", "flavor": ""}, {"name": "Scarlet Flamecaller", "faction": "Flame/Blood", "type": "Creature — Cleric", "cost": "1🔥, 1🩸", "atk": "1", "hp": "3", "text": "Exhaust + 1🩸: Target player loses 2 HP.", "flavor": ""}, {"name": "Ember-Blood Berserker", "faction": "Flame/Blood", "type": "Creature — Warrior", "cost": "2🔥, 2🩸", "atk": "4", "hp": "2", "text": "Whenever it attacks, you may pay 1 HP → it gains +2 ATK until end of turn.", "flavor": ""}, {"name": "Charred Executioner", "faction": "Flame/Blood", "type": "Creature — Soldier", "cost": "3🔥, 1🩸", "atk": "2", "hp": "4", "text": "Whenever a creature dies, deal 1 damage to any War Chief.", "flavor": ""}, {"name": "Ritescar Cultist", "faction": "Flame/Blood", "type": "Creature — Cultist", "cost": "1🔥, 1🩸", "atk": "1", "hp": "1", "text": "When this enters, you may pay 1 HP → draw a card.", "flavor": ""}, {"name": "Ashfang Gladiator", "faction": "Flame/Blood", "type": "Creature — Gladiator", "cost": "2 Any, 2🔥, 1🩸", "atk": "5", "hp": "3", "text": "Whenever you burn both Flame and Blood in the same turn, this gains Trample until end of turn.", "flavor": ""}, {"name": "Flamevein Bat", "faction": "Flame/Blood", "type": "Creature — Bat", "cost": "1🔥, 1🩸", "atk": "2", "hp": "2", "text": "Soaring. Whenever you burn a Blood Fragment, this deals 1 damage to any target.", "flavor": ""}, {"name": "Infernal Harvester", "faction": "Flame/Blood", "type": "Creature — Horror", "cost": "1 Any, 2🔥, 1🩸", "atk": "3", "hp": "3", "text": "When it attacks, you may sacrifice a creature → deal 3 damage to target creature.", "flavor": ""}, {"name": "Molten Butcher", "faction": "Flame/Blood", "type": "Creature — Berserker", "cost": "3🔥, 1🩸", "atk": "4", "hp": "4", "text": "When this dies, each opponent loses 2 HP.", "flavor": ""}, {"name": "Rite of Burning Veins", "faction": "Flame/Blood", "type": "Spell", "cost": "2 Any, 1🔥, 1🩸", "atk": "", "hp": "", "text": "Each player sacrifices a creature. Then deal 3 damage to each opponent War Chief. You lose 2 HP.", "flavor": ""}, {"name": "Sear the Weak", "faction": "Flame/Blood", "type": "Spell", "cost": "1 Any, 1🔥, 1🩸", "atk": "", "hp": "", "text": "Destroy target creature with 2 HP or less. If a Blood Fragment was burned this turn, deal 2 damage to that creature's controller.", "flavor": ""}, {"name": "Bloodflame Surge", "faction": "Flame/Blood", "type": "Spell", "cost": "2 Any, 1🔥, 1🩸", "atk": "", "hp": "", "text": "Creatures you control get +1 ATK until end of turn. You may pay 2 HP; if you do, they get +2 ATK instead.", "flavor": ""}, {"name": "Pyric Offering", "faction": "Flame/Blood", "type": "Spell", "cost": "2🔥, 1🩸", "atk": "", "hp": "", "text": "As an additional cost, sacrifice a creature. Draw 2 cards and deal 2 damage to any target.", "flavor": ""}, {"name": "Scorch the Flesh", "faction": "Flame/Blood", "type": "Spell", "cost": "2 Any, 2🔥, 1🩸", "atk": "", "hp": "", "text": "Deal 4 damage to target creature. You lose HP equal to that creature’s ATK.", "flavor": ""}, {"name": "Altar of Ash and Flame", "faction": "Flame/Blood", "type": "Relic", "cost": "2 Any, 1🔥, 1🩸", "atk": "", "hp": "", "text": "Whenever you pay HP as a cost, deal that much damage to an enemy War Chief.", "flavor": ""}, {"name": "Crown of Cinders", "faction": "Flame/Blood", "type": "Relic", "cost": "2 Any, 1🔥, 1🩸", "atk": "", "hp": "", "text": "Equipped creature gets +2 ATK. When equipped creature dies, Crown of Cinders deals 2 damage to each player.", "flavor": ""}, {"name": "Crimson Brand", "faction": "Flame/Blood", "type": "Relic", "cost": "1 Any, 1🔥, 1🩸", "atk": "", "hp": "", "text": "Creatures that enter under your control deal 1 damage to you, then gain +1 ATK permanently.", "flavor": ""}, {"name": "Emberfang Enforcer", "faction": "Flame/Blood", "type": "Creature — Soldier", "cost": "2🔥, 1🩸", "atk": "3", "hp": "2", "text": "Grasp. When this blocks, deal 1 damage to each blocking creature.", "flavor": ""}, {"name": "Crimson Pyre Knight", "faction": "Flame/Blood", "type": "Creature — Knight", "cost": "3🔥, 2🩸", "atk": "4", "hp": "4", "text": "Grasp. When this blocks, you may lose 2 HP → deal 3 damage to the blocked creature.", "flavor": ""}, {"name": "Bloodfire Chains", "faction": "Flame/Blood", "type": "Spell — Instant", "cost": "1🔥, 1🩸, 1 Any", "atk": "", "hp": "", "text": "Target creature gains Grasp until end of turn. If it blocks this turn, it deals damage equal to its ATK to target War Chief.", "flavor": ""}];
-const BUILTIN_PRESETS = {"Starter: Flame": {"chief": ["Kael, Pyre-Seer of Ashfall"], "main": ["Blazing Zealot", "Flame Hound", "Emberling Swarm", "Firebound Mage", "Ashwing Drake", "Flamebound Giant", "Magma Sprite", "Volcanic Shaman", "Emberblade Knight", "Ashscale Dragonkin", "Furnace Spirit", "Lava Charger", "Firestorm Elemental", "Ember Titan", "Cinder Wolf", "Immolation", "Inferno Surge", "Burn the World", "Magma Jet", "Flashfire Assault", "Emberburst", "Molten Rain", "Flame Rebirth", "Volcanic Torrent", "Blazing Path", "Ashstorm", "Ignite the Gate", "Furnace Fuel", "Furnace of the Fallen", "Banner of Cinders", "Volcanic Altar", "Pyrestone Idol", "Crown of Fire", "Ashfang Dagger", "Orb of Emberlight", "Flameheart Totem", "Obsidian Furnace", "Ashforge Hammer", "Ring of Cinders", "Molten Banner", "Cinderblade Duelist", "Ashfang Raider", "Molten Charger", "Pyrefang Drake", "Inferno Titanspawn"], "frags": ["Flame Fragment"]}, "Starter: Ash": {"chief": ["Eryth, Keeper of Cinders"], "main": ["Ashborn Wraith", "Dustling", "Emberfiend Spirit", "Gravehowl Shade", "Soulkeeper", "Bone Ash Guardian", "Ash Herald", "Cinder Phantom", "Ember Witch", "Corpse Collector", "Ashspawn", "Hollow Acolyte", "Dust Prophet", "Shade of the Gate", "Ashen Colossus", "Funeral Pyre", "Emberstorm", "Gravebind", "Embers of Fate", "Wailing Cinders", "Shadow Pyre", "Tombfire", "Dust’s Embrace", "Wither Veil", "Echo of Ash", "Ember Omen", "Dustcall", "Omen of Ruin", "Censer of Dust", "Ashen Idol", "Banner of Ashfall", "Relic of Silence", "Tome of Embers", "Mask of Ashen Prophet", "Furnace of Dust", "Boneforge Totem", "Crown of Ash", "Lamp of Cinders", "Idol of Ruin", "Ashstone Gate", "Dustborn Familiar", "Cinderweaver Adept", "Wraith of the Gate", "Ashfeather Shade", "Gravepyre Colossus"], "frags": ["Ash Fragment"]}, "Starter: Blood": {"chief": ["Queen Serava, Bloodbound Regent"], "main": ["Bloodwright Acolyte", "Crimson Thrall", "Royal Supplicant", "Vein Stalker", "Noble Executioner", "Cult Bladebearer", "Leechspawn", "Bone Collector", "Blood Priestess", "Crimson Rider", "Deathpact Knight", "Ghoul Servant", "Cursed Noble", "Soulflayer", "Herald of Crimson Pact", "Drain Life", "Bleed Out", "Crimson Pact", "Noble Sacrifice", "Thirst of Crowns", "Vein Ritual", "Crimson Feast", "Hemorrhage", "Vein Torrent", "Crown of Suffering", "Sanguine Chains", "Bone Oath", "Feast of Kings", "Altar of Veins", "Throne of Blood", "Crimson Crown", "Banner of Crimson Pact", "Idol of Bone", "Goblet of Kingsblood", "Dagger of Veins", "Mask of the Regent", "Sanguine Blade", "Orb of Crimson Flame", "Chains of Dominion", "Pactstone", "Veinborn Thrall", "Crimson Witchling", "Sanguine Knight", "Demonbound Husk", "Bloodpit Horror"], "frags": ["Blood Fragment"]}};
+// ===== Embedded Card Data =====
+const BUILTIN_CARDS = [
+  {
+    "Name": "Ashen Lancer",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "3 Flame Fragments",
+    "ATK": 5,
+    "HP": 3,
+    "Rules Text": "Overheat 1 — When this attacks, it gains +1 ATK this turn, then takes 1 damage at end of turn."
+  },
+  {
+    "Name": "Ashfield Militia",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "2 Flame Fragments",
+    "ATK": 4,
+    "HP": 3,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Blazeborn Duelist",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "3 Flame Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": "Ignite — When this deals damage, adjacent enemies to the target take 1 damage."
+  },
+  {
+    "Name": "Brimstone Runner",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "3 Flame Fragments",
+    "ATK": 4,
+    "HP": 2,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Charwalker",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "3 Flame Fragments",
+    "ATK": 2,
+    "HP": 4,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Cinderblade Adept",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "4 Flame Fragments",
+    "ATK": 4,
+    "HP": 3,
+    "Rules Text": "Surge — This unit may move and attack during the same turn."
+  },
+  {
+    "Name": "Cinderline Scout",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "3 Flame Fragments",
+    "ATK": 3,
+    "HP": 2,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Coalbrand Skirmisher",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "2 Flame Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Emberfoot Soldier",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "2 Flame Fragments",
+    "ATK": 3,
+    "HP": 3,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Embergale Striker",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "4 Flame Fragments",
+    "ATK": 3,
+    "HP": 5,
+    "Rules Text": "Molten Shield — Prevent the first 1 damage dealt to this each turn."
+  },
+  {
+    "Name": "Emberstorm Herald",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "5 Flame Fragments",
+    "ATK": 6,
+    "HP": 3,
+    "Rules Text": "Commanded Flame — When you cast a Spell, this gains +1 ATK until end of turn."
+  },
+  {
+    "Name": "Fireset Sentry",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "3 Flame Fragments",
+    "ATK": 3,
+    "HP": 3,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Flamewake Stalker",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "4 Flame Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": "Flow East — At the end of your turn, move this 1 tile east if unoccupied."
+  },
+  {
+    "Name": "Heatwave Vanguard",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "4 Flame Fragments",
+    "ATK": 5,
+    "HP": 2,
+    "Rules Text": "Rekindle — When this destroys a unit, heal 1 HP."
+  },
+  {
+    "Name": "Ignition Raider",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "4 Flame Fragments",
+    "ATK": 4,
+    "HP": 3,
+    "Rules Text": "Rend — Attacks pierce through the first enemy hit and deal -1 damage to the next unit in line."
+  },
+  {
+    "Name": "Inferno Harrier",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "3 Flame Fragments",
+    "ATK": 4,
+    "HP": 2,
+    "Rules Text": "Flow Forward — At the end of your turn, move this 1 tile forward if unoccupied."
+  },
+  {
+    "Name": "Kindling Spearhand",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "2 Flame Fragments",
+    "ATK": 3,
+    "HP": 3,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Molten Shocktroop",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "4 Flame Fragments",
+    "ATK": 5,
+    "HP": 4,
+    "Rules Text": "Eruption (-): When this attacks, after damage resolve, deal 1 damage in a line forward (friendly fire)."
+  },
+  {
+    "Name": "Pyreforge Guard",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "3 Flame Fragments",
+    "ATK": 2,
+    "HP": 3,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Pyreheart Champion",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "5 Flame Fragments",
+    "ATK": 5,
+    "HP": 3,
+    "Rules Text": "When Deployed — Allies in its column gain +1 ATK this turn. Overheat 1."
+  },
+  {
+    "Name": "Pyreplate Bruiser",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "3 Flame Fragments",
+    "ATK": 3,
+    "HP": 5,
+    "Rules Text": "Swift — This unit may act on the turn it is deployed (move or attack)."
+  },
+  {
+    "Name": "Scorchwing Captain",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "6 Flame Fragments",
+    "ATK": 4,
+    "HP": 5,
+    "Rules Text": "Swift. Rend — Attacks pierce; the second target takes -1 damage."
+  },
+  {
+    "Name": "Searbrand Marauder",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "3 Flame Fragments",
+    "ATK": 4,
+    "HP": 3,
+    "Rules Text": "Ember Step — When this moves, gain +1 ATK until end of turn."
+  },
+  {
+    "Name": "Torchline Pikeman",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "2 Flame Fragments",
+    "ATK": 4,
+    "HP": 3,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Volcanic Reaver",
+    "Faction": "Flame",
+    "Type": "Creature",
+    "Cost": "4 Flame Fragments",
+    "ATK": 4,
+    "HP": 4,
+    "Rules Text": "When Deployed — Eruption (+): deal 2 damage (friendly fire). Surge — This may move and attack during the same turn."
+  },
+  {
+    "Name": "Ashen War-Drum",
+    "Faction": "Flame",
+    "Type": "Relic",
+    "Cost": "2 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Allies in the center column gain +1 ATK. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Brimwall Bulwark",
+    "Faction": "Flame",
+    "Type": "Relic",
+    "Cost": "4 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Prevent the first 2 damage dealt to your units each turn; those units take 1 damage at end of turn (overheat). (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Cinder Gate",
+    "Faction": "Flame",
+    "Type": "Relic",
+    "Cost": "3 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Eruption (+): When you deploy a creature, deal 1 damage (friendly fire). (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Crown of Sparks",
+    "Faction": "Flame",
+    "Type": "Relic",
+    "Cost": "2 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Your Spells cost 1 less Fragment this turn after a creature dies. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Crucible Array",
+    "Faction": "Flame",
+    "Type": "Relic",
+    "Cost": "2 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Once per turn, you may move an allied unit 1 tile after it attacks. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Emberfont Standard",
+    "Faction": "Flame",
+    "Type": "Relic",
+    "Cost": "3 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "At end of your turn, create a Flamefield on a random empty tile in your front two rows. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Flamewheel Engine",
+    "Faction": "Flame",
+    "Type": "Relic",
+    "Cost": "4 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Relic Fuse — You may destroy this: deal 3 damage to a unit in line of sight. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Infernal Beacon",
+    "Faction": "Flame",
+    "Type": "Relic",
+    "Cost": "2 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Allied Flame units gain +1 ATK this turn when they move. (Newest Relic overrides oldest; max 4 Relics total between both players.)"
+  },
+  {
+    "Name": "Mantle of the Forge",
+    "Faction": "Flame",
+    "Type": "Relic",
+    "Cost": "4 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Allied units entering Flamefields gain +1 ATK until end of turn. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Pyreline Banner",
+    "Faction": "Flame",
+    "Type": "Relic",
+    "Cost": "3 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "When an allied unit destroys an enemy, draw 1 card. Pay 1 HP to keep this Relic at end of turn; otherwise destroy it. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Ashfall Surge",
+    "Faction": "Flame",
+    "Type": "Spell",
+    "Cost": "2 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Move an allied unit 1 tile, then it gains +1 ATK this turn. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Brand the Earth",
+    "Faction": "Flame",
+    "Type": "Spell",
+    "Cost": "2 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Target allied unit gains Surge until end of turn. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Crossflare",
+    "Faction": "Flame",
+    "Type": "Spell",
+    "Cost": "3 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Until end of turn, two target allies gain +1 ATK. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Emberlash",
+    "Faction": "Flame",
+    "Type": "Spell",
+    "Cost": "3 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Create a Flamefield on an empty tile within 2 tiles of a Flame unit. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Forge-Fire Volley",
+    "Faction": "Flame",
+    "Type": "Spell",
+    "Cost": "1 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Choose a column: enemies in that column take 1 damage. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Line of Cinders",
+    "Faction": "Flame",
+    "Type": "Spell",
+    "Cost": "2 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Eruption (+) — Deal 2 damage in a cross (friendly fire). You may cast this on any player's turn."
+  },
+  {
+    "Name": "Pyreburst",
+    "Faction": "Flame",
+    "Type": "Spell",
+    "Cost": "1 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Eruption (-) — Deal 2 damage in a line (friendly fire). You may cast this on any player's turn."
+  },
+  {
+    "Name": "Scorching Advance",
+    "Faction": "Flame",
+    "Type": "Spell",
+    "Cost": "1 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Choose a Flamefield: push all units adjacent to it 1 tile away. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Sear the Ranks",
+    "Faction": "Flame",
+    "Type": "Spell",
+    "Cost": "3 Flame Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Destroy target Sigil or reduce a Relic's effect by half until your next turn. You may cast this on any player's turn."
+  },
+  {
+    "Name": "High Pyre Commander",
+    "Faction": "Flame",
+    "Type": "War Chief",
+    "Cost": "0 Flame Fragments",
+    "ATK": 0,
+    "HP": 40,
+    "Rules Text": "Command (Free, 1/turn) — Choose a friendly Flame unit: it gains +1 ATK this turn and triggers Eruption (+) for 1 damage (friendly fire). Command (1 Flame Fragment, 1/turn) — Eruption (-) for 2 damage (friendly fire). War Chiefs cannot attack and may only move left or right in their back row."
+  },
+  {
+    "Name": "Bleak Surgeon",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "4 Blood Fragments",
+    "ATK": 3,
+    "HP": 5,
+    "Rules Text": "Gravecall — When this dies, you may spend 1 Blood Fragment to deploy it with -1 HP."
+  },
+  {
+    "Name": "Blood-Quenched Sentinel",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "2 Blood Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Bloodkeep Legionary",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "4 Blood Fragments",
+    "ATK": 3,
+    "HP": 6,
+    "Rules Text": "Life Tithe — Pay 1 HP: draw 1 card. Use once each of your turns."
+  },
+  {
+    "Name": "Carnage Reclaimer",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "5 Blood Fragments",
+    "ATK": 4,
+    "HP": 6,
+    "Rules Text": "Gravebond — When a friendly creature dies, this gains +1 ATK until end of turn. Feast."
+  },
+  {
+    "Name": "Clotline Soldier",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "2 Blood Fragments",
+    "ATK": 3,
+    "HP": 5,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Crimson Houndmaster",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "3 Blood Fragments",
+    "ATK": 2,
+    "HP": 6,
+    "Rules Text": "Essence Surge — Whenever you heal, an enemy in line of sight gets -1 ATK until end of turn."
+  },
+  {
+    "Name": "Crimson Servitor",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "2 Blood Fragments",
+    "ATK": 2,
+    "HP": 5,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Fleshmarket Warden",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "6 Blood Fragments",
+    "ATK": 3,
+    "HP": 8,
+    "Rules Text": "Relic Feeder — At end of your turn, you may sacrifice a friendly Summon: draw 1 card."
+  },
+  {
+    "Name": "Fleshshaper Acolyte",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "3 Blood Fragments",
+    "ATK": 3,
+    "HP": 5,
+    "Rules Text": "Guard — Enemies must attack this first if able."
+  },
+  {
+    "Name": "Gorefane Watch",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "3 Blood Fragments",
+    "ATK": 2,
+    "HP": 6,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Gravebond Champion",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "4 Blood Fragments",
+    "ATK": 5,
+    "HP": 6,
+    "Rules Text": "Command the Vein — When you cast a Spell, heal 1 to a friendly creature; then an enemy in line loses 1 ATK this turn."
+  },
+  {
+    "Name": "Gravetithe Collector",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "3 Blood Fragments",
+    "ATK": 4,
+    "HP": 5,
+    "Rules Text": "Sigilmaker — You may place a Sigil face-down on an adjacent empty tile (triggers when stepped on)."
+  },
+  {
+    "Name": "Grim Vicar",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "4 Blood Fragments",
+    "ATK": 2,
+    "HP": 6,
+    "Rules Text": "Ritual Draw — When you destroy a unit, draw 1 card if your War Chief took damage this turn."
+  },
+  {
+    "Name": "Hemlock Ward",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "3 Blood Fragments",
+    "ATK": 2,
+    "HP": 5,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Matriarch of the Tithe",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "4 Blood Fragments",
+    "ATK": 4,
+    "HP": 7,
+    "Rules Text": "When Deployed — Sacrifice another friendly creature: destroy an enemy with HP ≤ the sacrificed creature's HP."
+  },
+  {
+    "Name": "Ritual Butcher",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "3 Blood Fragments",
+    "ATK": 3,
+    "HP": 5,
+    "Rules Text": "Feast — When a unit dies on an adjacent tile, this heals 1 HP."
+  },
+  {
+    "Name": "Sanguine Duelist",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "3 Blood Fragments",
+    "ATK": 3,
+    "HP": 5,
+    "Rules Text": "Sacrificial Pact — Sacrifice a friendly creature: destroy an enemy with HP ≤ the sacrificed creature's HP."
+  },
+  {
+    "Name": "Sanguine Harvester",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "5 Blood Fragments",
+    "ATK": 5,
+    "HP": 5,
+    "Rules Text": "Claim the Blood — When this destroys a unit, you may pay 1 Blood Fragment: deploy it from your discard with -1 HP."
+  },
+  {
+    "Name": "Scarlet Overseer",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "4 Blood Fragments",
+    "ATK": 3,
+    "HP": 6,
+    "Rules Text": "Crimson Dice — When this enters, roll a d6. (1–3: gain 2 HP. 4–6: deal 2 to an enemy.)"
+  },
+  {
+    "Name": "Sinew Pikebearer",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "2 Blood Fragments",
+    "ATK": 3,
+    "HP": 5,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Thirstsworn Aide",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "3 Blood Fragments",
+    "ATK": 2,
+    "HP": 5,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Veinbound Guard",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "3 Blood Fragments",
+    "ATK": 2,
+    "HP": 4,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Veinspeaker Adept",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "4 Blood Fragments",
+    "ATK": 2,
+    "HP": 6,
+    "Rules Text": "Dominion — Enemies entering adjacent tiles lose 1 ATK until your next turn."
+  },
+  {
+    "Name": "Veinwhip Enforcer",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "3 Blood Fragments",
+    "ATK": 4,
+    "HP": 4,
+    "Rules Text": "Flesh Armor — If this would die, you may sacrifice another friendly creature instead."
+  },
+  {
+    "Name": "Vessel-Cutter",
+    "Faction": "Blood",
+    "Type": "Creature",
+    "Cost": "4 Blood Fragments",
+    "ATK": 3,
+    "HP": 5,
+    "Rules Text": "Retaliate 1 — When damaged, deal 1 back to the source."
+  },
+  {
+    "Name": "Blood Altar",
+    "Faction": "Blood",
+    "Type": "Relic",
+    "Cost": "2 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Whenever a unit dies, heal your War Chief 1 HP. (Newest Relic overrides oldest; max 4 Relics total between both players.)"
+  },
+  {
+    "Name": "Bone-Thread Loom",
+    "Faction": "Blood",
+    "Type": "Relic",
+    "Cost": "2 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Crimson Chant — Enemies on Bloodpools have -1 ATK. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Chalice of Tithes",
+    "Faction": "Blood",
+    "Type": "Relic",
+    "Cost": "3 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Vessel's Boon — The first time an ally dies each turn, gain 1 temporary Fragment (Blood) this turn only. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Crimson Court Standard",
+    "Faction": "Blood",
+    "Type": "Relic",
+    "Cost": "4 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Blood Ward — Allied creatures gain Guard this turn when healed. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Crucible of Flesh",
+    "Faction": "Blood",
+    "Type": "Relic",
+    "Cost": "2 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Life Tithe — Once per turn you may pay 2 HP: draw 1 card. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Gorewheel",
+    "Faction": "Blood",
+    "Type": "Relic",
+    "Cost": "4 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Tithe Counter — At end of your turn, if two or more enemies died, create a Bloodpool under one of them. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Red Chorus",
+    "Faction": "Blood",
+    "Type": "Relic",
+    "Cost": "3 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Flesh Market — When you sacrifice a unit, draw 1 card. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Sanguine Font",
+    "Faction": "Blood",
+    "Type": "Relic",
+    "Cost": "4 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "At end of your turn, spread a Bloodpool to an adjacent empty tile of a Blood unit. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Vat of Renewal",
+    "Faction": "Blood",
+    "Type": "Relic",
+    "Cost": "2 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Relic Scour — When an ally is healed, on a roll of 5–6 destroy a random enemy Relic. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Vein-Scribed Sigil",
+    "Faction": "Blood",
+    "Type": "Relic",
+    "Cost": "3 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Sigils you control deal +1 damage and apply Bleed (1). (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Blood Price",
+    "Faction": "Blood",
+    "Type": "Spell",
+    "Cost": "3 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Blood Price — Pay 2 HP: draw 2 cards. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Claim the Fallen",
+    "Faction": "Blood",
+    "Type": "Spell",
+    "Cost": "1 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Claim the Fallen — Pay 1 Blood Fragment: deploy a creature with cost ≤ 3 from your discard with -1 HP. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Crimson Cross",
+    "Faction": "Blood",
+    "Type": "Spell",
+    "Cost": "2 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Ripple (x) — Drain 1 HP diagonally around the target; heal allies by the same amount. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Harvest Call",
+    "Faction": "Blood",
+    "Type": "Spell",
+    "Cost": "3 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Harvest Call — If a unit died this turn, draw 1 card. Otherwise, discard 1 card. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Hemorrhage Line",
+    "Faction": "Blood",
+    "Type": "Spell",
+    "Cost": "1 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Ripple (+) — Drain 1 HP from enemies in a cross; heal allies by the same amount. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Leeching March",
+    "Faction": "Blood",
+    "Type": "Spell",
+    "Cost": "2 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Leeching March — Until end of turn, when allies deal damage, heal your War Chief 1 HP. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Pulse of the Vein",
+    "Faction": "Blood",
+    "Type": "Spell",
+    "Cost": "2 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Pulse of the Vein — Choose an enemy: it gets -2 ATK until your next turn. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Ritual Rebuke",
+    "Faction": "Blood",
+    "Type": "Spell",
+    "Cost": "1 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Ritual Rebuke — Sacrifice a friendly creature: destroy an enemy with HP ≤ the sacrificed creature's HP. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Vessel's Command",
+    "Faction": "Blood",
+    "Type": "Spell",
+    "Cost": "3 Blood Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Vessel's Command — Choose a tile on a Bloodpool: enemies adjacent take 1 damage. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Crimson Matriarch",
+    "Faction": "Blood",
+    "Type": "War Chief",
+    "Cost": "0 Blood Fragments",
+    "ATK": 0,
+    "HP": 45,
+    "Rules Text": "Command (Free, 1/turn) — Ripple (+): Drain 1 HP from enemies around a friendly Blood unit; heal your War Chief by the total drained. Command (1 Blood Fragment, 1/turn) — Create Bloodpools on up to two empty tiles adjacent to Blood units you control. War Chiefs cannot attack and may only move left or right in their back row."
+  },
+  {
+    "Name": "Ashbound Walker",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "2 Ash Fragments",
+    "ATK": 3,
+    "HP": 3,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Ashen Interdictor",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "3 Ash Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": "Obsidian Step — When this moves, create a Shadow Tile on its previous tile."
+  },
+  {
+    "Name": "Bonewraith",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "2 Ash Fragments",
+    "ATK": 2,
+    "HP": 4,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Cinder Shade",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "4 Ash Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": "Shroud — Takes 1 less damage from all sources this turn after moving."
+  },
+  {
+    "Name": "Cinder Veilguard",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "3 Ash Fragments",
+    "ATK": 2,
+    "HP": 5,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Dust-Crown Herald",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "5 Ash Fragments",
+    "ATK": 5,
+    "HP": 4,
+    "Rules Text": "Quiet Command — When this destroys a unit, you may pay 1 Ash Fragment: deploy a 1/1 Wraith token on an adjacent empty tile."
+  },
+  {
+    "Name": "Dustmarch Scout",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "3 Ash Fragments",
+    "ATK": 2,
+    "HP": 5,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Funeral Pike",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "2 Ash Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Grave Echo",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "4 Ash Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": "Ascend — When this moves to your back row, it gains +2 ATK."
+  },
+  {
+    "Name": "Graveclutch Champion",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "4 Ash Fragments",
+    "ATK": 5,
+    "HP": 5,
+    "Rules Text": "Obsidian Surge — When you cast a Spell, create a Shadow Tile on an empty adjacent tile."
+  },
+  {
+    "Name": "Gravecold Footman",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "2 Ash Fragments",
+    "ATK": 3,
+    "HP": 3,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Graveyard Sentinel",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "3 Ash Fragments",
+    "ATK": 2,
+    "HP": 4,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Hauntweaver",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "3 Ash Fragments",
+    "ATK": 2,
+    "HP": 5,
+    "Rules Text": "Reclaim — When this is deployed from your discard, draw 1 card."
+  },
+  {
+    "Name": "Mournblade Stalker",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "3 Ash Fragments",
+    "ATK": 3,
+    "HP": 3,
+    "Rules Text": "Wraithcall — When this dies, create a 1/1 Wraith token on its tile."
+  },
+  {
+    "Name": "Mourning Blade",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "3 Ash Fragments",
+    "ATK": 2,
+    "HP": 4,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Night-Quiet Lancer",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "4 Ash Fragments",
+    "ATK": 2,
+    "HP": 5,
+    "Rules Text": "Grave Siphon — When an enemy dies adjacent, heal your War Chief 1 HP."
+  },
+  {
+    "Name": "Obsidian Channeler",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "4 Ash Fragments",
+    "ATK": 2,
+    "HP": 5,
+    "Rules Text": "Channel — If aligned in the same row or column with another allied Channel card, both gain +1 ATK."
+  },
+  {
+    "Name": "Obsidian Revenant",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "6 Ash Fragments",
+    "ATK": 4,
+    "HP": 6,
+    "Rules Text": "Dustbound — While on a Shadow Tile, this has +1 ATK and Guard."
+  },
+  {
+    "Name": "Obsidian Skirmisher",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "2 Ash Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Shade-Touched Guard",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "3 Ash Fragments",
+    "ATK": 2,
+    "HP": 4,
+    "Rules Text": ""
+  },
+  {
+    "Name": "Shadowbind Adept",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "3 Ash Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": "Shadow Bind — Enemies on Shadow Tiles cannot move."
+  },
+  {
+    "Name": "Shroud Watcher",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "4 Ash Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": "Night Veil — Enemies adjacent have -1 ATK."
+  },
+  {
+    "Name": "Stillborn Regent",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "4 Ash Fragments",
+    "ATK": 4,
+    "HP": 5,
+    "Rules Text": "When Deployed — Bloom (x): create Shadow Tiles diagonally around the target tile."
+  },
+  {
+    "Name": "Warden of the Quiet",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "5 Ash Fragments",
+    "ATK": 4,
+    "HP": 5,
+    "Rules Text": "Grave Conductor — When a friendly unit dies, you may move an allied unit 1 tile."
+  },
+  {
+    "Name": "Wraith-Caller",
+    "Faction": "Ash",
+    "Type": "Creature",
+    "Cost": "3 Ash Fragments",
+    "ATK": 3,
+    "HP": 4,
+    "Rules Text": "Haunt — When this dies, its tile becomes haunted; enemies entering take 1 damage."
+  },
+  {
+    "Name": "Black Sigil Stone",
+    "Faction": "Ash",
+    "Type": "Relic",
+    "Cost": "4 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Sepulcher Echo — The first time an ally dies each turn, draw 1 card and then discard 1 card. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Catafalque Standard",
+    "Faction": "Ash",
+    "Type": "Relic",
+    "Cost": "3 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "At the end of your turn, you may convert a Ruins tile into a Shadow Tile. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Funerary Ring",
+    "Faction": "Ash",
+    "Type": "Relic",
+    "Cost": "3 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Silencing Pall — Enemies who enter Shadow Tiles cannot cast Spells until end of turn. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Graveglass Mirror",
+    "Faction": "Ash",
+    "Type": "Relic",
+    "Cost": "2 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "When you cast a Spell, create a Shadow Tile on an empty tile adjacent to your War Chief. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Lamp of the Unquiet",
+    "Faction": "Ash",
+    "Type": "Relic",
+    "Cost": "4 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "When an allied unit dies, 25% chance to deploy a 1/1 Wraith token on its tile. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Mortuary Engine",
+    "Faction": "Ash",
+    "Type": "Relic",
+    "Cost": "3 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Gravetide — At end of your turn, if two enemies died this turn, create Shadow Tiles (+) around your War Chief. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Obsidian Shrine",
+    "Faction": "Ash",
+    "Type": "Relic",
+    "Cost": "2 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Allied units on Shadow Tiles gain +1 ATK; enemies on Shadow Tiles have -1 ATK. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Pall of Silence",
+    "Faction": "Ash",
+    "Type": "Relic",
+    "Cost": "2 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Obsidian Web — Enemies moving off Shadow Tiles take 1 damage. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Sepulcher Banner",
+    "Faction": "Ash",
+    "Type": "Relic",
+    "Cost": "2 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Lamp of the Unquiet — Once per turn, you may move a Shadow Tile 1 space. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Urn of the Forgotten",
+    "Faction": "Ash",
+    "Type": "Relic",
+    "Cost": "4 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "While you control 3+ Shadow Tiles, allied creatures gain +1 HP. (Relic overwrite rules apply.)"
+  },
+  {
+    "Name": "Cross of Ashes",
+    "Faction": "Ash",
+    "Type": "Spell",
+    "Cost": "2 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Bloom (+) — Create Shadow Tiles in a cross centered on target. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Entomb Memory",
+    "Faction": "Ash",
+    "Type": "Spell",
+    "Cost": "3 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Entomb Memory — Put the top 2 cards of your deck into your discard; then draw 1. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Funeral March",
+    "Faction": "Ash",
+    "Type": "Spell",
+    "Cost": "3 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Funeral March — Move up to two allied units 1 tile each. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Gravewind",
+    "Faction": "Ash",
+    "Type": "Spell",
+    "Cost": "1 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Gravewind — Move a Shadow Tile 1 space; enemies it passes over take 1 damage. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Line of Dust",
+    "Faction": "Ash",
+    "Type": "Spell",
+    "Cost": "3 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Bloom (-) — In a line, turn up to 3 empty tiles into Shadow Tiles. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Night's Claim",
+    "Faction": "Ash",
+    "Type": "Spell",
+    "Cost": "2 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Night's Claim — Choose an enemy on a Shadow Tile: it cannot move next turn. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Shadow Bloom",
+    "Faction": "Ash",
+    "Type": "Spell",
+    "Cost": "1 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Bloom (x) — Create Shadow Tiles diagonally around the target. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Silence the Living",
+    "Faction": "Ash",
+    "Type": "Spell",
+    "Cost": "2 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Silence the Living — Target enemy loses 2 ATK until your next turn. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Wraithwalk",
+    "Faction": "Ash",
+    "Type": "Spell",
+    "Cost": "1 Ash Fragments",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Wraithwalk — Target allied unit gains Swift until end of turn. You may cast this on any player's turn."
+  },
+  {
+    "Name": "Warden of the Stillborn",
+    "Faction": "Ash",
+    "Type": "War Chief",
+    "Cost": "0 Ash Fragments",
+    "ATK": 0,
+    "HP": 42,
+    "Rules Text": "Command (Free, 1/turn) — Choose an empty tile adjacent to a fallen ally: deploy a 1/1 Wraith token. Command (1 Ash Fragment, 1/turn) — Bloom (x): Create Shadow Tiles on diagonally adjacent tiles of a chosen space. War Chiefs cannot attack and may only move left or right in their back row."
+  }
+];
+const BUILTIN_PRESETS = {};
 
 // ===== App =====
 const deck = { main: [], frags: [], chief: [] };
@@ -135,32 +1302,14 @@ const $ = id => document.getElementById(id);
 const cardsEl = $('cards'), mainList = $('mainList'), fragList = $('fragList'), chiefList = $('chiefList');
 
 function escapeHtml(s){ return (s ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
-function parseCostNumber(costStr){
-  if (!costStr) return NaN;
-  const digits  = [...String(costStr).matchAll(/\d+/g)].map(m => +m[0]);   // fixed
-  const symbols = [...String(costStr).matchAll(/[🔥🩸🕯️]/g)].length;
-  return (digits.reduce((a,b)=>a+b,0)) + symbols;
-}
-
 function filtered(){
   const f=$('faction').value.trim().toLowerCase();
   const t=$('type').value.trim().toLowerCase();
   const q=$('text').value.trim().toLowerCase();
-  const cmin=$('costMin').value?+$('costMin').value:-Infinity;
-  const cmax=$('costMax').value?+$('costMax').value:+Infinity;
-
   return allCards.filter(c=>{
     if (f && (c.faction||'').toLowerCase()!==f) return false;
-    if (t){
-      const ct=(c.type||'').toLowerCase();
-      const matchType = t==='war chief' ? /war\s*chief/.test(ct) : t==='fragment' ? /fragment/.test(ct) : ct.startsWith(t); // fixed
-      if (!matchType) return false;
-    }
-    if(q){
-      const blob = `${c.name} ${c.type} ${c.faction} ${c.cost} ${c.text} ${c.flavor}`.toLowerCase();
-      if(!blob.includes(q)) return false;
-    }
-    const est=parseCostNumber(c.cost); if(Number.isFinite(est) && (est<cmin||est>cmax)) return false;
+    if (t && (c.type||'').toLowerCase()!==t) return false;
+    if (q && !(`${c.name} ${c.type} ${c.text}`.toLowerCase().includes(q))) return false;
     return true;
   });
 }
@@ -169,248 +1318,43 @@ function renderCards(list){
   cardsEl.innerHTML='';
   list.forEach(c=>{
     const el=document.createElement('div'); el.className='card';
-    const costNum=parseCostNumber(c.cost);
-    el.innerHTML=`
-      <div class="row"><span class="name">${escapeHtml(c.name)}</span></div>
+    el.innerHTML=`<div class="row"><span class="name">${escapeHtml(c.name)}</span></div>
       <div class="row">
         <span class="tag">${c.faction||'—'}</span>
         <span class="tag">${c.type||'—'}</span>
         <span class="tag">Cost: ${c.cost||'—'}</span>
-        ${c.atk&&c.hp?`<span class="tag">ATK ${c.atk} / HP ${c.hp}</span>`:''}
       </div>
       <div class="muted small">${escapeHtml(c.text||'')}</div>
       <div class="row" style="margin-top:6px;gap:6px;">
         <button class="btn" data-add="main">+ Main</button>
         <button class="btn" data-add="frag">+ Fragment</button>
         <button class="btn" data-add="chief">Set Chief</button>
-        <div class="small muted" style="margin-left:auto">${Number.isFinite(costNum)?('Est Cost: '+costNum):''}</div>
       </div>`;
 
-    // ✅ Correct, simple click handler (no stray functions inside)
     el.querySelectorAll('button').forEach(b=>{
       b.addEventListener('click', ()=>{
-        if(b.dataset.add==='main')  addToDeck('main', c);
-        if(b.dataset.add==='frag')  addToDeck('frags', c);
-        if(b.dataset.add==='chief') setChief(c);
-        updateCounts();
+        if(b.dataset.add==='main') deck.main.push(c);
+        if(b.dataset.add==='frag') deck.frags.push(c);
+        if(b.dataset.add==='chief') deck.chief.push(c);
+        renderDeck();
       });
     });
-
     cardsEl.appendChild(el);
   });
   $('results').textContent = `${list.length} results`;
 }
 
-function renderDeckList(container, list, bucket){
-  container.innerHTML='';
-  list.forEach((c,i)=>{
-    const li=document.createElement('div'); li.className='li';
-    li.innerHTML=`<div>
-        <div class="name">${escapeHtml(c.name)}</div>
-        <div class="small muted">
-          ${escapeHtml(c.faction||'')} • ${escapeHtml(c.type||'')} • Cost ${escapeHtml(c.cost||'—')}
-          ${c.atk&&c.hp?` • ATK ${c.atk} / HP ${c.hp}`:''}
-        </div>
-      </div>`;
-    const r=document.createElement('div');
-    r.innerHTML = `<button class="btn" data-remove="${bucket}" data-idx="${i}">Remove</button>`;
-    li.appendChild(r); container.appendChild(li);
-  });
-  container.querySelectorAll('button[data-remove]').forEach(btn =>
-    btn.addEventListener('click', ()=>{
-      const b=btn.dataset.remove, ix=+btn.dataset.idx;
-      deck[b].splice(ix,1);
-      renderAll();
-    })
-  );
+function renderDeck(){
+  const list=(id,cards)=>{const el=$(id);el.innerHTML='';cards.forEach(c=>el.innerHTML+=`<div class='li'><div>${c.name}</div><div class='small muted'>${c.type}</div></div>`);};
+  list('mainList',deck.main);list('fragList',deck.frags);list('chiefList',deck.chief);
+  $('countMain').textContent=`Main: ${deck.main.length}`; $('countFrags').textContent=`Fragments: ${deck.frags.length}`; $('countChief').textContent=`War Chiefs: ${deck.chief.length}`;
 }
 
-function renderAll(){
-  renderDeckList(mainList, deck.main, 'main');
-  renderDeckList(fragList, deck.frags, 'frags');
-  renderDeckList(chiefList, deck.chief, 'chief');
-  updateCounts();
-}
+$('clear').addEventListener('click',()=>{$('faction').value='';$('type').value='';$('text').value='';renderCards(filtered());});
+$('validate').addEventListener('click',()=>{$('validationMsg').textContent=`Deck — Main: ${deck.main.length}, Fragments: ${deck.frags.length}, War Chiefs: ${deck.chief.length}`;});
+['faction','type','text'].forEach(id=>$(id).addEventListener('input',()=>renderCards(filtered())));
 
-function updateCounts(){
-  $('countMain').textContent  = `Main: ${deck.main.length}`;
-  $('countFrags').textContent = `Fragments: ${deck.frags.length}`;
-  $('countChief').textContent = `War Chiefs: ${deck.chief.length}`;
-}
-
-function addToDeck(bucket, card){
-  const t=(card.type||'').toLowerCase();
-  if(bucket==='frags' && !/fragment/.test(t)) toast('Tip: only Fragment cards belong in the Fragment deck.');
-  if(bucket==='main'  &&  /fragment/.test(t))  toast('Tip: Fragments usually go in the Fragment deck.');
-  if(bucket==='main') deck.main.push(card);
-  else if(bucket==='frags') deck.frags.push(card);
-  renderAll();
-}
-
-function setChief(card){
-  if(!/war\s*chief/i.test(card.type||'')){ toast('Selected card is not a War Chief.'); return; } // fixed
-  deck.chief.push(card);
-  renderAll();
-}
-
-function clearDeck(){ deck.main.length=0; deck.frags.length=0; deck.chief.length=0; renderAll(); }
-
-function validateDeck(){
-  $('validationMsg').textContent =
-    `Summary — Main: ${deck.main.length} • Fragments: ${deck.frags.length} • War Chiefs: ${deck.chief.length}`;
-  $('validationMsg').className='small';
-}
-
-// Bulk add (you were calling this but it wasn't defined)
-function addAll(list, mode){
-  list.forEach(card=>{
-    let bucket = mode;
-    if(mode==='auto'){
-      if(/war\s*chief/i.test(card.type||'')) bucket='chief';
-      else if(/fragment/i.test((card.type||'').toLowerCase())) bucket='frags';
-      else bucket='main';
-    }
-    if(bucket==='chief') setChief(card);
-    else addToDeck(bucket, card);
-  });
-  renderAll();
-}
-
-// ===== EXPORTS =====
-function download(filename, blobOrText){
-  const blob = blobOrText instanceof Blob ? blobOrText : new Blob([blobOrText],{type:'text/plain'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href);
-}
-function exportJSON(){ download('star_of_ash_deck.json', JSON.stringify(deck,null,2)); }
-function exportCSV(){
-  const rows=[['Section','Card Name','Faction','Type','Cost','ATK','HP','Rules Text','Flavor Text']];
-  const pushRow=(section,c)=>rows.push([section,c.name,c.faction||'',c.type||'',c.cost||'',c.atk||'',c.hp||'',
-    (c.text||'').replace(/\r?\n/g,' '),(c.flavor||'').replace(/\r?\n/g,' ')]);
-  deck.chief.forEach(c=>pushRow('War Chief',c));
-  deck.main.forEach(c=>pushRow('Main',c));
-  deck.frags.forEach(c=>pushRow('Fragments',c));
-  const csv = rows.map(r => r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  download('star_of_ash_deck.csv', csv);
-}
-function exportNames(){
-  const out=[];
-  if(deck.chief.length) out.push('# War Chief', ...deck.chief.map(c=>c.name), '');
-  if(deck.main.length)  out.push(`# Main (${deck.main.length})`,  ...deck.main.map(c=>c.name), '');
-  if(deck.frags.length) out.push(`# Fragments (${deck.frags.length})`, ...deck.frags.map(c=>c.name), '');
-  download('star_of_ash_deck.txt', out.join('\n'));
-}
-
-// ===== SHEET EXPORTER =====
-const CAN=$('sheet'); const CTX=CAN.getContext('2d');
-function pickSource(){ const s=$('sheetSource').value; if(s==='main') return [...deck.main]; if(s==='frags') return [...deck.frags]; if(s==='chief') return [...deck.chief]; return [...deck.chief,...deck.main,...deck.frags]; }
-function drawRoundedRect(ctx,x,y,w,h,r){ const rr=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+rr,y); ctx.arcTo(x+w,y,x+w,y+h,rr); ctx.arcTo(x+w,y+h,x,y+h,rr); ctx.arcTo(x,y+h,x,y,rr); ctx.arcTo(x,y,x+w,y,rr); ctx.closePath(); }
-function wrapText(ctx,text,x,y,maxW,lineH,maxLines){
-  if(!text) return y;
-  const words=String(text).split(/\s+/); // fixed
-  let line='', lines=0;
-  for(let n=0;n<words.length;n++){
-    const test=line?line+' '+words[n]:words[n];
-    const w=ctx.measureText(test).width;
-    if(w>maxW && line){
-      ctx.fillText(line,x,y); line=words[n]; y+=lineH; lines++;
-      if(maxLines && lines>=maxLines-1){
-        let rest=words.slice(n).join(' ');
-        while(ctx.measureText(rest+'…').width>maxW && rest.length>0) rest=rest.slice(0,-1);
-        ctx.fillText(rest+'…',x,y);
-        return y+lineH;
-      }
-    } else { line=test; }
-  }
-  if(line){ ctx.fillText(line,x,y); y+=lineH; }
-  return y;
-}
-function factionTint(f){ f=(f||'').toLowerCase(); if(f.includes('flame')) return '#ff7a4a'; if(f.includes('blood')) return '#d94763'; if(f.includes('ash')) return '#b6b1a9'; return '#8aa3ff'; }
-
-function renderCard(ctx,card,x,y,w,h,opts){
-  const {bleed=36,setCode=''}=opts;
-  const nameScale=Math.max(0.5,parseFloat(($('nameScale').value||'1')));
-  const rulesScale=Math.max(0.5,parseFloat(($('rulesScale').value||'1')));
-
-  ctx.save(); drawRoundedRect(ctx,x,y,w,h,24); ctx.fillStyle='#11151f'; ctx.fill(); ctx.strokeStyle='#2b3145'; ctx.lineWidth=2; ctx.stroke();
-  ctx.fillStyle=factionTint(card.faction); ctx.fillRect(x,y,w,12);
-
-  const pad=20; let cx=x+pad, cy=y+pad+Math.round(14*nameScale);
-  ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(28*nameScale)}px system-ui`; ctx.fillText(card.name||'Unnamed',cx,cy);
-  const cost=card.cost||'—'; ctx.font=`bold ${Math.round(22*nameScale)}px system-ui`; ctx.fillStyle='#cfd3da'; ctx.textAlign='right'; ctx.fillText(cost,x+w-pad,cy); ctx.textAlign='left'; cy+=Math.round(28*nameScale);
-  ctx.fillStyle='#9aa0ac'; ctx.font=`${Math.round(14*nameScale)}px system-ui`; ctx.fillText(`${card.type || '—'}  •  ${card.faction || '—'}`,cx,cy); cy+=Math.round(14*nameScale);
-
-  const boxY=cy+Math.round(10*rulesScale), boxH=h*0.46;
-  drawRoundedRect(ctx,x+pad-6,boxY-18,w-2*pad+12,boxH+28,14); ctx.fillStyle='#141a26'; ctx.fill(); ctx.strokeStyle='#262d3f'; ctx.stroke();
-
-  ctx.fillStyle='#e1e4ea'; const rulesSize=Math.round(16*rulesScale);
-  ctx.font=`${rulesSize}px system-ui`; const textMaxW=w-2*pad-10; let ty=boxY;
-  ty=wrapText(ctx,(card.text||''),x+pad,ty,textMaxW,Math.round(20*rulesScale),10);
-
-  if(card.flavor){
-    ctx.fillStyle='#a5acb8'; ctx.font=`italic ${Math.round(14*rulesScale)}px system-ui`;
-    wrapText(ctx,'“'+card.flavor+'”',x+pad,ty+Math.round(6*rulesScale),textMaxW,Math.round(18*rulesScale),3);
-  }
-
-  if(/war\s*chief/i.test(card.type||'')){ // fixed
-    const r=Math.round(32*nameScale); ctx.beginPath(); ctx.arc(x+w-pad-r,y+h-pad-r,r,0,Math.PI*2);
-    ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=Math.max(2,Math.round(3*nameScale)); ctx.stroke();
-    ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(22*nameScale)}px system-ui`;
-    const hp=(card.hp||'').toString()||'40'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(hp,x+w-pad-r,y+h-pad-r);
-    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
-  } else if(!/fragment/i.test((card.type||'').toLowerCase())){
-    const bw=Math.round(90*nameScale), bh=Math.round(48*nameScale);
-    drawRoundedRect(ctx,x+w-pad-bw,y+h-pad-bh,bw,bh,Math.round(10*nameScale));
-    ctx.fillStyle='#232a3d'; ctx.fill(); ctx.strokeStyle='#3a4563'; ctx.lineWidth=Math.max(1,Math.round(2*nameScale)); ctx.stroke();
-    ctx.fillStyle='#e9ebef'; ctx.font=`bold ${Math.round(20*nameScale)}px system-ui`;
-    ctx.fillText(`${card.atk||'—'} / ${card.hp||'—'}`, x+w-pad-bw+Math.round(12*nameScale), y+h-pad-bh+Math.round(30*nameScale));
-  } else {
-    ctx.fillStyle='#8e95a3'; ctx.font=`bold ${Math.round(16*nameScale)}px system-ui`;
-    ctx.fillText('Fragment', x+w-pad-Math.round(120*nameScale), y+h-pad-Math.round(18*nameScale));
-  }
-
-  if(setCode){ ctx.fillStyle='#80889a'; ctx.font=`bold ${Math.round(13*nameScale)}px system-ui`; ctx.fillText(setCode, x+pad, y+h-pad); }
-  ctx.restore();
-}
-
-function computeGrid(){ const rows=+$('rows').value||7; const cols=+$('cols').value||10; const cardW=+$('cardW').value||744; const cardH=+$('cardH').value||1038; const margin=+$('margin').value||24; const scale=Math.max(1,+$('scale').value||1); const bleed=+$('bleed').value||0; const setCode=$('setCode').value.trim(); return {rows,cols,cardW,cardH,margin,scale,bleed,setCode}; }
-function allocCanvas(W,H,scale){ const c=document.createElement('canvas'); c.width=Math.floor(W*scale); c.height=Math.floor(H*scale); const ctx=c.getContext('2d'); ctx.setTransform(scale,0,0,scale,0,0); return {c,ctx}; }
-function drawPage(ctx,cards,grid){ const {rows,cols,cardW,cardH,margin,bleed,setCode}=grid; const W=cols*cardW+(cols+1)*margin; const H=rows*cardH+(rows+1)*margin; ctx.fillStyle='#0b0b0e'; ctx.fillRect(0,0,W,H); for(let i=0;i<cards.length;i++){ const r=Math.floor(i/cols), c=i%cols; const x=margin+c*(cardW+margin); const y=margin+r*(cardH+margin); renderCard(ctx,cards[i],x,y,cardW,cardH,{bleed,setCode}); } }
-function renderSheet(){ const src=pickSource(); if(!src.length){ toast('No cards in the chosen section.'); return; } const g=computeGrid(); const per=g.rows*g.cols; const pageCards=src.slice(0,per); const W=g.cols*g.cardW+(g.cols+1)*g.margin; const H=g.rows*g.cardH+(g.rows+1)*g.margin; CAN.width=Math.floor(W*g.scale); CAN.height=Math.floor(H*g.scale); CTX.setTransform(g.scale,0,0,g.scale,0,0); drawPage(CTX,pageCards,g); }
-async function downloadAllSheets(){ const src=pickSource(); if(!src.length){ toast('No cards to export.'); return; } const g=computeGrid(); const per=g.rows*g.cols; const total=Math.ceil(src.length/per); const base=sheetLabel(); for(let p=0;p<total;p++){ const slice=src.slice(p*per,(p+1)*per); const W=g.cols*g.cardW+(g.cols+1)*g.margin; const H=g.rows*g.cardH+(g.rows+1)*g.margin; const {c,ctx}=allocCanvas(W,H,g.scale); drawPage(ctx,slice,g); await new Promise(res=>c.toBlob(b=>{download(`${base}_p${p+1}.png`,b);res();},'image/png')); } }
-function previewAllSheets(){ const src=pickSource(); if(!src.length){ toast('No cards to preview.'); return; } const g=computeGrid(); const per=g.rows*g.cols; const total=Math.ceil(src.length/per); for(let p=0;p<total;p++){ const slice=src.slice(p*per,(p+1)*per); const W=g.cols*g.cardW+(g.cols+1)*g.margin; const H=g.rows*g.cardH+(g.rows+1)*g.margin; const {c,ctx}=allocCanvas(W,H,g.scale); drawPage(ctx,slice,g); const url=c.toDataURL('image/png'); const w=window.open('','_blank'); if(w){ w.document.write(`<title>Sheet ${p+1}/${total}</title><style>html,body{margin:0;background:#0b0b0e}img{display:block;margin:0 auto;max-width:100%;height:auto}</style><img src="${url}" alt="Card Sheet ${p+1}">`); w.document.close(); } } }
-function sheetLabel(){ const s=$('sheetSource').value; if(s==='main') return 'star_of_ash_main'; if(s==='frags') return 'star_of_ash_fragments'; if(s==='chief') return 'star_of_ash_chiefs'; return 'star_of_ash_all'; }
-function renderBacks(){ const g=computeGrid(); const {rows,cols,cardW,cardH,margin}=g; const label=$('backLabel').value||'Star of Ash'; const color=$('backColor').value||'#0b0b0e'; const W=cols*cardW+(cols+1)*margin; const H=rows*cardH+(rows+1)*margin; CAN.width=Math.floor(W*g.scale); CAN.height=Math.floor(H*g.scale); CTX.setTransform(g.scale,0,0,g.scale,0,0); CTX.fillStyle='#0b0b0e'; CTX.fillRect(0,0,W,H); for(let r=0;r<rows;r++){ for(let c=0;c<cols;c++){ const x=margin+c*(cardW+margin), y=margin+r*(cardH+margin); drawRoundedRect(CTX,x,y,cardW,cardH,24); CTX.fillStyle=color; CTX.fill(); CTX.strokeStyle='#222633'; CTX.lineWidth=2; CTX.stroke(); CTX.save(); CTX.translate(x+cardW/2,y+cardH/2); CTX.fillStyle='#e7e8ea'; CTX.font='bold 40px system-ui'; CTX.textAlign='center'; CTX.textBaseline='middle'; CTX.fillText(label,0,0); CTX.restore(); } } }
-function downloadSheet(){ CAN.toBlob(b=>download(`${sheetLabel()}_p1.png`,b),'image/png'); }
-function openLargePreview(){ if(CAN.width===0||CAN.height===0) renderSheet(); const url=CAN.toDataURL('image/png'); const w=window.open('','_blank'); if(!w){ toast('Popup blocked'); return; } w.document.write('<title>Card Sheet Preview</title><style>html,body{margin:0;background:#0b0b0e}img{display:block;margin:0 auto;max-width:100%;height:auto}</style><img src="'+url+'" alt="Card Sheet Preview">'); w.document.close(); }
-
-// Events
-['faction','type','text','costMin','costMax'].forEach(id=>$(id).addEventListener('input', ()=>renderCards(filtered())));
-$('clear').addEventListener('click', ()=>{ ['faction','type','text','costMin','costMax'].forEach(id=>$(id).value=''); renderCards(filtered()); });
-$('addAllFiltered').addEventListener('click', ()=> addAll(filtered(), $('addAllMode').value));
-$('addAllAll').addEventListener('click', ()=> addAll(allCards, $('addAllMode').value));
-$('clearDeck').addEventListener('click', clearDeck);
-$('validate').addEventListener('click', validateDeck);
-$('exportJson').addEventListener('click', exportJSON);
-$('exportCsv').addEventListener('click', exportCSV);
-$('exportTxt').addEventListener('click', exportNames);
-$('renderSheet').addEventListener('click', renderSheet);
-$('renderBacks').addEventListener('click', renderBacks);
-$('downloadSheet').addEventListener('click', downloadSheet);
-$('previewFull').addEventListener('click', openLargePreview);
-$('downloadAll').addEventListener('click', downloadAllSheets);
-$('previewAll').addEventListener('click', previewAllSheets);
-
-// Presets init
-function refreshPresetSelect(){ const sel=$('presetSelect'); sel.innerHTML=''; const names=Object.keys(presets).sort(); names.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); }); if(names[0]) sel.value=names[0]; }
-function namesToCards(names){ const set = new Set((names||[]).map(s=>String(s).toLowerCase())); return allCards.filter(c=> set.has(String(c.name).toLowerCase())); }
-function applyPreset(name, mode){ const p=presets[name]; if(!p) return; if(mode==='replace') clearDeck(); if(p.chief) deck.chief.push(...namesToCards(p.chief)); if(p.main) deck.main.push(...namesToCards(p.main)); if(p.frags) deck.frags.push(...namesToCards(p.frags)); renderAll(); }
-$('loadPresetAppend').addEventListener('click', ()=>applyPreset($('presetSelect').value,'append'));
-$('loadPresetReplace').addEventListener('click', ()=>applyPreset($('presetSelect').value,'replace'));
-
-// Start
-(function init(){ refreshPresetSelect(); renderCards(filtered()); })();
-
-function toast(msg){ const el=$('validationMsg'); el.textContent=msg; el.className='small warn'; setTimeout(()=>{ el.textContent=''; }, 3000); }
-})();
+renderCards(filtered());
 </script>
-</body></html>
+</body>
+</html>
