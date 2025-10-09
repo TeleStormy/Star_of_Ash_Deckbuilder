@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Star of Ash — Deck Builder + Sheet Exporter (v9)</title>
+<title>Star of Ash — Deck Builder + Sheet Exporter (v9 FIXED)</title>
 <style>
 :root { --bg:#0f0f13; --panel:#171923; --muted:#9aa0ac; --text:#e7e8ea; --accent:#b389ff; --ok:#6dd37a; --warn:#ffb84d; --bad:#ff6b6b; --line:#222633; }
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial}
@@ -29,7 +29,6 @@ input,select{width:100%;background:#141722;border:1px solid #2a2d3a;color:var(--
 .pill{padding:6px 8px;border-radius:999px;text-align:center;background:#141722;border:1px solid #2a2d3a}
 footer{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
 .small{font-size:12px}
-canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:12px}
 .field{display:flex;flex-direction:column;gap:4px} .field label{font-size:11px;color:var(--muted)} .hint{font-size:11px;color:var(--muted)}
 @media (max-width:1200px){.layout{grid-template-columns:1fr}}
 @media (max-width:520px){.grid{grid-template-columns:1fr}}
@@ -37,11 +36,11 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
 </head>
 <body>
 <header>
-  <h1>Star of Ash — Deck Builder + Sheet Exporter (v9)</h1>
+  <h1>Star of Ash — Deck Builder + Sheet Exporter (v9 FIXED)</h1>
   <button id="exportJson" class="btn">Export Deck (JSON)</button>
   <button id="exportCsv" class="btn">Export Deck (CSV)</button>
   <button id="exportTxt" class="btn">Export Names (TXT)</button>
-  <div class="small muted" id="status">Cards: Built-in v9</div>
+  <div class="small muted" id="status">Data: v9 (normalized)</div>
 </header>
 
 <div class="layout">
@@ -57,6 +56,8 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
           <option value="">All Types</option><option>Creature</option><option>Spell</option><option>Relic</option><option>War Chief</option><option>Fragment</option>
         </select></div>
         <div class="field"><label>Search</label><input id="text" placeholder="Name, rules, flavor…" /></div>
+        <div class="field"><label>Min Cost (est.)</label><input id="costMin" type="number" min="0" placeholder="0" /></div>
+        <div class="field"><label>Max Cost (est.)</label><input id="costMax" type="number" min="0" placeholder="∞" /></div>
       </div>
       <div class="row"><button id="clear" class="btn">Clear Filters</button><div class="small muted" id="results"></div></div>
     </div>
@@ -65,7 +66,7 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
   <section class="panel"><h2>Cards</h2><div class="body" style="min-height:400px"><div class="cards" id="cards"></div></div></section>
   <section class="panel"><h2>Deck</h2><div class="body deckcol">
     <div class="counts"><div class="pill" id="countMain">Main: 0</div><div class="pill" id="countFrags">Fragments: 0</div><div class="pill" id="countChief">War Chiefs: 0</div></div>
-    <div class="small muted">Main Deck</div><div class="list" id="mainList"></div>
+    <div class="small muted">Main</div><div class="list" id="mainList"></div>
     <div class="small muted">Fragments</div><div class="list" id="fragList"></div>
     <div class="small muted">War Chiefs</div><div class="list" id="chiefList"></div>
     <footer><button id="validate" class="btn primary">Summary</button><div id="validationMsg" class="small"></div></footer>
@@ -73,8 +74,8 @@ canvas{max-width:100%;background:#0b0b0e;border:1px solid #2a2a2e;border-radius:
 </div>
 
 <script>
-// ===== Embedded Card Data =====
-const BUILTIN_CARDS = [
+// ===== Raw v9 Cards (as uploaded) =====
+const RAW_V9_CARDS = [
   {
     "Name": "Ashen Lancer",
     "Faction": "Flame",
@@ -1291,6 +1292,21 @@ const BUILTIN_CARDS = [
     "Rules Text": "Command (Free, 1/turn) — Choose an empty tile adjacent to a fallen ally: deploy a 1/1 Wraith token. Command (1 Ash Fragment, 1/turn) — Bloom (x): Create Shadow Tiles on diagonally adjacent tiles of a chosen space. War Chiefs cannot attack and may only move left or right in their back row."
   }
 ];
+
+// ===== Normalize v9 -> app schema =====
+function normalizeCard(c) {
+  const name   = c.Name ?? c.name ?? '';
+  const faction= c.Faction ?? c.faction ?? '';
+  const type   = c.Type ?? c.type ?? '';
+  const cost   = c.Cost ?? c.cost ?? '';
+  const atk    = (c.ATK ?? c.atk ?? '').toString();
+  const hp     = (c.HP  ?? c.hp  ?? '').toString();
+  const text   = c['Rules Text'] ?? c.text ?? '';
+  const flavor = c['Flavor Text'] ?? c.flavor ?? '';
+  return { name, faction, type, cost, atk, hp, text, flavor };
+}
+
+const BUILTIN_CARDS = RAW_V9_CARDS.map(normalizeCard);
 const BUILTIN_PRESETS = {};
 
 // ===== App =====
@@ -1302,14 +1318,32 @@ const $ = id => document.getElementById(id);
 const cardsEl = $('cards'), mainList = $('mainList'), fragList = $('fragList'), chiefList = $('chiefList');
 
 function escapeHtml(s){ return (s ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+function parseCostNumber(costStr){
+  if (!costStr) return NaN;
+  const digits  = [...String(costStr).matchAll(/\\d+/g)].map(m => +m[0]);
+  const symbols = [...String(costStr).matchAll(/[🔥🩸🕯️]/g)].length;
+  return (digits.reduce((a,b)=>a+b,0)) + symbols;
+}
+
 function filtered(){
   const f=$('faction').value.trim().toLowerCase();
   const t=$('type').value.trim().toLowerCase();
   const q=$('text').value.trim().toLowerCase();
+  const cmin=$('costMin').value?+$('costMin').value:-Infinity;
+  const cmax=$('costMax').value?+$('costMax').value:+Infinity;
+
   return allCards.filter(c=>{
     if (f && (c.faction||'').toLowerCase()!==f) return false;
-    if (t && (c.type||'').toLowerCase()!==t) return false;
-    if (q && !(`${c.name} ${c.type} ${c.text}`.toLowerCase().includes(q))) return false;
+    if (t){
+      const ct=(c.type||'').toLowerCase();
+      const matchType = t==='war chief' ? /war\\s*chief/.test(ct) : t==='fragment' ? /fragment/.test(ct) : ct.startsWith(t);
+      if (!matchType) return false;
+    }
+    if(q){
+      const blob = `${c.name} ${c.type} ${c.faction} ${c.cost} ${c.text} ${c.flavor}`.toLowerCase();
+      if(!blob.includes(q)) return false;
+    }
+    const est=parseCostNumber(c.cost); if(Number.isFinite(est) && (est<cmin||est>cmax)) return false;
     return true;
   });
 }
@@ -1318,41 +1352,83 @@ function renderCards(list){
   cardsEl.innerHTML='';
   list.forEach(c=>{
     const el=document.createElement('div'); el.className='card';
-    el.innerHTML=`<div class="row"><span class="name">${escapeHtml(c.name)}</span></div>
+    const costNum=parseCostNumber(c.cost);
+    el.innerHTML=`
+      <div class="row"><span class="name">${escapeHtml(c.name)}</span></div>
       <div class="row">
         <span class="tag">${c.faction||'—'}</span>
         <span class="tag">${c.type||'—'}</span>
         <span class="tag">Cost: ${c.cost||'—'}</span>
+        ${(c.atk && c.hp) ? `<span class="tag">ATK ${c.atk} / HP ${c.hp}</span>` : ''}
       </div>
       <div class="muted small">${escapeHtml(c.text||'')}</div>
       <div class="row" style="margin-top:6px;gap:6px;">
         <button class="btn" data-add="main">+ Main</button>
         <button class="btn" data-add="frag">+ Fragment</button>
         <button class="btn" data-add="chief">Set Chief</button>
+        <div class="small muted" style="margin-left:auto">${Number.isFinite(costNum)?('Est Cost: '+costNum):''}</div>
       </div>`;
 
     el.querySelectorAll('button').forEach(b=>{
       b.addEventListener('click', ()=>{
-        if(b.dataset.add==='main') deck.main.push(c);
-        if(b.dataset.add==='frag') deck.frags.push(c);
+        if(b.dataset.add==='main')  deck.main.push(c);
+        if(b.dataset.add==='frag')  deck.frags.push(c);
         if(b.dataset.add==='chief') deck.chief.push(c);
-        renderDeck();
+        renderAll();
       });
     });
+
     cardsEl.appendChild(el);
   });
   $('results').textContent = `${list.length} results`;
 }
 
-function renderDeck(){
-  const list=(id,cards)=>{const el=$(id);el.innerHTML='';cards.forEach(c=>el.innerHTML+=`<div class='li'><div>${c.name}</div><div class='small muted'>${c.type}</div></div>`);};
-  list('mainList',deck.main);list('fragList',deck.frags);list('chiefList',deck.chief);
-  $('countMain').textContent=`Main: ${deck.main.length}`; $('countFrags').textContent=`Fragments: ${deck.frags.length}`; $('countChief').textContent=`War Chiefs: ${deck.chief.length}`;
+function renderDeckList(container, list){
+  container.innerHTML='';
+  list.forEach((c)=>{
+    const li=document.createElement('div'); li.className='li';
+    li.innerHTML=`<div>
+        <div class="name">${escapeHtml(c.name)}</div>
+        <div class="small muted">
+          ${escapeHtml(c.faction||'')} • ${escapeHtml(c.type||'')} • Cost ${escapeHtml(c.cost||'—')}
+          ${(c.atk&&c.hp)?` • ATK ${c.atk} / HP ${c.hp}`:''}
+        </div>
+      </div>`;
+    container.appendChild(li);
+  });
 }
 
-$('clear').addEventListener('click',()=>{$('faction').value='';$('type').value='';$('text').value='';renderCards(filtered());});
-$('validate').addEventListener('click',()=>{$('validationMsg').textContent=`Deck — Main: ${deck.main.length}, Fragments: ${deck.frags.length}, War Chiefs: ${deck.chief.length}`;});
-['faction','type','text'].forEach(id=>$(id).addEventListener('input',()=>renderCards(filtered())));
+function renderAll(){
+  renderDeckList(mainList, deck.main);
+  renderDeckList(fragList, deck.frags);
+  renderDeckList(chiefList, deck.chief);
+  $('countMain').textContent  = `Main: ${deck.main.length}`;
+  $('countFrags').textContent = `Fragments: ${deck.frags.length}`;
+  $('countChief').textContent = `War Chiefs: ${deck.chief.length}`;
+}
+
+function exportFile(filename, text){
+  const blob = new Blob([text], {type:'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href);
+}
+document.getElementById('exportJson').addEventListener('click',()=>exportFile('star_of_ash_deck.json', JSON.stringify(deck,null,2)));
+document.getElementById('exportCsv').addEventListener('click',()=>{
+  const rows=[['Section','Card Name','Faction','Type','Cost','ATK','HP','Rules Text','Flavor Text']];
+  const add=(section,arr)=>arr.forEach(c=>rows.push([section,c.name,c.faction||'',c.type||'',c.cost||'',c.atk||'',c.hp||'',(c.text||'').replace(/\\n/g,' '),(c.flavor||'').replace(/\\n/g,' ')]));
+  add('War Chief',deck.chief); add('Main',deck.main); add('Fragments',deck.frags);
+  const csv = rows.map(r => r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\\n');
+  exportFile('star_of_ash_deck.csv', csv);
+});
+document.getElementById('exportTxt').addEventListener('click',()=>{
+  const out=[];
+  if(deck.chief.length) out.push('# War Chief', ...deck.chief.map(c=>c.name), '');
+  if(deck.main.length)  out.push(`# Main (${deck.main.length})`,  ...deck.main.map(c=>c.name), '');
+  if(deck.frags.length) out.push(`# Fragments (${deck.frags.length})`, ...deck.frags.map(c=>c.name), '');
+  exportFile('star_of_ash_deck.txt', out.join('\\n'));
+});
+
+['faction','type','text','costMin','costMax'].forEach(id=>$(id).addEventListener('input', ()=>renderCards(filtered())));
+$('clear').addEventListener('click', ()=>{ ['faction','type','text','costMin','costMax'].forEach(id=>$(id).value=''); renderCards(filtered()); });
 
 renderCards(filtered());
 </script>
