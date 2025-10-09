@@ -1350,6 +1350,278 @@ function normalizeCard(c){
   const flavor = c['Flavor Text'] ?? c.flavor ?? '';
   return { name, faction, type, cost, atk, hp, text, flavor };
 }
+const RAW_FRAGMENT_CARDS = [
+  {
+    "Name": "Ash Fragment",
+    "Faction": "Ash",
+    "Type": "Fragment",
+    "Cost": "",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "ProvidesBurn: Provides 🕯️ Ash to cast creatures, spells, or relics.\nReburn: Instead of exiling, shuffle this Fragment into your Fragment Deck.\nFlavor: “Even dust remembers the flame.”",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Ash Fragment",
+    "Faction": "Ash",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: Provides 1 Ash resource. Reburn: Instead of exiling, shuffle this Fragment back into your Fragment Deck.",
+    "Flavor Text": "What burns to ash may rise again, ever circling."
+  },
+  {
+    "Name": "Dust-Etched Fragment",
+    "Faction": "Ash",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Ash Fragments. Place on top of graveyard instead of normal.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Eternal Ember Fragment",
+    "Faction": "Ash",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +1 Ash Fragment. On reburn, shuffle into deck instead of exile.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Cinderfall Relic",
+    "Faction": "Ash",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +3 Ash Fragments. Exile 1 card from your hand.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Phantom Veil Fragment",
+    "Faction": "Ash",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Ash Fragments. Exile 1 card from your graveyard.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Bone-Ash Keystone",
+    "Faction": "Ash",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +1 any Fragment. Shuffle 2 cards from graveyard into deck.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Funeral Pyre Fragment",
+    "Faction": "Ash",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Ash Fragments. Exile after use.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Wraithfire Fragment",
+    "Faction": "Ash",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Ash Fragments. Exile after use. Opponent creates 1 Wraith token.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Blood Fragment",
+    "Faction": "Blood",
+    "Type": "Fragment",
+    "Cost": "",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Burn: Provides 🩸 Blood to cast creatures, spells, or relics.\nReburn: Pay 1 HP to shuffle this Fragment into your Fragment Deck, or sacrifice a creature to return it to your hand.\nFlavor: “The covenant of crimson demands either blood or bone.”",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Blood Fragment",
+    "Faction": "Blood",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: Provides 1 Blood resource. Reburn: Pay 1 HP to return to Fragment Deck or sacrifice a creature to return to hand.",
+    "Flavor Text": "A shard steeped in crimson vows, binding life and death."
+  },
+  {
+    "Name": "Crimson Pactstone",
+    "Faction": "Blood",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +3 Blood Fragments. Pay 3 HP.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Veinspire Shard",
+    "Faction": "Blood",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Blood Fragments. Sacrifice a creature.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Throne-Blood Fragment",
+    "Faction": "Blood",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Blood Fragments. Opponent gains 1 HP.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Sanguine Reliquary",
+    "Faction": "Blood",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Blood Fragments. Mill 3 cards from your deck.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Obsidian Chalice",
+    "Faction": "Blood",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Blood Fragments. While in graveyard, you lose 1 HP every Upkeep.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Hemorrhage Fragment",
+    "Faction": "Blood",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Blood Fragments. Exile after use.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Vampiric Surge Fragment",
+    "Faction": "Blood",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +3 Blood Fragments. Exile after use. Lose 2 HP.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Flame Fragment",
+    "Faction": "Flame",
+    "Type": "Fragment",
+    "Cost": "",
+    "ATK": "",
+    "HP": "",
+    "Rules Text": "Burn: Provides 🔥 Flame to cast creatures, spells, or relics.\nReburn: Deal 1 damage to your own War Chief.\nFlavor: “The fire feeds your ambition, but every spark leaves a scar.”",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Flame Fragment",
+    "Faction": "Flame",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: Provides 1 Flame resource. Reburn: Deal 1 damage to your War Chief.",
+    "Flavor Text": "The fury of the Inner Furnace, searing even its wielder."
+  },
+  {
+    "Name": "Infernal Core",
+    "Faction": "Flame",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +3 Flame Fragments. Lose 2 HP.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Cinderheart",
+    "Faction": "Flame",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Flame Fragments. Exile top 2 cards of your deck.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Blazing Rift",
+    "Faction": "Flame",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Flame Fragments. Reburn: deal 1 damage to your Leader.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Volcanic Pulse",
+    "Faction": "Flame",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Flame Fragments. Opponent draws 1 card.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Ashstorm Vein",
+    "Faction": "Flame",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +1 any Fragment. Exile after use.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Magma Surge Fragment",
+    "Faction": "Flame",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Flame Fragments. Exile after use.",
+    "Flavor Text": ""
+  },
+  {
+    "Name": "Dragonfire Fragment",
+    "Faction": "Flame",
+    "Type": "Fragment",
+    "Cost": "—",
+    "ATK": "—",
+    "HP": "—",
+    "Rules Text": "Burn: +2 Flame Fragments. Exile after use. Deal 2 damage to War Chief.",
+    "Flavor Text": ""
+  }
+];
 const BUILTIN_CARDS = RAW_V9_CARDS.map(normalizeCard).concat(RAW_FRAGMENT_CARDS.map(normalizeCard));
 const BUILTIN_PRESETS = {
   "Starter: Ash — Warden of Ashes (v3)": {
