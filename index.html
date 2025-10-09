@@ -101,10 +101,25 @@ footer{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;j
         <button id="downloadAll" class="btn">Download ALL</button>
         <button id="previewAll" class="btn">Preview ALL</button>
       </div>
-      <div class="grid">
-        <div class="field"><label>Back Label</label><input id="backLabel" placeholder="Star of Ash" /></div>
-        <div class="field"><label>Back Color</label><input id="backColor" type="color" value="#0b0b0e" /></div>
-      </div>
+    <div class="grid">
+  <div class="field">
+    <label>Back Label</label>
+    <input id="backLabel" placeholder="Star of Ash" />
+  </div>
+
+  <div class="field">
+    <label>Back Color</label>
+    <input id="backColor" type="color" value="#0b0b0e" />
+  </div>
+
+  <!-- NEW FEATURE: Card Background Color -->
+  <div class="field">
+    <label>Card Background Color</label>
+    <input id="cardBgColor" type="color" value="#11151f" />
+    <div class="hint">Helps visually distinguish decks during mirror matches.</div>
+  </div>
+</div>
+
       <canvas id="sheet" width="0" height="0"></canvas>
     </div>
   </section>
@@ -1959,10 +1974,20 @@ function factionTint(f){ f=(f||'').toLowerCase(); if(f.includes('flame')) return
 
 function renderCard(ctx,card,x,y,w,h,opts){
   const {bleed=36,setCode=''}=opts;
-  const nameScale=Math.max(0.5,parseFloat((document.getElementById('nameScale').value||'1')));
-  const rulesScale=Math.max(0.5,parseFloat((document.getElementById('rulesScale').value||'1')));
+  const nameScale=Math.max(0.5,parseFloat(($('nameScale').value||'1')));
+  const rulesScale=Math.max(0.5,parseFloat(($('rulesScale').value||'1')));
 
-  ctx.save(); drawRoundedRect(ctx,x,y,w,h,24); ctx.fillStyle='#11151f'; ctx.fill(); ctx.strokeStyle='#2b3145'; ctx.lineWidth=2; ctx.stroke();
+  ctx.save(); 
+  drawRoundedRect(ctx,x,y,w,h,24);
+
+  // 🌈 Use user-selected card face background color
+  ctx.fillStyle = (document.getElementById('cardBgColor')?.value || '#11151f');
+  ctx.fill();
+
+  ctx.strokeStyle='#2b3145';
+  ctx.lineWidth=2;
+  ctx.stroke();
+
   ctx.fillStyle=factionTint(card.faction); ctx.fillRect(x,y,w,12);
 
   const pad=20; let cx=x+pad, cy=y+pad+Math.round(14*nameScale);
