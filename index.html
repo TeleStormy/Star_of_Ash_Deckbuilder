@@ -241,11 +241,11 @@ function addAll(cards, mode){
     else if(m==='frags') deck.frags.push(c);
     else if(m==='chief'){ if(/war\\s*chief/.test(t)) deck.chief.push(c); }
     else{ if(/fragment/.test(t)) deck.frags.push(c); else if(/war\\s*chief/.test(t)) deck.chief.push(c); else deck.main.push(c); }
-  }
+ }
   renderAll();
 }
 function clearDeck(){ deck.main.length=deck.frags.length=deck.chief.length=0; renderAll(); }
-function validateDeck(){ $('validationMsg').textContent=\`Summary — Main: \${deck.main.length} • Fragments: \${deck.frags.length} • War Chiefs: \${deck.chief.length}\`; $('validationMsg').className='small'; }
+function validateDeck(){ ...
 
 // EXPORTS
 function download(filename, blobOrText){ const blob=blobOrText instanceof Blob?blobOrText:new Blob([blobOrText],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
