@@ -998,7 +998,7 @@ function buildSheetsFromRows(rows){
 
 function openSheetPreviewFrom(rows, title="Print Sheet Preview"){
   if(!rows.length){ alert("Nothing to preview. Build a deck first."); return; }
-  const pages = buildSheetsFromRows(rows);
+  let pages = buildSheetsFromRows(rows);
   let page = 0;
 
   const modal = document.getElementById("sheetModal");
@@ -1018,6 +1018,13 @@ function openSheetPreviewFrom(rows, title="Print Sheet Preview"){
 
   prevBtn.onclick = ()=> show(page-1);
   nextBtn.onclick = ()=> show(page+1);
+
+  // expose a rebuild hook to live-update pages (text sizes etc.)
+  window.rebuildSheets = function(){
+    const cur = page;
+    pages = buildSheetsFromRows(rows);
+    show(Math.min(cur, pages.length-1));
+  };
 
   show(0);
   modal.style.display = "flex";
@@ -1072,6 +1079,57 @@ init();
   applyZoom();
 })();
 
+
+// ===== Strong close + live text size editing =====
+(function(){
+  const modal = document.getElementById("sheetModal");
+  const inner = modal.querySelector(".inner");
+  const img = document.getElementById("sheetImg");
+  const closeBtn = document.getElementById("closeSheet");
+
+  function closeModal(){ modal.style.display = "none"; }
+  closeBtn.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); closeModal(); });
+  modal.addEventListener("click", (e)=>{ if(e.target === modal) closeModal(); });
+  inner.addEventListener("click", (e)=>{ /* allow internal clicks without closing */ });
+
+  window.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && modal.style.display === "flex") closeModal(); });
+
+  // Live text-size tool: mirror to base sliders and rebuild sheets
+  const map = [
+    ["pvFsName","fsName"],
+    ["pvFsBars","fsBars"],
+    ["pvFsRules","fsRules"],
+    ["pvFsFlavor","fsFlavor"],
+  ];
+  function syncFromBase(){
+    for(const [pv,base] of map){
+      const a = document.getElementById(base);
+      const b = document.getElementById(pv);
+      if(a && b){ b.value = a.value; }
+    }
+  }
+  function setAndInput(id, val){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.value = String(val);
+    // Trigger the same listeners the app uses
+    el.dispatchEvent(new Event("input", {bubbles:true}));
+    if(el.tagName === "SELECT") el.dispatchEvent(new Event("change", {bubbles:true}));
+  }
+  function rebuildSheets(){
+    if(typeof window.rebuildSheets === "function"){ window.rebuildSheets(); }
+  }
+  for(const [pv,base] of map){
+    const slider = document.getElementById(pv);
+    slider.addEventListener("input", ()=>{ setAndInput(base, slider.value); rebuildSheets(); });
+  }
+
+  // When modal opens, the preview code calls openSheetPreviewFrom(); hook to initialize our sliders
+  const initObs = new MutationObserver(()=>{
+    if(modal.style.display === "flex"){ syncFromBase(); }
+  });
+  initObs.observe(modal, { attributes:true, attributeFilter:["style"] });
+})();
 </script>
 
 <style>
@@ -1094,6 +1152,15 @@ init();
         <button id="closeSheet">Close</button>
       </div>
     </header>
+    
+    <div class="subbar" id="previewTextTools" style="display:flex;gap:12px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+      <span class="badge">Text sizes</span>
+      <label class="badge">Name <input id="pvFsName" type="range" min="16" max="40" value="26" style="width:140px;margin-left:6px"></label>
+      <label class="badge">Bars <input id="pvFsBars" type="range" min="10" max="22" value="14" style="width:120px;margin-left:6px"></label>
+      <label class="badge">Rules <input id="pvFsRules" type="range" min="12" max="22" value="16" style="width:140px;margin-left:6px"></label>
+      <label class="badge">Flavor <input id="pvFsFlavor" type="range" min="10" max="18" value="12" style="width:120px;margin-left:6px"></label>
+    </div>
+
     <div class="content">
       <img id="sheetImg" alt="Sheet preview"/>
     </div>
