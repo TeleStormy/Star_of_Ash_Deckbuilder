@@ -1033,6 +1033,45 @@ document.getElementById("previewFrags").addEventListener("click", ()=>{
 });
 
 init();
+
+// ===== Zoom + Close Handlers =====
+(function(){
+  const modal = document.getElementById("sheetModal");
+  const inner = modal.querySelector(".inner");
+  const img = document.getElementById("sheetImg");
+  const zoomOut = document.getElementById("zoomOut");
+  const zoomIn = document.getElementById("zoomIn");
+  const zoomRange = document.getElementById("zoomRange");
+  const zoomLabel = document.getElementById("zoomLabel");
+  const closeBtn = document.getElementById("closeSheet");
+
+  let zoom = 100;
+  function applyZoom(){
+    img.style.transform = `scale(${zoom/100})`;
+    zoomLabel.textContent = Math.round(zoom) + "%";
+    zoomRange.value = String(Math.round(zoom));
+  }
+  function clamp(z){ return Math.max(25, Math.min(400, z)); }
+
+  zoomOut.onclick = ()=>{ zoom = clamp(zoom - 10); applyZoom(); };
+  zoomIn.onclick = ()=>{ zoom = clamp(zoom + 10); applyZoom(); };
+  zoomRange.oninput = ()=>{ zoom = clamp(parseInt(zoomRange.value||"100",10)||100); applyZoom(); };
+
+  // Reset zoom whenever a new page is shown (hook into openSheetPreviewFrom by listening for src changes)
+  const obs = new MutationObserver(applyZoom);
+  obs.observe(img, { attributes:true, attributeFilter:["src"] });
+
+  // Close behavior
+  function closeModal(){ modal.style.display = "none"; }
+  closeBtn.onclick = closeModal;
+  modal.addEventListener("click", (e)=>{ if(e.target === modal) closeModal(); });
+  // Prevent clicks inside from closing
+  inner.addEventListener("click", (e)=>{ e.stopPropagation(); });
+
+  // Initialize after first render
+  applyZoom();
+})();
+
 </script>
 
 <style>
@@ -1040,7 +1079,7 @@ init();
 #sheetModal .inner{background:#0f0f12;border:1px solid var(--border);border-radius:14px;max-width:92vw;max-height:92vh;display:flex;flex-direction:column}
 #sheetModal header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
 #sheetModal .content{padding:12px;overflow:auto}
-#sheetImg{max-width:86vw;max-height:76vh;display:block}
+#sheetImg{display:block; transform-origin: top left; image-rendering: crisp-edges;}
 </style>
 <div id="sheetModal">
   <div class="inner">
@@ -1050,7 +1089,7 @@ init();
         <label class="badge"><input id="optTransparent" type="checkbox" checked style="margin-right:6px">Transparent BG</label>
         <label class="badge"><input id="optCrop" type="checkbox" style="margin-right:6px">Crop marks</label>
         <label class="badge">Safe gap <input id="optGap" type="number" value="0" min="0" max="20" style="width:56px;margin-left:6px"></label>
-        <button id="prevPage" class="badge">Prev</button><span id="pageInfo" class="badge">1/1</span><button id="nextPage" class="badge">Next</button>
+        <button id="zoomOut" class="badge">−</button><span id="zoomLabel" class="badge">100%</span><button id="zoomIn" class="badge">+</button><input id="zoomRange" type="range" min="25" max="400" value="100" style="width:120px;vertical-align:middle"> <button id="prevPage" class="badge">Prev</button><span id="pageInfo" class="badge">1/1</span><button id="nextPage" class="badge">Next</button>
         <a id="downloadSheet" class="badge" href="#" download="Star_of_Ash_Sheet.png">Download PNG</a>
         <button id="closeSheet">Close</button>
       </div>
