@@ -96,7 +96,7 @@ canvas{background:#111;border-radius:8px;box-shadow:0 0 0 1px var(--accent-soft)
           <div class="btns">
             <button id="addUpdate">Add / Update</button>
             <button id="exportCsv">Export CSV (All)</button>
-            <button id="downloadPng">Download PNG</button>
+            <button id="downloadPng">Download PNG</button><button id="previewMain">Preview Main Sheets</button><button id="previewFrags">Preview Fragment Sheets</button>
             <button id="clearList">Clear List</button>
           </div>
         </div>
@@ -762,8 +762,165 @@ function init(){ loadBaked(); renderList(); draw(); if(!master.length){ // fallb
 } }
 init();
 
+/* ===== Sheet Preview (10x7, TTS) ===== */
+const SHEET_CFG = { COLS:10, ROWS:7, OUT_W:4096, OUT_H:4096, MARGIN:0, GAP:0 };
+
+function renderSingleCardToCanvas(row){
+  const [cardId,name,faction,typ,cost,atk,hp,mov,rarity,keywords,rules,flavor] = row.map(v=>v??"");
+  const c = document.getElementById("cardCanvas");
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.value=String(val??""); };
+  set("cardId", cardId); set("name", name); set("faction", faction); set("type", typ);
+  set("cost", cost); set("atk", atk); set("hp", hp); set("mov", mov);
+  set("rarity", rarity); set("keywords", keywords); set("rules", rules); set("flavor", typ); // bottom bar shows type text
+  draw();
+  const out=document.createElement("canvas"); out.width=c.width; out.height=c.height; out.getContext("2d").drawImage(c,0,0); return out;
+}
+
+function buildSheetsFromRows(rows){
+  const {COLS,ROWS,OUT_W,OUT_H,MARGIN,GAP}=SHEET_CFG;
+  const perPage = COLS*ROWS;
+  const pages = Math.ceil(rows.length/perPage) || 1;
+  const rendered = rows.map(r=>renderSingleCardToCanvas(r));
+  const canvases=[];
+
+  for(let p=0;p<pages;p++){
+    const sheet=document.createElement("canvas"); sheet.width=OUT_W; sheet.height=OUT_H;
+    const g=sheet.getContext("2d"); g.clearRect(0,0,OUT_W,OUT_H);
+    const totalGapW = MARGIN*2 + GAP*(COLS-1);
+    const totalGapH = MARGIN*2 + GAP*(ROWS-1);
+    const targetW = Math.floor((OUT_W - totalGapW) / COLS);
+    const scale = targetW / rendered[0].width;
+    const targetH = Math.floor(rendered[0].height * scale);
+    let idx = p*perPage;
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const card = rendered[idx++]; if(!card) break;
+        const x = MARGIN + c*(targetW + GAP);
+        const y = MARGIN + r*(targetH + GAP);
+        g.drawImage(card, x, y, targetW, targetH);
+      }
+    }
+    canvases.push(sheet);
+  }
+  return canvases;
+}
+
+function openSheetPreviewFrom(rows){
+  if(!rows.length){ alert("Nothing to preview. Build a deck first."); return; }
+  let pages = buildSheetsFromRows(rows);
+  let page = 0;
+
+  const modal = document.getElementById("sheetModal");
+  const img = document.getElementById("sheetImg");
+  const pageInfo = document.getElementById("pageInfo");
+  const prevBtn = document.getElementById("prevPage");
+  const nextBtn = document.getElementById("nextPage");
+  const dl = document.getElementById("downloadSheet");
+  const closeBtn = document.getElementById("closeSheet");
+
+  const zoomOut = document.getElementById("zoomOut");
+  const zoomIn = document.getElementById("zoomIn");
+  const zoomRange = document.getElementById("zoomRange");
+  const zoomLabel = document.getElementById("zoomLabel");
+  let zoom = 100;
+
+  function applyZoom(){
+    img.style.transform = `scale(${zoom/100})`;
+    zoomLabel.textContent = Math.round(zoom) + "%";
+    zoomRange.value = String(Math.round(zoom));
+  }
+  function clamp(z){ return Math.max(25, Math.min(400, z)); }
+
+  function show(i){
+    page = Math.max(0, Math.min(i, pages.length-1));
+    const url = pages[page].toDataURL("image/png");
+    img.src = url; dl.href = url;
+    pageInfo.textContent = (page+1) + "/" + pages.length;
+    prevBtn.disabled = page===0; nextBtn.disabled = page===pages.length-1;
+    applyZoom();
+  }
+
+  prevBtn.onclick = ()=> show(page-1);
+  nextBtn.onclick = ()=> show(page+1);
+  zoomOut.onclick = ()=>{ zoom = clamp(zoom - 10); applyZoom(); };
+  zoomIn.onclick  = ()=>{ zoom = clamp(zoom + 10); applyZoom(); };
+  zoomRange.oninput = ()=>{ zoom = clamp(parseInt(zoomRange.value||"100",10)||100); applyZoom(); };
+
+  function closeModal(){ modal.style.display = "none"; }
+  closeBtn.onclick = (e)=>{ e.preventDefault(); e.stopPropagation(); closeModal(); };
+  modal.onclick = (e)=>{ if(e.target === modal) closeModal(); };
+  window.onkeydown = (e)=>{ if(e.key === "Escape" && modal.style.display === "flex") closeModal(); };
+
+  // Live text-size sliders
+  const map = [["pvFsName","fsName"],["pvFsBars","fsBars"],["pvFsRules","fsRules"],["pvFsFlavor","fsFlavor"]];
+  function setAndInput(id,val){ const el=document.getElementById(id); if(!el) return; el.value=String(val); el.dispatchEvent(new Event("input",{bubbles:true})); if(el.tagName==="SELECT") el.dispatchEvent(new Event("change",{bubbles:true})); }
+  function syncFromBase(){ for(const [pv,base] of map){ const a=$(base), b=$(pv); if(a&&b){ b.value=a.value; }} }
+  for(const [pv,base] of map){ const s=$(pv); if(s){ s.oninput=()=>{ setAndInput(base,s.value); window.rebuildSheets(); }; } }
+
+  // Stats sliders
+  const statMap = [["pvAtk","atk"],["pvHp","hp"],["pvMov","mov"],["pvCost","cost"]];
+  function syncStats(){ for(const [pv,base] of statMap){ const a=$(base), b=$(pv); if(a&&b){ b.value=a.value||"0"; }} }
+  for(const [pv,base] of statMap){ const s=$(pv); if(s){ s.oninput=()=>{ const el=$(base); if(el){ el.value=s.value; el.dispatchEvent(new Event("input",{bubbles:true})); } window.rebuildSheets(); }; } }
+
+  // Expose rebuild hook
+  window.rebuildSheets = function(){ const cur=page; pages = buildSheetsFromRows(rows); show(Math.min(cur,pages.length-1)); };
+
+  syncFromBase(); syncStats();
+  show(0);
+  modal.style.display="flex";
+}
+
+document.getElementById("previewMain").addEventListener("click", ()=>{
+  if(!builtMain.length){ alert("No Main deck assembled yet."); return; }
+  openSheetPreviewFrom(builtMain);
+});
+document.getElementById("previewFrags").addEventListener("click", ()=>{
+  if(!builtFrags.length){ alert("No Fragment deck assembled yet."); return; }
+  openSheetPreviewFrom(builtFrags);
+});
+
 // Manual reload
 document.getElementById("reloadBaked").addEventListener("click", ()=>{ loadBaked(); renderList(); });
 </script>
+
+<style>
+#sheetModal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:9999}
+#sheetModal .inner{background:#0f0f12;border:1px solid var(--border);border-radius:14px;max-width:92vw;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+#sheetModal header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
+#sheetModal .content{padding:12px;overflow:auto}
+#sheetImg{display:block;transform-origin: top left; image-rendering: crisp-edges;}
+#sheetModal .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#sheetModal .toolbar .badge{cursor:default}
+</style>
+<div id="sheetModal">
+  <div class="inner">
+    <header>
+      <strong>TTS Deck Sheet Preview (10×7)</strong>
+      <div class="toolbar">
+        <button id="zoomOut" class="badge">−</button><span id="zoomLabel" class="badge">100%</span><button id="zoomIn" class="badge">+</button>
+        <input id="zoomRange" type="range" min="25" max="400" value="100" style="width:120px;vertical-align:middle">
+        <button id="prevPage" class="badge">Prev</button><span id="pageInfo" class="badge">1/1</span><button id="nextPage" class="badge">Next</button>
+        <a id="downloadSheet" class="badge" href="#" download="Star_of_Ash_Sheet.png">Download PNG</a>
+        <button id="closeSheet">Close</button>
+      </div>
+    </header>
+    <div class="subbar" id="previewTextTools" style="display:flex;gap:12px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap">
+      <span class="badge">Text sizes</span>
+      <label class="badge">Name <input id="pvFsName" type="range" min="16" max="40" value="26" style="width:140px;margin-left:6px"></label>
+      <label class="badge">Bars <input id="pvFsBars" type="range" min="10" max="22" value="14" style="width:120px;margin-left:6px"></label>
+      <label class="badge">Rules <input id="pvFsRules" type="range" min="12" max="22" value="16" style="width:140px;margin-left:6px"></label>
+      <label class="badge">Type <input id="pvFsFlavor" type="range" min="10" max="24" value="14" style="width:120px;margin-left:6px"></label>
+      <span class="badge">Stats</span>
+      <label class="badge">ATK <input id="pvAtk" type="range" min="0" max="99" value="0" style="width:120px;margin-left:6px"></label>
+      <label class="badge">HP <input id="pvHp" type="range" min="0" max="99" value="0" style="width:120px;margin-left:6px"></label>
+      <label class="badge">MOV <input id="pvMov" type="range" min="0" max="9" value="0" style="width:120px;margin-left:6px"></label>
+      <label class="badge">Cost <input id="pvCost" type="range" min="0" max="20" value="0" style="width:140px;margin-left:6px"></label>
+    </div>
+    <div class="content">
+      <img id="sheetImg" alt="Sheet preview"/>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
