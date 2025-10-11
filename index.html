@@ -58,6 +58,7 @@ canvas{background:#111;border-radius:8px;box-shadow:0 0 0 1px var(--accent-soft)
         <select id="starterPicker" style="min-width:220px"><option value="">— choose a starter —</option></select>
       </div>
       <div class="kpi" id="kpi">Master: 0 · Starters: 0</div>
+      <button id="reloadBaked">Reload Baked Data</button>
     </div>
   </div>
 
@@ -79,7 +80,7 @@ canvas{background:#111;border-radius:8px;box-shadow:0 0 0 1px var(--accent-soft)
 
         <div class="field wide"><label>Keywords</label><input id="keywords" /></div>
         <div class="field wide"><label>Rules Text</label><textarea id="rules"></textarea></div>
-        <div class="field wide"><label>Flavor Text</label><textarea id="flavor"></textarea></div>
+        <div class="field wide"><label>Type (bottom bar)</label><textarea id="flavor"></textarea></div>
 
         <div class="field wide">
           <label>Font Sizes</label>
@@ -1240,7 +1241,7 @@ init();
       <label class="badge">Name <input id="pvFsName" type="range" min="16" max="40" value="26" style="width:140px;margin-left:6px"></label>
       <label class="badge">Bars <input id="pvFsBars" type="range" min="10" max="22" value="14" style="width:120px;margin-left:6px"></label>
       <label class="badge">Rules <input id="pvFsRules" type="range" min="12" max="22" value="16" style="width:140px;margin-left:6px"></label>
-      <label class="badge">Flavor <input id="pvFsFlavor" type="range" min="10" max="18" value="12" style="width:120px;margin-left:6px"></label>
+      <label class="badge">Type <input id="pvFsFlavor" type="range" min="10" max="18" value="12" style="width:120px;margin-left:6px"></label>
     </div>
 
     <div class="content">
