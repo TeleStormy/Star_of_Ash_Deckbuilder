@@ -96,14 +96,14 @@ canvas{background:#111;border-radius:8px;box-shadow:0 0 0 1px var(--accent-soft)
           <div class="btns">
             <button id="addUpdate">Add / Update</button>
             <button id="exportCsv">Export CSV (All)</button>
-            <button id="downloadPng">Download PNG</button>
+            <button id="downloadPng">Download PNG</button><button id="previewMain">Preview Main Sheets</button><button id="previewFrags">Preview Fragment Sheets</button>
             <button id="clearList">Clear List</button>
           </div>
         </div>
 
-        <div class="field wide">
+        <div class="field wide" style="display:none">
           <label>Live Preview</label>
-          <div class="canvas-wrap"><canvas id="cardCanvas" width="744" height="1038"></canvas></div>
+          <div class="canvas-wrap" style="display:none"><canvas id="cardCanvas" width="744" height="1038"></canvas></div>
           <div class="help">Layout: Name → Mov/Cost → centered Rules → ATK / Flavor (watermark) / HP.</div>
         </div>
       </div>
@@ -822,6 +822,35 @@ function paintTexture(ctx,w,h){ const g=ctx.createLinearGradient(0,0,w,h); g.add
   const rg=ctx.createRadialGradient(w*.7,h*.25,20,w*.7,h*.25,w*.6); rg.addColorStop(0,"rgba(192,57,43,.10)"); rg.addColorStop(1,"rgba(192,57,43,0)");
   ctx.fillStyle=rg; ctx.fillRect(0,0,w,h);
   const rg2=ctx.createRadialGradient(w*.25,h*.8,20,w*.25,h*.8,w*.5); rg2.addColorStop(0,"rgba(200,70,50,.08)"); rg2.addColorStop(1,"rgba(200,70,50,0)"); ctx.fillStyle=rg2; ctx.fillRect(0,0,w,h); }
+function wrapLinesWithFont(ctx,text,maxW,fontPx,lineGap){
+  ctx.font = `${fontPx}px Segoe UI, Roboto, Helvetica, Arial`;
+  const out=[]; const words=String(text||"").split(/\s+/); let line="";
+  for(const w of words){
+    const test=line?line+" "+w:w;
+    if(ctx.measureText(test).width>maxW){ out.push(line); line=w; } else line=test;
+  }
+  if(line) out.push(line);
+  return out;
+}
+function fitParagraph(ctx, text, boxW, boxH, maxPx, minPx){
+  let size = maxPx;
+  for(; size>=minPx; size--){
+    const lines = wrapLinesWithFont(ctx, text, boxW-40, size, 8);
+    const lineH = size + 8;
+    const totalH = lines.length * lineH;
+    if(totalH <= boxH - 10){
+      return {size, lines, lineH};
+    }
+  }
+  const lines = wrapLinesWithFont(ctx, text, boxW-40, minPx, 8);
+  const lineH = minPx + 8;
+  const maxLines = Math.max(1, Math.floor((boxH-10) / lineH));
+  let cut = lines.slice(0, maxLines);
+  if(lines.length > maxLines){
+    cut[maxLines-1] = cut[maxLines-1].replace(/\s+\S*$/, '') + '…';
+  }
+  return {size:minPx, lines:cut, lineH};
+}
 function draw(){
   const c=$("cardCanvas"); const ctx=c.getContext("2d");
   ctx.clearRect(0,0,c.width,c.height); paintTexture(ctx,c.width,c.height);
@@ -841,12 +870,14 @@ function draw(){
   ctx.font=`${fsName}px Segoe UI, Roboto, Helvetica, Arial`; ctx.textAlign="center"; ctx.fillText(nm,c.width/2,pad+topH/2);
 
   const fsBars=parseInt($("fsBars").value,10); ctx.font=`${fsBars}px Segoe UI, Roboto, Helvetica, Arial`;
-  ctx.textAlign="left"; ctx.fillText("Mov", mov.x+10, mov.y+mov.h/2); ctx.textAlign="center"; ctx.fillText($("mov").value, mov.x+mov.w-20, mov.y+mov.h/2);
-  ctx.textAlign="left"; ctx.fillText("Cost", cost.x+10, cost.y+cost.h/2); ctx.textAlign="center"; ctx.fillText($("cost").value, cost.x+cost.w-20, cost.y+cost.h/2);
+  ctx.textAlign="center"; ctx.fillText($("mov").value, mov.x+mov.w/2, mov.y+mov.h/2);
+  ctx.textAlign="center"; ctx.fillText($("cost").value, cost.x+cost.w/2, cost.y+cost.h/2);
 
-  const fsRules=parseInt($("fsRules").value,10); ctx.font=`${fsRules}px Segoe UI, Roboto, Helvetica, Arial`; ctx.textAlign="center";
-  const rLines=wrapLines(ctx,$("rules").value,rules.w-40); const total=rLines.length*(fsRules+8); let y=rules.y+(rules.h-total)/2+(fsRules/2);
-  for(const ln of rLines){ ctx.fillText(ln,rules.x+rules.w/2,y); y+=fsRules+8; }
+  const fsRules=parseInt($("fsRules").value,10);
+  const fit = fitParagraph(ctx, $("rules").value, rules.w, rules.h, fsRules, 10);
+  ctx.font = `${fit.size}px Segoe UI, Roboto, Helvetica, Arial`; ctx.textAlign="center";
+  let y = rules.y + (rules.h - (fit.lines.length*fit.lineH)) / 2 + fit.size/2;
+  for(const ln of fit.lines){ ctx.fillText(ln, rules.x+rules.w/2, y); y+=fit.lineH; }
 
   ctx.globalAlpha=.10; ctx.beginPath(); ctx.arc(flavor.x+flavor.w/2, flavor.y+flavor.h/2, Math.min(flavor.w,flavor.h)*.22, 0, Math.PI*2); ctx.fillStyle="#7a2d26"; ctx.fill(); ctx.globalAlpha=1;
 
@@ -854,9 +885,9 @@ function draw(){
   const fLines=wrapLines(ctx,$("flavor").value,flavor.w-20); let fy=flavor.y+flavor.h/2-((fsFlavor+4)*(fLines.length-1))/2;
   for(const ln of fLines){ ctx.fillText(ln,flavor.x+flavor.w/2,fy); fy+=fsFlavor+4; }
 
-  ctx.font=`${fsBars}px Segoe UI, Roboto, Helvetica, Arial`; ctx.textAlign="left";
-  ctx.fillText("ATK", atk.x+10, atk.y+atk.h/2); ctx.textAlign="right"; ctx.fillText($("atk").value, atk.x+atk.w-10, atk.y+atk.h/2);
-  ctx.textAlign="left"; ctx.fillText("HP", hp.x+10, hp.y+hp.h/2); ctx.textAlign="right"; ctx.fillText($("hp").value, hp.x+hp.w-10, hp.y+hp.h/2);
+  ctx.font=`${fsBars}px Segoe UI, Roboto, Helvetica, Arial`;
+  ctx.textAlign="center"; ctx.fillText($("atk").value, atk.x+atk.w/2, atk.y+atk.h/2);
+  ctx.textAlign="center"; ctx.fillText($("hp").value, hp.x+hp.w/2, hp.y+hp.h/2);
 
   ctx.textAlign="left"; ctx.font="11px Segoe UI, Roboto, Helvetica, Arial"; ctx.fillStyle="#bdb7b4";
   const meta = (`${$("cardId").value||""}  ·  ${$("faction").value}  ·  ${$("type").value}  ·  ${$("rarity").value}`);
@@ -887,7 +918,148 @@ function init(){
 
   renderList(); draw(); updateKpi();
 }
+
+
+/* ===== Sheet Preview (Multi-page, Main vs Fragments) ===== */
+const SHEET_CFG = { COLS:10, ROWS:7, OUT_W:4096, OUT_H:4096, MARGIN:0, GAP:0 };
+
+function drawCardToCanvas(row){
+  // row indexes follow master columns
+  const [cardId,name,faction,typ,cost,atk,hp,mov,rarity,keywords,rules,flavor] = row.map(v=>v??"");
+  // Use the hidden cardCanvas as a base to keep drawing code in one place
+  const c = document.getElementById("cardCanvas");
+  const ctx = c.getContext("2d");
+
+  // Temporarily set editor fields (so draw() uses the same codepath)
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.value = String(val??""); };
+  set("cardId", cardId); set("name", name); set("faction", faction); set("type", typ);
+  set("cost", cost); set("atk", atk); set("hp", hp); set("mov", mov);
+  set("rarity", rarity); set("keywords", keywords); set("rules", rules); set("flavor", flavor);
+
+  draw(); // paints into #cardCanvas
+
+  // Copy pixels into a fresh canvas we return
+  const out = document.createElement("canvas");
+  out.width = c.width; out.height = c.height;
+  out.getContext("2d").drawImage(c,0,0);
+  return out;
+}
+
+function buildSheetsFromRows(rows){
+  const uiGap = parseInt(document.getElementById("optGap").value||"0",10) || 0;
+  const useCrop = document.getElementById("optCrop").checked;
+  const transparent = document.getElementById("optTransparent").checked;
+  const {COLS,ROWS,OUT_W,OUT_H,MARGIN} = SHEET_CFG; const GAP = uiGap;
+  const perPage = COLS*ROWS;
+  const pages = Math.ceil(rows.length / perPage) || 1;
+  const canvases = [];
+  let index = 0;
+
+  // Pre-render each card once (basic caching)
+  const rendered = rows.map(r=>drawCardToCanvas(r));
+
+  for(let p=0;p<pages;p++){
+    const sheet = document.createElement("canvas");
+    sheet.width = OUT_W; sheet.height = OUT_H;
+    const g = sheet.getContext("2d");
+    if(!transparent){ g.fillStyle = "#0b0b0c"; g.fillRect(0,0,OUT_W,OUT_H); } else { g.clearRect(0,0,OUT_W,OUT_H); }
+
+    // compute target card size to fit grid
+    const totalGapW = MARGIN*2 + GAP*(COLS-1);
+    const totalGapH = MARGIN*2 + GAP*(ROWS-1);
+    const targetW = Math.floor((OUT_W - totalGapW) / COLS);
+    const scale = targetW / rendered[0].width;
+    const targetH = Math.floor(rendered[0].height * scale);
+
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const card = rendered[index] || rendered[rendered.length-1] || rendered[0];
+        const x = MARGIN + c*(targetW + GAP);
+        const y = MARGIN + r*(targetH + GAP);
+        if(card) g.drawImage(card, x, y, targetW, targetH);
+        index++;
+        if(index >= rows.length) break;
+      }
+      if(index >= rows.length) break;
+    }
+    if(useCrop && GAP>0){
+      g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = 1;
+      const totalGapW = MARGIN*2 + GAP*(COLS-1);
+      const totalGapH = MARGIN*2 + GAP*(ROWS-1);
+      const targetW = Math.floor((OUT_W - totalGapW) / COLS);
+      const targetH = Math.floor((OUT_H - totalGapH) / ROWS);
+      for(let c=1;c<COLS;c++){ const x = MARGIN + c*(targetW + GAP) - GAP/2; g.beginPath(); g.moveTo(x,0); g.lineTo(x,OUT_H); g.stroke(); }
+      for(let r=1;r<ROWS;r++){ const y = MARGIN + r*(targetH + GAP) - GAP/2; g.beginPath(); g.moveTo(0,y); g.lineTo(OUT_W,y); g.stroke(); }
+    }
+    canvases.push(sheet);
+  }
+  return canvases;
+}
+
+function openSheetPreviewFrom(rows, title="Print Sheet Preview"){
+  if(!rows.length){ alert("Nothing to preview. Build a deck first."); return; }
+  const pages = buildSheetsFromRows(rows);
+  let page = 0;
+
+  const modal = document.getElementById("sheetModal");
+  const img = document.getElementById("sheetImg");
+  const pageInfo = document.getElementById("pageInfo");
+  const prevBtn = document.getElementById("prevPage");
+  const nextBtn = document.getElementById("nextPage");
+  const dl = document.getElementById("downloadSheet");
+
+  function show(i){
+    page = Math.max(0, Math.min(i, pages.length-1));
+    const url = pages[page].toDataURL("image/png");
+    img.src = url; dl.href = url;
+    pageInfo.textContent = (page+1) + "/" + pages.length;
+    prevBtn.disabled = page===0; nextBtn.disabled = page===pages.length-1;
+  }
+
+  prevBtn.onclick = ()=> show(page-1);
+  nextBtn.onclick = ()=> show(page+1);
+
+  show(0);
+  modal.style.display = "flex";
+}
+
+document.getElementById("previewMain").addEventListener("click", ()=>{
+  if(!builtMain.length){ alert("No Main deck assembled yet."); return; }
+  openSheetPreviewFrom(builtMain, "Main Sheet Preview");
+});
+document.getElementById("previewFrags").addEventListener("click", ()=>{
+  if(!builtFrags.length){ alert("No Fragment deck assembled yet."); return; }
+  openSheetPreviewFrom(builtFrags, "Fragment Sheet Preview");
+});
+
 init();
 </script>
+
+<style>
+#sheetModal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:9999}
+#sheetModal .inner{background:#0f0f12;border:1px solid var(--border);border-radius:14px;max-width:92vw;max-height:92vh;display:flex;flex-direction:column}
+#sheetModal header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
+#sheetModal .content{padding:12px;overflow:auto}
+#sheetImg{max-width:86vw;max-height:76vh;display:block}
+</style>
+<div id="sheetModal">
+  <div class="inner">
+    <header>
+      <strong>TTS Deck Sheet Preview (10×7)</strong>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label class="badge"><input id="optTransparent" type="checkbox" checked style="margin-right:6px">Transparent BG</label>
+        <label class="badge"><input id="optCrop" type="checkbox" style="margin-right:6px">Crop marks</label>
+        <label class="badge">Safe gap <input id="optGap" type="number" value="0" min="0" max="20" style="width:56px;margin-left:6px"></label>
+        <button id="prevPage" class="badge">Prev</button><span id="pageInfo" class="badge">1/1</span><button id="nextPage" class="badge">Next</button>
+        <a id="downloadSheet" class="badge" href="#" download="Star_of_Ash_Sheet.png">Download PNG</a>
+        <button id="closeSheet">Close</button>
+      </div>
+    </header>
+    <div class="content">
+      <img id="sheetImg" alt="Sheet preview"/>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
