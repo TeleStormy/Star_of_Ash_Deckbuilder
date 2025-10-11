@@ -370,98 +370,97 @@ FRG-ASH-011,Fragment of Withering Soul,Ash,Fragment,,,,,Resource,Renew,Gain +4 F
 FRG-ASH-012,Fragment of Gravecall,Ash,Fragment,,,,,Resource,Renew,"Gain +3 Fragments. If 5+ cards in grave, Renew 1 Unit.",
 FRG-ASH-013,Fragment of Rebirth’s Dust,Ash,Fragment,,,,,Resource,Renew,Gain +4 Fragments. Exile your top card.,`;
 const BAKED_STARTERS = {
-  "The Blazing March (Flame)": `Card ID,Name,Faction,Type,Cost,ATK,HP,MOV,Rarity,Keywords,Rules Text,Flavor Text,Deck Section,Deck Name
-FLM-056,"Kael, Warchild of the Pyre",Flame,Unit — War Chief,,,15.0,,Legendary,"Burn, Flamefield","Your Flamefield Tiles deal +1 damage each turn. When an enemy Unit is destroyed, create a Burn Marker in its space.",He does not seek to conquer—only to ignite what refuses to move.,Main Deck,The Blazing March
-FLM-001,Cinderfoot Soldier,Flame,Unit,1.0,1.0,1.0,1.0,Common,,No flame too small to start a war.,,Main Deck,The Blazing March
-FLM-001,Cinderfoot Soldier,Flame,Unit,1.0,1.0,1.0,1.0,Common,,No flame too small to start a war.,,Main Deck,The Blazing March
-FLM-001,Cinderfoot Soldier,Flame,Unit,1.0,1.0,1.0,1.0,Common,,No flame too small to start a war.,,Main Deck,The Blazing March
-FLM-002,Ashrunner Scout,Flame,Unit,1.0,1.0,1.0,2.0,Common,Advance,This Unit may move +1 space this turn.,,Main Deck,The Blazing March
-FLM-002,Ashrunner Scout,Flame,Unit,1.0,1.0,1.0,2.0,Common,Advance,This Unit may move +1 space this turn.,,Main Deck,The Blazing March
-FLM-002,Ashrunner Scout,Flame,Unit,1.0,1.0,1.0,2.0,Common,Advance,This Unit may move +1 space this turn.,,Main Deck,The Blazing March
-FLM-003,Flame Recruit,Flame,Unit,1.0,2.0,1.0,1.0,Common,,,,Main Deck,The Blazing March
-FLM-003,Flame Recruit,Flame,Unit,1.0,2.0,1.0,1.0,Common,,,,Main Deck,The Blazing March
-FLM-003,Flame Recruit,Flame,Unit,1.0,2.0,1.0,1.0,Common,,,,Main Deck,The Blazing March
-FLM-004,Pyre Guard,Flame,Unit,1.0,1.0,1.0,0.0,Common,Guard,This Unit can intercept attacks aimed at an ally behind it.,,Main Deck,The Blazing March
-FLM-004,Pyre Guard,Flame,Unit,1.0,1.0,1.0,0.0,Common,Guard,This Unit can intercept attacks aimed at an ally behind it.,,Main Deck,The Blazing March
-FLM-004,Pyre Guard,Flame,Unit,1.0,1.0,1.0,0.0,Common,Guard,This Unit can intercept attacks aimed at an ally behind it.,,Main Deck,The Blazing March
-FLM-005,Singeing Sentry,Flame,Unit,1.0,1.0,1.0,1.0,Common,Rush,May attack the turn it enters the Field.,,Main Deck,The Blazing March
-FLM-005,Singeing Sentry,Flame,Unit,1.0,1.0,1.0,1.0,Common,Rush,May attack the turn it enters the Field.,,Main Deck,The Blazing March
-FLM-005,Singeing Sentry,Flame,Unit,1.0,1.0,1.0,1.0,Common,Rush,May attack the turn it enters the Field.,,Main Deck,The Blazing March
-FLM-006,Molten Grunt,Flame,Unit,1.0,2.0,2.0,1.0,Common,,,,Main Deck,The Blazing March
-FLM-006,Molten Grunt,Flame,Unit,1.0,2.0,2.0,1.0,Common,,,,Main Deck,The Blazing March
-FLM-006,Molten Grunt,Flame,Unit,1.0,2.0,2.0,1.0,Common,,,,Main Deck,The Blazing March
-FLM-007,Ashling Footman,Flame,Unit,1.0,1.0,2.0,1.0,Common,Advance,"When this Unit moves, it gains +1 ATK this turn.",,Main Deck,The Blazing March
-FLM-007,Ashling Footman,Flame,Unit,1.0,1.0,2.0,1.0,Common,Advance,"When this Unit moves, it gains +1 ATK this turn.",,Main Deck,The Blazing March
-FLM-007,Ashling Footman,Flame,Unit,1.0,1.0,2.0,1.0,Common,Advance,"When this Unit moves, it gains +1 ATK this turn.",,Main Deck,The Blazing March
-FLM-008,Cinderwatch,Flame,Unit,1.0,1.0,1.0,0.0,Common,Guard,,,Main Deck,The Blazing March
-FLM-008,Cinderwatch,Flame,Unit,1.0,1.0,1.0,0.0,Common,Guard,,,Main Deck,The Blazing March
-FLM-008,Cinderwatch,Flame,Unit,1.0,1.0,1.0,0.0,Common,Guard,,,Main Deck,The Blazing March
-FLM-009,Emberling,Flame,Unit,1.0,1.0,1.0,1.0,Common,Rush,,,Main Deck,The Blazing March
-FLM-009,Emberling,Flame,Unit,1.0,1.0,1.0,1.0,Common,Rush,,,Main Deck,The Blazing March
-FLM-009,Emberling,Flame,Unit,1.0,1.0,1.0,1.0,Common,Rush,,,Main Deck,The Blazing March
-FLM-010,Flame Adept,Flame,Unit,1.0,2.0,2.0,1.0,Common,,,,Main Deck,The Blazing March
-FLM-010,Flame Adept,Flame,Unit,1.0,2.0,2.0,1.0,Common,,,,Main Deck,The Blazing March
-FLM-010,Flame Adept,Flame,Unit,1.0,2.0,2.0,1.0,Common,,,,Main Deck,The Blazing March
-FLM-011,Ember Tactics,Flame,Spell,,,,,Common,,Target Unit gains +1 MOV and +1 ATK this turn.,Speed is the breath of fire.,Main Deck,The Blazing March
-FLM-011,Ember Tactics,Flame,Spell,,,,,Common,,Target Unit gains +1 MOV and +1 ATK this turn.,Speed is the breath of fire.,Main Deck,The Blazing March
-FLM-011,Ember Tactics,Flame,Spell,,,,,Common,,Target Unit gains +1 MOV and +1 ATK this turn.,Speed is the breath of fire.,Main Deck,The Blazing March
-FLM-012,Ignite,Flame,Spell,,,,,Common,Burn,Burn 1 Fragment to deal 1 damage to any target.,,Main Deck,The Blazing March
-FLM-012,Ignite,Flame,Spell,,,,,Common,Burn,Burn 1 Fragment to deal 1 damage to any target.,,Main Deck,The Blazing March
-FLM-012,Ignite,Flame,Spell,,,,,Common,Burn,Burn 1 Fragment to deal 1 damage to any target.,,Main Deck,The Blazing March
-FLM-013,Cinderfield,Flame,Relic,,,,,Common,,"Whenever a Unit is destroyed, create a Flamefield Tile in its space.",,Main Deck,The Blazing March
-FLM-013,Cinderfield,Flame,Relic,,,,,Common,,"Whenever a Unit is destroyed, create a Flamefield Tile in its space.",,Main Deck,The Blazing March
-FLM-013,Cinderfield,Flame,Relic,,,,,Common,,"Whenever a Unit is destroyed, create a Flamefield Tile in its space.",,Main Deck,The Blazing March
-FLM-014,Smoldering Line,Flame,Spell,,,,,Common,Flamefield,All Units in a chosen Line take 1 damage if on a Flamefield Tile.,,Main Deck,The Blazing March
-FLM-014,Smoldering Line,Flame,Spell,,,,,Common,Flamefield,All Units in a chosen Line take 1 damage if on a Flamefield Tile.,,Main Deck,The Blazing March
-FLM-014,Smoldering Line,Flame,Spell,,,,,Common,Flamefield,All Units in a chosen Line take 1 damage if on a Flamefield Tile.,,Main Deck,The Blazing March
-FLM-015,Flame Dancer,Flame,Unit,2.0,2.0,2.0,1.0,Common,"Rush, Surf","When this Unit enters or leaves a Flamefield Tile, prevent damage from it this turn.",,Main Deck,The Blazing March
-FLM-015,Flame Dancer,Flame,Unit,2.0,2.0,2.0,1.0,Common,"Rush, Surf","When this Unit enters or leaves a Flamefield Tile, prevent damage from it this turn.",,Main Deck,The Blazing March
-FLM-015,Flame Dancer,Flame,Unit,2.0,2.0,2.0,1.0,Common,"Rush, Surf","When this Unit enters or leaves a Flamefield Tile, prevent damage from it this turn.",,Main Deck,The Blazing March
-FLM-016,Torchbearer,Flame,Unit,2.0,2.0,2.0,1.0,Common,Advance,"When this Unit moves, Burn 1 Fragment to draw a card.",,Main Deck,The Blazing March
-FLM-016,Torchbearer,Flame,Unit,2.0,2.0,2.0,1.0,Common,Advance,"When this Unit moves, Burn 1 Fragment to draw a card.",,Main Deck,The Blazing March
-FLM-016,Torchbearer,Flame,Unit,2.0,2.0,2.0,1.0,Common,Advance,"When this Unit moves, Burn 1 Fragment to draw a card.",,Main Deck,The Blazing March
-FLM-017,Ashspark Mage,Flame,Unit,2.0,2.0,1.0,1.0,Common,Burn,"When deployed, Burn 1 Fragment to deal 1 damage to any target.",,Main Deck,The Blazing March
-FLM-017,Ashspark Mage,Flame,Unit,2.0,2.0,1.0,1.0,Common,Burn,"When deployed, Burn 1 Fragment to deal 1 damage to any target.",,Main Deck,The Blazing March
-FLM-017,Ashspark Mage,Flame,Unit,2.0,2.0,1.0,1.0,Common,Burn,"When deployed, Burn 1 Fragment to deal 1 damage to any target.",,Main Deck,The Blazing March
-FLM-018,Blazeguard Sentinel,Flame,Unit,3.0,3.0,3.0,2.0,Common,"Guard, Taunt",Units behind this gain +1 ATK.,,Main Deck,The Blazing March
-FLM-018,Blazeguard Sentinel,Flame,Unit,3.0,3.0,3.0,2.0,Common,"Guard, Taunt",Units behind this gain +1 ATK.,,Main Deck,The Blazing March
-FLM-018,Blazeguard Sentinel,Flame,Unit,3.0,3.0,3.0,2.0,Common,"Guard, Taunt",Units behind this gain +1 ATK.,,Main Deck,The Blazing March
-FLM-019,Infernal Spear,Flame,Spell,,,,,Common,Pierce,Deal 2 damage to a target Unit and 1 damage to the Unit behind it.,,Main Deck,The Blazing March
-FLM-019,Infernal Spear,Flame,Spell,,,,,Common,Pierce,Deal 2 damage to a target Unit and 1 damage to the Unit behind it.,,Main Deck,The Blazing March
-FLM-019,Infernal Spear,Flame,Spell,,,,,Common,Pierce,Deal 2 damage to a target Unit and 1 damage to the Unit behind it.,,Main Deck,The Blazing March
-FLM-020,Molten Shieldwall,Flame,Unit,3.0,2.0,4.0,2.0,Common,"Guard, Fortify",Takes –1 damage from all attacks.,,Main Deck,The Blazing March
-FLM-020,Molten Shieldwall,Flame,Unit,3.0,2.0,4.0,2.0,Common,"Guard, Fortify",Takes –1 damage from all attacks.,,Main Deck,The Blazing March
-FRG-FLM-001,Flame Fragment,Flame,Fragment,,,,,Resource,Surge,Gain +1 Flame Fragment.,“The forge’s first breath.”,Fragments,The Blazing March
-FRG-FLM-002,Fragment of the Ember Path,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Next Unit gains +1 ATK.,“Even ash remembers the blaze.”,Fragments,The Blazing March
-FRG-FLM-003,Fragment of the Forgeheart,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. All allied Units gain +1 HP this turn.,"“Steel burns, then strengthens.”",Fragments,The Blazing March
-FRG-FLM-004,Fragment of Fury,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Lose 1 HP.,“Power bought by pain.”,Fragments,The Blazing March
-FRG-FLM-005,Fragment of the Inferno,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Your Units take 1 damage.,“A world reborn in its own heat.”,Fragments,The Blazing March
-FRG-FLM-006,Fragment of Wildfire,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Lose 2 HP and discard 1 card.,“Flames that cannot be tamed consume all.”,Fragments,The Blazing March
-FRG-FLM-007,Fragment of the Vanguard,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Next deployed Unit gains Guard.,“Stand where sparks fall.”,Fragments,The Blazing March
-FRG-FLM-008,Fragment of Surging Heat,Flame,Fragment,,,,,Resource,Surge,Gain +1 Fragment. Next Unit gains Rush.,“Strike before the ash settles.”,Fragments,The Blazing March
-FRG-FLM-009,Fragment of Ember Reign,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. All allies lose 1 HP.,“A pyre for patience.”,Fragments,The Blazing March
-FRG-FLM-010,Fragment of Scorched Resolve,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Cannot attack next turn.,“Hold fire within until it breaks you.”,Fragments,The Blazing March
-FRG-FLM-011,Fragment of Unbound Flame,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Destroy 1 allied Relic.,“Freedom is the cost of form.”,Fragments,The Blazing March
-FRG-FLM-012,Fragment of the Blazing March,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Advance one Unit +1 space.,"“Where flame leads, courage follows.”",Fragments,The Blazing March
-FRG-FLM-013,Fragment of Cinderstorm,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Take 1 damage for each Unit you control.,“To command the storm is to burn with it.”,Fragments,The Blazing March
-FRG-FLM-002,Fragment of the Ember Path,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Next Unit gains +1 ATK.,“Even ash remembers the blaze.”,Fragments,The Blazing March
-FRG-FLM-003,Fragment of the Forgeheart,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. All allied Units gain +1 HP this turn.,"“Steel burns, then strengthens.”",Fragments,The Blazing March
-FRG-FLM-004,Fragment of Fury,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Lose 1 HP.,“Power bought by pain.”,Fragments,The Blazing March
-FRG-FLM-005,Fragment of the Inferno,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Your Units take 1 damage.,“A world reborn in its own heat.”,Fragments,The Blazing March
-FRG-FLM-006,Fragment of Wildfire,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Lose 2 HP and discard 1 card.,“Flames that cannot be tamed consume all.”,Fragments,The Blazing March
-FRG-FLM-007,Fragment of the Vanguard,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Next deployed Unit gains Guard.,“Stand where sparks fall.”,Fragments,The Blazing March
-FRG-FLM-008,Fragment of Surging Heat,Flame,Fragment,,,,,Resource,Surge,Gain +1 Fragment. Next Unit gains Rush.,“Strike before the ash settles.”,Fragments,The Blazing March
-FRG-FLM-009,Fragment of Ember Reign,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. All allies lose 1 HP.,“A pyre for patience.”,Fragments,The Blazing March
-FRG-FLM-010,Fragment of Scorched Resolve,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Cannot attack next turn.,“Hold fire within until it breaks you.”,Fragments,The Blazing March
-FRG-FLM-011,Fragment of Unbound Flame,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Destroy 1 allied Relic.,“Freedom is the cost of form.”,Fragments,The Blazing March
-FRG-FLM-012,Fragment of the Blazing March,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Advance one Unit +1 space.,"“Where flame leads, courage follows.”",Fragments,The Blazing March
-FRG-FLM-013,Fragment of Cinderstorm,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Take 1 damage for each Unit you control.,“To command the storm is to burn with it.”,Fragments,The Blazing March
-FRG-FLM-002,Fragment of the Ember Path,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Next Unit gains +1 ATK.,“Even ash remembers the blaze.”,Fragments,The Blazing March
-FRG-FLM-003,Fragment of the Forgeheart,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. All allied Units gain +1 HP this turn.,"“Steel burns, then strengthens.”",Fragments,The Blazing March
-FRG-FLM-004,Fragment of Fury,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Lose 1 HP.,“Power bought by pain.”,Fragments,The Blazing March
-FRG-FLM-005,Fragment of the Inferno,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Your Units take 1 damage.,“A world reborn in its own heat.”,Fragments,The Blazing March
-FRG-FLM-006,Fragment of Wildfire,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Lose 2 HP and discard 1 card.,“Flames that cannot be tamed consume all.”,Fragments,The Blazing March
-`,
+  "The Blazing March (Flame)": `Card ID,Name,Faction,Type,Cost,ATK,HP,MOV,Rarity,Keywords,Rules Text,Flavor Text
+FLM-056,"Kael, Warchild of the Pyre",Flame,Unit — War Chief,,,40,,Legendary,"Burn, Flamefield","Your Flamefield Tiles deal +1 damage each turn. When an enemy Unit is destroyed, create a Burn Marker in its space.",He does not seek to conquer—only to ignite what refuses to move.
+FLM-001,Cinderfoot Soldier,Flame,Unit,1,1,1,1,Common,,No flame too small to start a war.,
+FLM-001,Cinderfoot Soldier,Flame,Unit,1,1,1,1,Common,,No flame too small to start a war.,
+FLM-001,Cinderfoot Soldier,Flame,Unit,1,1,1,1,Common,,No flame too small to start a war.,
+FLM-002,Ashrunner Scout,Flame,Unit,1,1,1,2,Common,Advance,This Unit may move +1 space this turn.,
+FLM-002,Ashrunner Scout,Flame,Unit,1,1,1,2,Common,Advance,This Unit may move +1 space this turn.,
+FLM-002,Ashrunner Scout,Flame,Unit,1,1,1,2,Common,Advance,This Unit may move +1 space this turn.,
+FLM-003,Flame Recruit,Flame,Unit,1,2,1,1,Common,,,
+FLM-003,Flame Recruit,Flame,Unit,1,2,1,1,Common,,,
+FLM-003,Flame Recruit,Flame,Unit,1,2,1,1,Common,,,
+FLM-004,Pyre Guard,Flame,Unit,1,1,1,0,Common,Guard,This Unit can intercept attacks aimed at an ally behind it.,
+FLM-004,Pyre Guard,Flame,Unit,1,1,1,0,Common,Guard,This Unit can intercept attacks aimed at an ally behind it.,
+FLM-004,Pyre Guard,Flame,Unit,1,1,1,0,Common,Guard,This Unit can intercept attacks aimed at an ally behind it.,
+FLM-005,Singeing Sentry,Flame,Unit,1,1,1,1,Common,Rush,May attack the turn it enters the Field.,
+FLM-005,Singeing Sentry,Flame,Unit,1,1,1,1,Common,Rush,May attack the turn it enters the Field.,
+FLM-005,Singeing Sentry,Flame,Unit,1,1,1,1,Common,Rush,May attack the turn it enters the Field.,
+FLM-006,Molten Grunt,Flame,Unit,1,2,2,1,Common,,,
+FLM-006,Molten Grunt,Flame,Unit,1,2,2,1,Common,,,
+FLM-006,Molten Grunt,Flame,Unit,1,2,2,1,Common,,,
+FLM-007,Ashling Footman,Flame,Unit,1,1,2,1,Common,Advance,"When this Unit moves, it gains +1 ATK this turn.",
+FLM-007,Ashling Footman,Flame,Unit,1,1,2,1,Common,Advance,"When this Unit moves, it gains +1 ATK this turn.",
+FLM-007,Ashling Footman,Flame,Unit,1,1,2,1,Common,Advance,"When this Unit moves, it gains +1 ATK this turn.",
+FLM-008,Cinderwatch,Flame,Unit,1,1,1,0,Common,Guard,,
+FLM-008,Cinderwatch,Flame,Unit,1,1,1,0,Common,Guard,,
+FLM-008,Cinderwatch,Flame,Unit,1,1,1,0,Common,Guard,,
+FLM-009,Emberling,Flame,Unit,1,1,1,1,Common,Rush,,
+FLM-009,Emberling,Flame,Unit,1,1,1,1,Common,Rush,,
+FLM-009,Emberling,Flame,Unit,1,1,1,1,Common,Rush,,
+FLM-010,Flame Adept,Flame,Unit,1,2,2,1,Common,,,
+FLM-010,Flame Adept,Flame,Unit,1,2,2,1,Common,,,
+FLM-010,Flame Adept,Flame,Unit,1,2,2,1,Common,,,
+FLM-011,Ember Tactics,Flame,Spell,,,,,Common,,Target Unit gains +1 MOV and +1 ATK this turn.,Speed is the breath of fire.
+FLM-011,Ember Tactics,Flame,Spell,,,,,Common,,Target Unit gains +1 MOV and +1 ATK this turn.,Speed is the breath of fire.
+FLM-011,Ember Tactics,Flame,Spell,,,,,Common,,Target Unit gains +1 MOV and +1 ATK this turn.,Speed is the breath of fire.
+FLM-012,Ignite,Flame,Spell,,,,,Common,Burn,Burn 1 Fragment to deal 1 damage to any target.,
+FLM-012,Ignite,Flame,Spell,,,,,Common,Burn,Burn 1 Fragment to deal 1 damage to any target.,
+FLM-012,Ignite,Flame,Spell,,,,,Common,Burn,Burn 1 Fragment to deal 1 damage to any target.,
+FLM-013,Cinderfield,Flame,Relic,,,,,Common,,"Whenever a Unit is destroyed, create a Flamefield Tile in its space.",
+FLM-013,Cinderfield,Flame,Relic,,,,,Common,,"Whenever a Unit is destroyed, create a Flamefield Tile in its space.",
+FLM-013,Cinderfield,Flame,Relic,,,,,Common,,"Whenever a Unit is destroyed, create a Flamefield Tile in its space.",
+FLM-014,Smoldering Line,Flame,Spell,,,,,Common,Flamefield,All Units in a chosen Line take 1 damage if on a Flamefield Tile.,
+FLM-014,Smoldering Line,Flame,Spell,,,,,Common,Flamefield,All Units in a chosen Line take 1 damage if on a Flamefield Tile.,
+FLM-014,Smoldering Line,Flame,Spell,,,,,Common,Flamefield,All Units in a chosen Line take 1 damage if on a Flamefield Tile.,
+FLM-015,Flame Dancer,Flame,Unit,2,2,2,1,Common,"Rush, Surf","When this Unit enters or leaves a Flamefield Tile, prevent damage from it this turn.",
+FLM-015,Flame Dancer,Flame,Unit,2,2,2,1,Common,"Rush, Surf","When this Unit enters or leaves a Flamefield Tile, prevent damage from it this turn.",
+FLM-015,Flame Dancer,Flame,Unit,2,2,2,1,Common,"Rush, Surf","When this Unit enters or leaves a Flamefield Tile, prevent damage from it this turn.",
+FLM-016,Torchbearer,Flame,Unit,2,2,2,1,Common,Advance,"When this Unit moves, Burn 1 Fragment to draw a card.",
+FLM-016,Torchbearer,Flame,Unit,2,2,2,1,Common,Advance,"When this Unit moves, Burn 1 Fragment to draw a card.",
+FLM-016,Torchbearer,Flame,Unit,2,2,2,1,Common,Advance,"When this Unit moves, Burn 1 Fragment to draw a card.",
+FLM-017,Ashspark Mage,Flame,Unit,2,2,1,1,Common,Burn,"When deployed, Burn 1 Fragment to deal 1 damage to any target.",
+FLM-017,Ashspark Mage,Flame,Unit,2,2,1,1,Common,Burn,"When deployed, Burn 1 Fragment to deal 1 damage to any target.",
+FLM-017,Ashspark Mage,Flame,Unit,2,2,1,1,Common,Burn,"When deployed, Burn 1 Fragment to deal 1 damage to any target.",
+FLM-018,Blazeguard Sentinel,Flame,Unit,3,3,3,2,Common,"Guard, Taunt",Units behind this gain +1 ATK.,
+FLM-018,Blazeguard Sentinel,Flame,Unit,3,3,3,2,Common,"Guard, Taunt",Units behind this gain +1 ATK.,
+FLM-018,Blazeguard Sentinel,Flame,Unit,3,3,3,2,Common,"Guard, Taunt",Units behind this gain +1 ATK.,
+FLM-019,Infernal Spear,Flame,Spell,,,,,Common,Pierce,Deal 2 damage to a target Unit and 1 damage to the Unit behind it.,
+FLM-019,Infernal Spear,Flame,Spell,,,,,Common,Pierce,Deal 2 damage to a target Unit and 1 damage to the Unit behind it.,
+FLM-019,Infernal Spear,Flame,Spell,,,,,Common,Pierce,Deal 2 damage to a target Unit and 1 damage to the Unit behind it.,
+FLM-020,Molten Shieldwall,Flame,Unit,3,2,4,2,Common,"Guard, Fortify",Takes –1 damage from all attacks.,
+FLM-020,Molten Shieldwall,Flame,Unit,3,2,4,2,Common,"Guard, Fortify",Takes –1 damage from all attacks.,
+FRG-FLM-001,Flame Fragment,Flame,Fragment,,,,,Resource,Surge,Gain +1 Flame Fragment.,“The forge’s first breath.”
+FRG-FLM-002,Fragment of the Ember Path,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Next Unit gains +1 ATK.,“Even ash remembers the blaze.”
+FRG-FLM-003,Fragment of the Forgeheart,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. All allied Units gain +1 HP this turn.,"“Steel burns, then strengthens.”"
+FRG-FLM-004,Fragment of Fury,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Lose 1 HP.,“Power bought by pain.”
+FRG-FLM-005,Fragment of the Inferno,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Your Units take 1 damage.,“A world reborn in its own heat.”
+FRG-FLM-006,Fragment of Wildfire,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Lose 2 HP and discard 1 card.,“Flames that cannot be tamed consume all.”
+FRG-FLM-007,Fragment of the Vanguard,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Next deployed Unit gains Guard.,“Stand where sparks fall.”
+FRG-FLM-008,Fragment of Surging Heat,Flame,Fragment,,,,,Resource,Surge,Gain +1 Fragment. Next Unit gains Rush.,“Strike before the ash settles.”
+FRG-FLM-009,Fragment of Ember Reign,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. All allies lose 1 HP.,“A pyre for patience.”
+FRG-FLM-010,Fragment of Scorched Resolve,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Cannot attack next turn.,“Hold fire within until it breaks you.”
+FRG-FLM-011,Fragment of Unbound Flame,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Destroy 1 allied Relic.,“Freedom is the cost of form.”
+FRG-FLM-012,Fragment of the Blazing March,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Advance one Unit +1 space.,"“Where flame leads, courage follows.”"
+FRG-FLM-013,Fragment of Cinderstorm,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Take 1 damage for each Unit you control.,“To command the storm is to burn with it.”
+FRG-FLM-002,Fragment of the Ember Path,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Next Unit gains +1 ATK.,“Even ash remembers the blaze.”
+FRG-FLM-003,Fragment of the Forgeheart,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. All allied Units gain +1 HP this turn.,"“Steel burns, then strengthens.”"
+FRG-FLM-004,Fragment of Fury,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Lose 1 HP.,“Power bought by pain.”
+FRG-FLM-005,Fragment of the Inferno,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Your Units take 1 damage.,“A world reborn in its own heat.”
+FRG-FLM-006,Fragment of Wildfire,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Lose 2 HP and discard 1 card.,“Flames that cannot be tamed consume all.”
+FRG-FLM-007,Fragment of the Vanguard,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Next deployed Unit gains Guard.,“Stand where sparks fall.”
+FRG-FLM-008,Fragment of Surging Heat,Flame,Fragment,,,,,Resource,Surge,Gain +1 Fragment. Next Unit gains Rush.,“Strike before the ash settles.”
+FRG-FLM-009,Fragment of Ember Reign,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. All allies lose 1 HP.,“A pyre for patience.”
+FRG-FLM-010,Fragment of Scorched Resolve,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Cannot attack next turn.,“Hold fire within until it breaks you.”
+FRG-FLM-011,Fragment of Unbound Flame,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Destroy 1 allied Relic.,“Freedom is the cost of form.”
+FRG-FLM-012,Fragment of the Blazing March,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Advance one Unit +1 space.,"“Where flame leads, courage follows.”"
+FRG-FLM-013,Fragment of Cinderstorm,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Take 1 damage for each Unit you control.,“To command the storm is to burn with it.”
+FRG-FLM-002,Fragment of the Ember Path,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. Next Unit gains +1 ATK.,“Even ash remembers the blaze.”
+FRG-FLM-003,Fragment of the Forgeheart,Flame,Fragment,,,,,Resource,Surge,Gain +2 Fragments. All allied Units gain +1 HP this turn.,"“Steel burns, then strengthens.”"
+FRG-FLM-004,Fragment of Fury,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Lose 1 HP.,“Power bought by pain.”
+FRG-FLM-005,Fragment of the Inferno,Flame,Fragment,,,,,Resource,Surge,Gain +3 Fragments. Your Units take 1 damage.,“A world reborn in its own heat.”
+FRG-FLM-006,Fragment of Wildfire,Flame,Fragment,,,,,Resource,Surge,Gain +4 Fragments. Lose 2 HP and discard 1 card.,“Flames that cannot be tamed consume all.”`,
   "The Crimson Covenant (Blood)": `Card ID,Name,Faction,Type,Cost,ATK,HP,MOV,Rarity,Keywords,Rules Text,Flavor Text,Deck Section,Deck Name
 BLD-001,Serrath the Hollowed Duke,Blood,Unit — War Chief,,,15.0,,Legendary,Ritual,"Passive — When an allied Unit dies, gain 1 Blood. Active — Spend 3 Blood: Return a Unit (cost ≤3) from your graveyard to your Deployment Zone.","""Once a noble who bled his line to buy a kingdom of silence. In undeath, he rules by debt—every oath paid back in veins.""",Main Deck,The Crimson Covenant
 BLD-029,Crimson Ritualist,Blood,Unit,3.0,2.0,4.0,2.0,Common,,On Deploy: Sacrifice another allied Unit to gain 1 Blood and draw a card.,“Trade breath for wisdom.”,Main Deck,The Crimson Covenant
