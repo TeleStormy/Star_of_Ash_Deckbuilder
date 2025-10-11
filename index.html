@@ -844,28 +844,19 @@ function fitParagraph(ctx, text, boxW, boxH, maxPx, minPx){
   }
   return {size:minPx, lines:cut, lineH};
 }
-function setAmberGlow(on){
-  const ctx = document.getElementById("cardCanvas").getContext("2d");
-  if(on){
-    ctx.shadowColor = "rgba(255, 180, 100, 0.35)";
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-  } else {
-    ctx.shadowColor = "transparent";
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-  }
-}
+function setAmberGlow(on){}
 function draw(){
+  const c=document.getElementById("cardCanvas"); const ctx=c.getContext("2d");
+  // Ensure no glow/shadow is active
+  ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+
   const c=$("cardCanvas"); const ctx=c.getContext("2d");
   ctx.clearRect(0,0,c.width,c.height); paintTexture(ctx,c.width,c.height);
   ctx.strokeStyle="rgba(192,57,43,.65)"; ctx.lineWidth=4; ctx.strokeRect(8,8,c.width-16,c.height-16);
 
   const pad=24, topH=72, statH=44;
   const rules={x:pad+16,y:pad+topH+statH+22,w:c.width-2*(pad+16),h:540};
-  const bY=rules.y+rules.h+24, bH=58;
+  const bY=rules.y+rules.h+24, bH=70;
   const mov={x:pad,y:pad+topH,w:74,h:statH}, cost={x:pad+220,y:pad+topH,w:164,h:statH};
   const atk={x:pad,y:bY,w:114,h:bH}, hp={x:c.width-pad-114,y:bY,w:114,h:bH};
   const flavor={x:atk.x+atk.w+12,y:bY,w:hp.x-(atk.x+atk.w+24),h:bH};
@@ -890,11 +881,12 @@ function draw(){
 
   const fsFlavor=parseInt($("fsFlavor").value,10);
   const typeText = String($("type").value||"");
-  const fitType = fitText(ctx, typeText, flavor.w-20, fsFlavor, 10);
-  ctx.font=`${fitType}px Segoe UI, Roboto, Helvetica, Arial`; ctx.textAlign="center";
+  const fitType = fitText(ctx, typeText, flavor.w-20, fsFlavor, 14);
+  ctx.font=`bold ${fitType}px Segoe UI, Roboto, Helvetica, Arial`; ctx.textAlign="center";
+  const prevColor = ctx.fillStyle; ctx.fillStyle = "#ffffff";
   ctx.fillText(typeText, flavor.x+flavor.w/2, flavor.y+flavor.h/2);
-
-  ctx.font=`bold ${fsBars}px Segoe UI, Roboto, Helvetica, Arial`;
+  ctx.fillStyle = prevColor;
+ctx.font=`bold ${fsBars}px Segoe UI, Roboto, Helvetica, Arial`;
   ctx.fillStyle="#eae7e4"; ctx.textAlign="center"; setAmberGlow(true); ctx.fillText($("atk").value, atk.x+atk.w/2, atk.y+atk.h/2);
   ctx.textAlign="center"; ctx.fillText($("hp").value, hp.x+hp.w/2, hp.y+hp.h/2); setAmberGlow(false);
 
